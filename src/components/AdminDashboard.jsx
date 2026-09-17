@@ -30,12 +30,13 @@ import {
   CheckIcon,
 } from './Icons';
 import MarketOverview from './MarketOverview';
+import MandiRates from './MandiRates';
 import './AdminDashboard.css';
 
 export default function AdminDashboard({
   onNavigateToDesignSystem,
   onNavigateToLogin,
-  initialNav = 'Market Overview',
+  initialNav = 'Mandi Rates',
 }) {
   const [activeNav, setActiveNav] = useState(initialNav);
 
@@ -231,7 +232,9 @@ export default function AdminDashboard({
               type="text"
               className="dash-search-input"
               placeholder={
-                activeNav === 'Market Overview'
+                activeNav === 'Mandi Rates'
+                  ? 'Search commodity, mandi, state...'
+                  : activeNav === 'Market Overview'
                   ? 'Search commodity, mandi, trader, news...'
                   : 'Search here... (Commodity, Trader, News, etc.)'
               }
@@ -277,10 +280,16 @@ export default function AdminDashboard({
         <div className="dash-welcome-banner">
           <div className="dash-welcome-left">
             <h1 className="dash-welcome-title">
-              {activeNav === 'Market Overview' ? 'Market Intelligence' : 'Welcome Back, Admin 👋'}
+              {activeNav === 'Mandi Rates'
+                ? 'Mandi Rates'
+                : activeNav === 'Market Overview'
+                ? 'Market Intelligence'
+                : 'Welcome Back, Admin 👋'}
             </h1>
             <p className="dash-welcome-subtitle">
-              {activeNav === 'Market Overview'
+              {activeNav === 'Mandi Rates'
+                ? 'Get latest mandi rates from across India. Compare prices, track trends and make better business decisions.'
+                : activeNav === 'Market Overview'
                 ? 'Live commodity markets, mandi rates, exchange data and market insights.'
                 : "Here's what's happening with Vyapari Darbaar today."}
             </p>
@@ -288,7 +297,9 @@ export default function AdminDashboard({
 
           <div className="dash-welcome-center">
             <span className="dash-welcome-quote">
-              {activeNav === 'Market Overview'
+              {activeNav === 'Mandi Rates'
+                ? '“From Every Mandi To A Stronger Bharat”'
+                : activeNav === 'Market Overview'
                 ? '“Real Markets. Real Opportunities.”'
                 : '“Indian Commodities. Global Opportunities.”'}
             </span>
@@ -300,10 +311,12 @@ export default function AdminDashboard({
         </div>
 
         {/* ==================================================================
-            Dashboard Content Container (Market Overview vs General Dashboard)
+            Dashboard Content Container (Mandi Rates vs Market Overview vs Dashboard)
             ================================================================== */}
         <div className="dash-content-container">
-          {activeNav === 'Market Overview' ? (
+          {activeNav === 'Mandi Rates' ? (
+            <MandiRates />
+          ) : activeNav === 'Market Overview' ? (
             <MarketOverview />
           ) : (
             <>
