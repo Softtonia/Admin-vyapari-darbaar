@@ -36,12 +36,13 @@ import TraderDirectory from './TraderDirectory';
 import ContactUnlocks from './ContactUnlocks';
 import NewsContentCMS from './NewsContentCMS';
 import SubscriptionPlans from './SubscriptionPlans';
+import AdvertisementManagement from './AdvertisementManagement';
 import './AdminDashboard.css';
 
 export default function AdminDashboard({
   onNavigateToDesignSystem,
   onNavigateToLogin,
-  initialNav = 'Subscription Plans',
+  initialNav = 'Advertisements',
 }) {
   const [activeNav, setActiveNav] = useState(initialNav);
 
@@ -98,10 +99,17 @@ export default function AdminDashboard({
         { name: 'Users', icon: 'users' },
         { name: 'Traders', icon: 'traders' },
         { name: 'Subscribers', icon: 'subscribers' },
+        { name: 'Advertisers', icon: 'advertisers' },
+        { name: 'Roles & Permissions', icon: 'roles' },
+      ],
+    },
+    {
+      title: 'MONETISATION',
+      items: [
         { name: 'Subscription Plans', icon: 'plans' },
         { name: 'Payments', icon: 'payments' },
         { name: 'Advertisements', icon: 'ads' },
-        { name: 'Roles & Permissions', icon: 'roles' },
+        { name: 'Advertising Slots', icon: 'slots' },
       ],
     },
     {
@@ -249,7 +257,9 @@ export default function AdminDashboard({
               type="text"
               className="dash-search-input"
               placeholder={
-                activeNav === 'Subscription Plans'
+                activeNav === 'Advertisements'
+                  ? 'Search ads, advertisers, campaigns, slots...'
+                  : activeNav === 'Subscription Plans'
                   ? 'Search subscribers, plans, transactions, trader name...'
                   : activeNav === 'News & Articles'
                   ? 'Search news, keywords, author, category...'
@@ -307,7 +317,9 @@ export default function AdminDashboard({
         <div className="dash-welcome-banner">
           <div className="dash-welcome-left">
             <h1 className="dash-welcome-title">
-              {activeNav === 'Subscription Plans'
+              {activeNav === 'Advertisements'
+                ? 'Advertisement Management'
+                : activeNav === 'Subscription Plans'
                 ? 'Subscription Management'
                 : activeNav === 'News & Articles'
                 ? 'News & Content CMS'
@@ -324,7 +336,9 @@ export default function AdminDashboard({
                     : 'Welcome Back, Admin 👋'}
             </h1>
             <p className="dash-welcome-subtitle">
-              {activeNav === 'Subscription Plans'
+              {activeNav === 'Advertisements'
+                ? 'Manage ad campaigns, banners, slots and revenue. Monetize your platform with trusted advertisers.'
+                : activeNav === 'Subscription Plans'
                 ? 'Manage subscription plans, track payments, monitor renewals and grow your member base.'
                 : activeNav === 'News & Articles'
                 ? 'Create, manage and publish news, articles, government updates, global trade insights and multimedia content.'
@@ -344,7 +358,9 @@ export default function AdminDashboard({
 
           <div className="dash-welcome-center">
             <span className="dash-welcome-quote">
-              {activeNav === 'Subscription Plans'
+              {activeNav === 'Advertisements'
+                ? '“Advertise Today. Reach Real Traders.”'
+                : activeNav === 'Subscription Plans'
                 ? '“Empowering Traders. Growing Together.”'
                 : activeNav === 'News & Articles'
                 ? '“Information Empowers Better Decisions.”'
@@ -368,10 +384,12 @@ export default function AdminDashboard({
         </div>
 
         {/* ==================================================================
-            Dashboard Content Container (Subscription Plans vs News & Articles vs Contact Unlocks vs Trader Directory vs Trade Requirements vs Mandi vs Overview vs Dashboard)
+            Dashboard Content Container (Advertisements vs Subscription Plans vs News & Articles vs Contact Unlocks vs Trader Directory vs Trade Requirements vs Mandi vs Overview vs Dashboard)
             ================================================================== */}
         <div className="dash-content-container">
-          {activeNav === 'Subscription Plans' ? (
+          {activeNav === 'Advertisements' ? (
+            <AdvertisementManagement />
+          ) : activeNav === 'Subscription Plans' ? (
             <SubscriptionPlans />
           ) : activeNav === 'News & Articles' ? (
             <NewsContentCMS />
