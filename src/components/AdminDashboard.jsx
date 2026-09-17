@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import sidebarLogoImg from '../assets/sidebar_logo.png';
 import adminAvatarImg from '../assets/admin_avatar.png';
 import welcomeBgImg from '../assets/welcome_banner_sketch.png';
@@ -46,19 +47,76 @@ import SystemSettingsAudit from './SystemSettingsAudit';
 import CommodityPrices from './CommodityPrices';
 import './AdminDashboard.css';
 
+// Routes implemented strictly for the modules worked on so far
+export const ROUTE_MAP = {
+  'Dashboard': '/dashboard',
+  'Market Overview': '/market-overview',
+  'Commodity Prices': '/commodity-prices',
+  'Mandi Rates': '/mandi-rates',
+  'Buy Requirements': '/buy-requirements',
+  'Trader Directory': '/trader-directory',
+  'Contact Unlocks': '/contact-unlocks',
+  'News & Articles': '/news-articles',
+  'Roles & Permissions': '/roles-permissions',
+  'Subscription Plans': '/subscription-plans',
+  'Payments': '/payments',
+  'Advertisements': '/advertisements',
+  'Platform Analytics': '/platform-analytics',
+  'Notifications': '/notifications',
+  'Homepage': '/homepage',
+  'System Settings': '/system-settings',
+  'Audit Logs': '/audit-logs',
+};
+
+export const PATH_TO_NAV = {
+  '/': 'Dashboard',
+  '/dashboard': 'Dashboard',
+  '/market-overview': 'Market Overview',
+  '/commodity-prices': 'Commodity Prices',
+  '/mandi-rates': 'Mandi Rates',
+  '/buy-requirements': 'Buy Requirements',
+  '/trader-directory': 'Trader Directory',
+  '/contact-unlocks': 'Contact Unlocks',
+  '/news-articles': 'News & Articles',
+  '/roles-permissions': 'Roles & Permissions',
+  '/subscription-plans': 'Subscription Plans',
+  '/payments': 'Payments',
+  '/advertisements': 'Advertisements',
+  '/platform-analytics': 'Platform Analytics',
+  '/notifications': 'Notifications',
+  '/homepage': 'Homepage',
+  '/system-settings': 'System Settings',
+  '/audit-logs': 'Audit Logs',
+};
+
 export default function AdminDashboard({
   onNavigateToDesignSystem,
   onNavigateToLogin,
-  initialNav = 'Homepage',
+  initialNav = 'Dashboard',
 }) {
-  const [activeNav, setActiveNav] = useState(initialNav);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const navFromPath = PATH_TO_NAV[location?.pathname];
+  const [activeNav, setActiveNav] = useState(navFromPath || initialNav || 'Dashboard');
   const activeItemRef = useRef(null);
 
   useEffect(() => {
-    if (initialNav) {
+    if (navFromPath) {
+      setActiveNav(navFromPath);
+    } else if (initialNav) {
       setActiveNav(initialNav);
     }
-  }, [initialNav]);
+  }, [navFromPath, initialNav]);
+
+  const handleNavClick = (itemName) => {
+    const route = ROUTE_MAP[itemName];
+    if (route) {
+      navigate(route);
+    } else {
+      setActiveNav(itemName);
+    }
+  };
 
   useEffect(() => {
     if (activeItemRef.current) {
@@ -188,7 +246,8 @@ export default function AdminDashboard({
                     ref={isActive ? activeItemRef : null}
                     type="button"
                     className={`dash-nav-item ${isActive ? 'active' : ''}`}
-                    onClick={() => setActiveNav(item.name)}
+                    onClick={() => handleNavClick(item.name)}
+                    title={!ROUTE_MAP[item.name] ? `${item.name} (Coming Soon)` : undefined}
                   >
                     <span className="dash-nav-icon">
                       {item.icon === 'dashboard' && <DashboardIcon size={14} />}
