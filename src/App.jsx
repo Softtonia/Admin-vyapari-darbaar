@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import leftBannerImg from './assets/left_banner_clean.png';
+import DesignSystem from './components/DesignSystem';
 import {
   UserIcon,
   LockIcon,
@@ -24,6 +25,9 @@ const LANGUAGES = [
 ];
 
 export default function App() {
+  // Active View State ('design-system' or 'login')
+  const [currentView, setCurrentView] = useState('design-system');
+
   // Form State
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -142,23 +146,45 @@ export default function App() {
   };
 
   return (
-    <div className="app-viewport">
+    <>
+      {/* Floating View Switcher */}
+      <div className="view-switcher-pill">
+        <button
+          type="button"
+          className={`switch-btn ${currentView === 'design-system' ? 'active' : ''}`}
+          onClick={() => setCurrentView('design-system')}
+        >
+          🎨 Design System
+        </button>
+        <button
+          type="button"
+          className={`switch-btn ${currentView === 'login' ? 'active' : ''}`}
+          onClick={() => setCurrentView('login')}
+        >
+          🔐 Login Portal
+        </button>
+      </div>
+
       {/* Toast Notification */}
       {toastMessage && <div className="toast-notice">{toastMessage}</div>}
 
-      {/* Left Showcase (Emerald Imperial Banner with Spices & Logistics Art) */}
-      <aside className="left-showcase" aria-label="Vyapari Darbaar Showcase">
-        <div className="left-banner-container">
-          <img
-            src={leftBannerImg}
-            alt="Vyapari Darbaar - India's Premier Commodity Market Platform"
-            className="left-banner-img"
-          />
-        </div>
-      </aside>
+      {currentView === 'design-system' ? (
+        <DesignSystem onNavigateToLogin={() => setCurrentView('login')} />
+      ) : (
+        <div className="app-viewport">
+          {/* Left Showcase (Emerald Imperial Banner with Spices & Logistics Art) */}
+          <aside className="left-showcase" aria-label="Vyapari Darbaar Showcase">
+            <div className="left-banner-container">
+              <img
+                src={leftBannerImg}
+                alt="Vyapari Darbaar - India's Premier Commodity Market Platform"
+                className="left-banner-img"
+              />
+            </div>
+          </aside>
 
-      {/* Right Section (Heritage Background + Centered Interactive Card) */}
-      <main className="right-main">
+          {/* Right Section (Heritage Background + Centered Interactive Card) */}
+          <main className="right-main">
         {/* Top Header with Language Dropdown */}
         <header className="right-header">
           <div className="lang-selector-wrapper" ref={langDropdownRef}>
@@ -444,5 +470,7 @@ export default function App() {
         </footer>
       </main>
     </div>
+    )}
+  </>
   );
 }

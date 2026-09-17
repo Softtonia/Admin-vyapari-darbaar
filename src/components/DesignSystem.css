@@ -1,0 +1,1367 @@
+/* ==========================================================================
+   Vyapari Darbaar - Design System Showcase Styles
+   ========================================================================== */
+
+.ds-page {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f6f2e9;
+  color: #1f2937;
+  font-family: var(--font-sans);
+  display: flex;
+  flex-direction: column;
+}
+
+/* --------------------------------------------------------------------------
+   Header Bar
+   -------------------------------------------------------------------------- */
+.ds-header {
+  width: 100%;
+  background: #fbf7ee;
+  background-image: radial-gradient(circle at 80% 50%, rgba(200, 160, 80, 0.08) 0%, transparent 60%);
+  border-bottom: 1px solid #e8dfcf;
+  padding: 12px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ds-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ds-header-badge {
+  height: 64px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.15));
+}
+
+.ds-header-title-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.ds-title {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.ds-subtitle {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #4b5563;
+  margin: 2px 0;
+  text-transform: uppercase;
+}
+
+.ds-tagline {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: #9b7328;
+  text-transform: uppercase;
+}
+
+.ds-header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.ds-header-mission {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #374151;
+  text-align: right;
+}
+
+.ds-header-vertical-sep {
+  width: 1px;
+  height: 42px;
+  background-color: #c89e3a;
+  opacity: 0.6;
+}
+
+.ds-header-pillars {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: #78581a;
+  line-height: 1.3;
+}
+
+.ds-login-portal-btn {
+  margin-left: 12px;
+  background-color: #026544;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.ds-login-portal-btn:hover {
+  background-color: #014c33;
+}
+
+/* --------------------------------------------------------------------------
+   Main Grid Container
+   -------------------------------------------------------------------------- */
+.ds-main-grid {
+  padding: 18px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ds-row {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+}
+
+.ds-row-3col {
+  grid-template-columns: 1fr 1.6fr 1.4fr;
+}
+
+.ds-row-complex {
+  grid-template-columns: 1.7fr 0.6fr 0.9fr;
+}
+
+.ds-row-2col {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* --------------------------------------------------------------------------
+   Common Card Styles
+   -------------------------------------------------------------------------- */
+.ds-card {
+  background-color: #ffffff;
+  border: 1px solid #e7e0d3;
+  border-radius: 10px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.ds-card-heading {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 12px;
+}
+
+.ds-subgroup-title {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 8px;
+}
+
+/* --------------------------------------------------------------------------
+   01. Brand Identity Card
+   -------------------------------------------------------------------------- */
+.ds-brand-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.ds-brand-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: 4px;
+}
+
+.ds-brand-crest-box {
+  width: 125px;
+  height: 125px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ds-brand-crest-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.ds-brand-name {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.ds-brand-panel-tag {
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.ds-brand-divider {
+  margin: 6px 0;
+}
+
+.ds-brand-slogan {
+  font-size: 11px;
+  font-style: italic;
+  color: #6b7280;
+}
+
+/* --------------------------------------------------------------------------
+   02. Color Palette Card
+   -------------------------------------------------------------------------- */
+.ds-primary-swatches-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.ds-color-tile {
+  display: flex;
+  flex-direction: column;
+}
+
+.ds-color-box {
+  width: 100%;
+  height: 48px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+
+.ds-color-box.border {
+  border: 1px solid #ded6c8;
+}
+
+.ds-color-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.ds-color-hex {
+  font-size: 11px;
+  color: #6b7280;
+  font-family: ui-monospace, monospace;
+}
+
+.ds-color-role {
+  font-size: 10.5px;
+  color: #9ca3af;
+  margin-top: 1px;
+}
+
+.ds-secondary-swatches-row {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+
+.ds-sec-tile {
+  display: flex;
+  flex-direction: column;
+}
+
+.ds-sec-box {
+  width: 100%;
+  height: 26px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.ds-sec-name {
+  font-size: 10px;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ds-sec-hex {
+  font-size: 9px;
+  color: #6b7280;
+  font-family: ui-monospace, monospace;
+}
+
+.ds-sec-role {
+  font-size: 9px;
+  color: #9ca3af;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --------------------------------------------------------------------------
+   03. Typography Card
+   -------------------------------------------------------------------------- */
+.ds-type-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 16px;
+}
+
+.ds-specimen-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.ds-specimen-heading-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.ds-big-sample {
+  font-size: 34px;
+  line-height: 1;
+  color: #111827;
+}
+
+.ds-big-sample.serif {
+  font-family: var(--font-serif);
+  font-weight: 700;
+}
+
+.ds-big-sample.sans {
+  font-family: var(--font-sans);
+  font-weight: 700;
+}
+
+.ds-font-family-name {
+  font-size: 13px;
+  color: #111827;
+  margin-right: 4px;
+}
+
+.ds-font-usage {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.ds-char-sample {
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  color: #4b5563;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.ds-char-sample.serif {
+  font-family: var(--font-serif);
+}
+
+.ds-char-sample.sans {
+  font-family: var(--font-sans);
+}
+
+.ds-type-scale-table {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-left: 1px solid #f0e8db;
+  padding-left: 14px;
+}
+
+.ds-type-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 0;
+}
+
+.ds-type-label {
+  font-size: 11.5px;
+  color: #374151;
+}
+
+.ds-type-value {
+  font-size: 11px;
+  font-weight: 600;
+  color: #111827;
+  font-family: ui-monospace, monospace;
+}
+
+/* --------------------------------------------------------------------------
+   04. Buttons Card
+   -------------------------------------------------------------------------- */
+.ds-buttons-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  align-items: end;
+}
+
+.ds-btn-col {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ds-mini-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.ds-btn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 6px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.ds-btn-primary {
+  background-color: #026544;
+  color: #ffffff;
+}
+
+.ds-btn-primary:hover {
+  background-color: #014f35;
+}
+
+.ds-btn-secondary {
+  background-color: #ffffff;
+  border: 1px solid #026544;
+  color: #026544;
+}
+
+.ds-btn-secondary:hover {
+  background-color: #f4fbf7;
+}
+
+.ds-btn-accent {
+  background-color: #e5a820;
+  color: #111827;
+}
+
+.ds-btn-accent:hover {
+  background-color: #d19515;
+}
+
+.ds-btn-danger {
+  background-color: #dc3545;
+  color: #ffffff;
+}
+
+.ds-btn-danger:hover {
+  background-color: #bb2d3b;
+}
+
+.ds-btn-states-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.ds-state-btn {
+  color: #ffffff;
+}
+
+.ds-state-btn.default {
+  background-color: #026544;
+}
+
+.ds-state-btn.hover {
+  background-color: #0f7a5a;
+}
+
+.ds-state-btn.pressed {
+  background-color: #01422c;
+}
+
+.ds-state-btn.disabled {
+  background-color: #adb5bd;
+  cursor: not-allowed;
+}
+
+/* --------------------------------------------------------------------------
+   05. Form Elements Card
+   -------------------------------------------------------------------------- */
+.ds-form-elements-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.ds-form-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ds-form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ds-field-label {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.ds-input-icon-wrap,
+.ds-select-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.ds-field-icon {
+  position: absolute;
+  left: 10px;
+  pointer-events: none;
+}
+
+.ds-field-input,
+.ds-field-select,
+.ds-field-textarea {
+  width: 100%;
+  height: 32px;
+  border: 1px solid #d5cec2;
+  border-radius: 6px;
+  background-color: #ffffff;
+  font-size: 12px;
+  color: #1f2937;
+  padding: 0 10px;
+  font-family: var(--font-sans);
+}
+
+.ds-field-input {
+  padding-left: 30px;
+}
+
+.ds-field-select {
+  appearance: none;
+  padding-right: 28px;
+}
+
+.ds-select-arrow {
+  position: absolute;
+  right: 10px;
+  pointer-events: none;
+}
+
+.ds-field-textarea {
+  height: 52px;
+  padding: 6px 10px;
+  resize: none;
+}
+
+.ds-dropzone {
+  border: 1.5px dashed #c8beaf;
+  border-radius: 6px;
+  background-color: #fbfaf8;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+}
+
+.ds-dropzone-prompt {
+  font-size: 11px;
+  font-weight: 500;
+  color: #374151;
+  margin-top: 4px;
+}
+
+.ds-dropzone-sub {
+  font-size: 9.5px;
+  color: #9ca3af;
+}
+
+.ds-check-label,
+.ds-toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  margin-top: 2px;
+}
+
+.ds-custom-check {
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid #026544;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+}
+
+.ds-custom-check.checked {
+  background-color: #026544;
+}
+
+.ds-check-text {
+  font-size: 11.5px;
+  color: #374151;
+}
+
+.ds-switch {
+  width: 32px;
+  height: 18px;
+  background-color: #e5e7eb;
+  border-radius: 10px;
+  position: relative;
+  transition: background 0.15s ease;
+}
+
+.ds-switch.on {
+  background-color: #026544;
+}
+
+.ds-switch-handle {
+  width: 14px;
+  height: 14px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.15s ease;
+}
+
+.ds-switch.on .ds-switch-handle {
+  transform: translateX(14px);
+}
+
+/* --------------------------------------------------------------------------
+   06. Icons Card
+   -------------------------------------------------------------------------- */
+.ds-icons-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px 8px;
+  text-align: center;
+  padding: 4px 0;
+}
+
+.ds-icon-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.ds-icon-label {
+  font-size: 10.5px;
+  color: #4b5563;
+}
+
+/* --------------------------------------------------------------------------
+   07. Status Badges Card
+   -------------------------------------------------------------------------- */
+.ds-badge-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ds-status-pill {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ds-status-pill.active {
+  background-color: #d1e7dd;
+  color: #0f5132;
+}
+
+.ds-status-pill.pending {
+  background-color: #fff3cd;
+  color: #664d03;
+}
+
+.ds-status-pill.under-review {
+  background-color: #ffe5d0;
+  color: #854d0e;
+}
+
+.ds-status-pill.approved {
+  background-color: #d1e7dd;
+  color: #0f5132;
+}
+
+.ds-status-pill.rejected {
+  background-color: #f8d7da;
+  color: #842029;
+}
+
+.ds-status-pill.suspended {
+  background-color: #fde2e4;
+  color: #9d0208;
+}
+
+.ds-status-pill.expired {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.ds-status-pill.draft {
+  background-color: #f8f9fa;
+  border: 1px solid #ced4da;
+  color: #6c757d;
+}
+
+/* --------------------------------------------------------------------------
+   08. Alerts Card
+   -------------------------------------------------------------------------- */
+.ds-alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ds-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  border: 1px solid transparent;
+}
+
+.ds-alert-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ds-alert-close {
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+}
+
+.ds-alert-success {
+  background-color: #d1e7dd;
+  border-color: #badbcc;
+  color: #0f5132;
+}
+
+.ds-alert-info {
+  background-color: #cff4fc;
+  border-color: #b6effb;
+  color: #055160;
+}
+
+.ds-alert-warning {
+  background-color: #fff3cd;
+  border-color: #ffecb5;
+  color: #664d03;
+}
+
+.ds-alert-danger {
+  background-color: #f8d7da;
+  border-color: #f5c2c7;
+  color: #842029;
+}
+
+/* --------------------------------------------------------------------------
+   09. KPI Stat Cards
+   -------------------------------------------------------------------------- */
+.ds-kpi-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.ds-kpi-tile {
+  background-color: #ffffff;
+  border: 1px solid #ebe5d9;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+
+.ds-kpi-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ds-kpi-icon-wrap.beige {
+  background-color: #f7eedb;
+}
+
+.ds-kpi-icon-wrap.gold {
+  background-color: #fcedcb;
+}
+
+.ds-rupee-symbol {
+  font-size: 18px;
+  font-weight: 700;
+  color: #9b7328;
+}
+
+.ds-kpi-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.ds-kpi-title {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.ds-kpi-number {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.15;
+}
+
+.ds-kpi-trend {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ds-kpi-trend.positive {
+  color: #198754;
+}
+
+.ds-kpi-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 28px;
+  margin-left: auto;
+}
+
+.ds-kpi-chart .bar {
+  width: 5px;
+  background-color: #98dfb6;
+  border-radius: 1px;
+}
+
+.ds-kpi-chart .bar.b1 { height: 10px; }
+.ds-kpi-chart .bar.b2 { height: 15px; }
+.ds-kpi-chart .bar.b3 { height: 20px; }
+.ds-kpi-chart .bar.b4 { height: 26px; }
+.ds-kpi-chart .bar.b5 { height: 28px; }
+
+/* --------------------------------------------------------------------------
+   10. Table Section
+   -------------------------------------------------------------------------- */
+.ds-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.ds-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 11.5px;
+}
+
+.ds-table th {
+  padding: 8px 6px;
+  font-weight: 600;
+  color: #4b5563;
+  border-bottom: 1px solid #e5e0d4;
+  white-space: nowrap;
+}
+
+.ds-table td {
+  padding: 8px 6px;
+  color: #1f2937;
+  border-bottom: 1px solid #f2ede4;
+  white-space: nowrap;
+}
+
+.ds-table .id-col {
+  font-family: ui-monospace, monospace;
+  color: #4b5563;
+}
+
+.ds-table .name-col {
+  font-weight: 500;
+}
+
+.ds-type-pill {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.ds-type-pill.buy {
+  background-color: #d1e7dd;
+  color: #0f5132;
+}
+
+.ds-type-pill.sell {
+  background-color: #f8d7da;
+  color: #842029;
+}
+
+.ds-status-pill.table {
+  padding: 2px 8px;
+  font-size: 10.5px;
+}
+
+.ds-table .action-col {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ds-view-link {
+  color: #026544;
+  font-weight: 500;
+}
+
+.ds-view-link:hover {
+  text-decoration: underline;
+}
+
+.ds-more-btn {
+  color: #6b7280;
+  padding: 2px;
+}
+
+.ds-table-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.ds-table-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ds-mini-pagination {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ds-pag-arrow,
+.ds-pag-num {
+  min-width: 22px;
+  height: 22px;
+  border: 1px solid #ded8cb;
+  border-radius: 4px;
+  background: #ffffff;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #374151;
+}
+
+.ds-pag-num.active {
+  background-color: #026544;
+  border-color: #026544;
+  color: #ffffff;
+}
+
+.ds-per-page-select {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid #ded8cb;
+  border-radius: 4px;
+  padding: 2px 6px;
+  background: #ffffff;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------------------------
+   Sidebar Component Preview
+   -------------------------------------------------------------------------- */
+.ds-sidebar-preview {
+  background: linear-gradient(180deg, #012815 0%, #011d0f 100%);
+  border-radius: 10px;
+  padding: 12px 10px;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.ds-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(200, 160, 80, 0.25);
+  margin-bottom: 8px;
+}
+
+.ds-sidebar-crown {
+  font-size: 16px;
+}
+
+.ds-sidebar-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.ds-sb-name {
+  font-family: var(--font-serif);
+  font-size: 11px;
+  font-weight: 700;
+  color: #e5b94c;
+  letter-spacing: 0.1em;
+}
+
+.ds-sb-sub {
+  font-family: var(--font-serif);
+  font-size: 9px;
+  font-weight: 600;
+  color: #e5b94c;
+  letter-spacing: 0.12em;
+}
+
+.ds-sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ds-sb-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  color: #cfd8dc;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.ds-sb-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.ds-sb-item.active {
+  background-color: #0a4d33;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   Right Components Stack (11, 13, 14, 15)
+   -------------------------------------------------------------------------- */
+.ds-components-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ds-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+}
+
+.ds-bread-sep {
+  color: #9ca3af;
+}
+
+.ds-bread-link {
+  color: #4b5563;
+}
+
+.ds-bread-current {
+  color: #111827;
+  font-weight: 600;
+}
+
+.ds-tabs-row {
+  display: flex;
+  border-bottom: 1px solid #e5e0d5;
+}
+
+.ds-tab-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  color: #4b5563;
+  font-weight: 500;
+  position: relative;
+  background: transparent;
+}
+
+.ds-tab-btn.active {
+  color: #026544;
+  font-weight: 600;
+}
+
+.ds-tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #026544;
+}
+
+.ds-pagination-row {
+  display: flex;
+  gap: 4px;
+}
+
+.ds-pag-btn {
+  min-width: 26px;
+  height: 26px;
+  border: 1px solid #ded8cb;
+  border-radius: 4px;
+  background: #ffffff;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #374151;
+}
+
+.ds-pag-btn.active {
+  background-color: #026544;
+  border-color: #026544;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.ds-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ds-progress-track {
+  flex: 1;
+  height: 10px;
+  background-color: #e8e3d8;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.ds-progress-fill {
+  height: 100%;
+  background-color: #026544;
+  border-radius: 5px;
+}
+
+.ds-progress-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+/* --------------------------------------------------------------------------
+   16. Shadows & 17. Border Radius
+   -------------------------------------------------------------------------- */
+.ds-elevation-grid,
+.ds-radius-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.ds-elevation-item,
+.ds-radius-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.ds-shadow-box,
+.ds-radius-box {
+  width: 100%;
+  height: 42px;
+  background-color: #ffffff;
+  margin-bottom: 6px;
+}
+
+.ds-shadow-box.level-0 {
+  border: 1px solid #e2ded5;
+}
+
+.ds-shadow-box.level-1 {
+  border: 1px solid #f0ecdf;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.ds-shadow-box.level-2 {
+  border: 1px solid #ede8db;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.ds-shadow-box.level-3 {
+  border: 1px solid #e8e2d4;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.14);
+}
+
+.ds-radius-box {
+  border: 1px solid #ded7cb;
+  background-color: #ffffff;
+}
+
+.ds-radius-box.r-4 { border-radius: 4px; }
+.ds-radius-box.r-8 { border-radius: 8px; }
+.ds-radius-box.r-12 { border-radius: 12px; }
+.ds-radius-box.r-16 { border-radius: 16px; }
+
+.ds-elev-name,
+.ds-radius-val {
+  font-size: 11px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.ds-elev-role,
+.ds-radius-role {
+  font-size: 10px;
+  color: #6b7280;
+}
+
+/* --------------------------------------------------------------------------
+   Bottom Royal Footer
+   -------------------------------------------------------------------------- */
+.ds-footer {
+  width: 100%;
+  background: #012111;
+  color: #ffffff;
+  padding: 12px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  border-top: 1px solid rgba(200, 160, 80, 0.4);
+}
+
+.ds-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ds-footer-crown {
+  font-size: 16px;
+}
+
+.ds-footer-brand {
+  font-family: var(--font-serif);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #e5b94c;
+}
+
+.ds-footer-title {
+  font-size: 11.5px;
+  color: #cfd8dc;
+}
+
+.ds-footer-divider {
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+}
+
+.ds-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11.5px;
+  color: #cfd8dc;
+}
+
+.ds-pipe {
+  color: rgba(200, 160, 80, 0.6);
+}
+
+.ds-highlight {
+  color: #e5b94c;
+  font-weight: 500;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive Adjustments
+   -------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .ds-row-3col,
+  .ds-row-complex,
+  .ds-row-2col {
+    grid-template-columns: 1fr;
+  }
+
+  .ds-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .ds-header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .ds-footer {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+}
