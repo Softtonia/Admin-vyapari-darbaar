@@ -26,8 +26,8 @@ const LANGUAGES = [
 ];
 
 export default function App() {
-  // Active View State ('contact-unlocks', 'trader-directory', 'buy-requirements', 'mandi-rates', 'market-overview', 'dashboard', 'design-system', or 'login')
-  const [currentView, setCurrentView] = useState('contact-unlocks');
+  // Active View State ('news-cms', 'contact-unlocks', 'trader-directory', 'buy-requirements', 'mandi-rates', 'market-overview', 'dashboard', 'design-system', or 'login')
+  const [currentView, setCurrentView] = useState('news-cms');
 
   // Form State
   const [identifier, setIdentifier] = useState('');
@@ -152,6 +152,13 @@ export default function App() {
       <div className="view-switcher-pill">
         <button
           type="button"
+          className={`switch-btn ${currentView === 'news-cms' ? 'active' : ''}`}
+          onClick={() => setCurrentView('news-cms')}
+        >
+          📰 News & CMS
+        </button>
+        <button
+          type="button"
           className={`switch-btn ${currentView === 'contact-unlocks' ? 'active' : ''}`}
           onClick={() => setCurrentView('contact-unlocks')}
         >
@@ -211,7 +218,8 @@ export default function App() {
       {/* Toast Notification */}
       {toastMessage && <div className="toast-notice">{toastMessage}</div>}
 
-      {currentView === 'contact-unlocks' ||
+      {currentView === 'news-cms' ||
+      currentView === 'contact-unlocks' ||
       currentView === 'trader-directory' ||
       currentView === 'buy-requirements' ||
       currentView === 'mandi-rates' ||
@@ -219,7 +227,9 @@ export default function App() {
       currentView === 'dashboard' ? (
         <AdminDashboard
           initialNav={
-            currentView === 'contact-unlocks'
+            currentView === 'news-cms'
+              ? 'News & Articles'
+              : currentView === 'contact-unlocks'
               ? 'Contact Unlocks'
               : currentView === 'trader-directory'
               ? 'Trader Directory'

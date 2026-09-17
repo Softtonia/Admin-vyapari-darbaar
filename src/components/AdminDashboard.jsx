@@ -34,12 +34,13 @@ import MandiRates from './MandiRates';
 import TradeRequirements from './TradeRequirements';
 import TraderDirectory from './TraderDirectory';
 import ContactUnlocks from './ContactUnlocks';
+import NewsContentCMS from './NewsContentCMS';
 import './AdminDashboard.css';
 
 export default function AdminDashboard({
   onNavigateToDesignSystem,
   onNavigateToLogin,
-  initialNav = 'Contact Unlocks',
+  initialNav = 'News & Articles',
 }) {
   const [activeNav, setActiveNav] = useState(initialNav);
 
@@ -248,7 +249,9 @@ export default function AdminDashboard({
               type="text"
               className="dash-search-input"
               placeholder={
-                activeNav === 'Contact Unlocks'
+                activeNav === 'News & Articles'
+                  ? 'Search news, keywords, author, category...'
+                  : activeNav === 'Contact Unlocks'
                   ? 'Search traders, commodity, location, transaction ID...'
                   : activeNav === 'Trader Directory'
                   ? 'Search traders, company name, email, mobile, location...'
@@ -302,7 +305,9 @@ export default function AdminDashboard({
         <div className="dash-welcome-banner">
           <div className="dash-welcome-left">
             <h1 className="dash-welcome-title">
-              {activeNav === 'Contact Unlocks'
+              {activeNav === 'News & Articles'
+                ? 'News & Content CMS'
+                : activeNav === 'Contact Unlocks'
                 ? 'Contact Unlocks'
                 : activeNav === 'Trader Directory'
                 ? 'Trader Management'
@@ -315,7 +320,9 @@ export default function AdminDashboard({
                     : 'Welcome Back, Admin 👋'}
             </h1>
             <p className="dash-welcome-subtitle">
-              {activeNav === 'Contact Unlocks'
+              {activeNav === 'News & Articles'
+                ? 'Create, manage and publish news, articles, government updates, global trade insights and multimedia content.'
+                : activeNav === 'Contact Unlocks'
                 ? 'Track and manage contact information access. Monitor usage, revenue and connect genuine traders.'
                 : activeNav === 'Trader Directory'
                 ? 'Manage traders, verify profiles, monitor activity, and grow a trusted trading community.'
@@ -331,7 +338,9 @@ export default function AdminDashboard({
 
           <div className="dash-welcome-center">
             <span className="dash-welcome-quote">
-              {activeNav === 'Contact Unlocks'
+              {activeNav === 'News & Articles'
+                ? '“Information Empowers Better Decisions.”'
+                : activeNav === 'Contact Unlocks'
                 ? '“Connections Create Stronger Markets.”'
                 : activeNav === 'Trader Directory'
                 ? '“Trusted Traders. Stronger Markets.”'
@@ -351,10 +360,12 @@ export default function AdminDashboard({
         </div>
 
         {/* ==================================================================
-            Dashboard Content Container (Contact Unlocks vs Trader Directory vs Trade Requirements vs Mandi vs Overview vs Dashboard)
+            Dashboard Content Container (News & Articles vs Contact Unlocks vs Trader Directory vs Trade Requirements vs Mandi vs Overview vs Dashboard)
             ================================================================== */}
         <div className="dash-content-container">
-          {activeNav === 'Contact Unlocks' ? (
+          {activeNav === 'News & Articles' ? (
+            <NewsContentCMS />
+          ) : activeNav === 'Contact Unlocks' ? (
             <ContactUnlocks />
           ) : activeNav === 'Trader Directory' ? (
             <TraderDirectory />
