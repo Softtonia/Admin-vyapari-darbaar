@@ -41,6 +41,7 @@ import PaymentsManagement from './PaymentsManagement';
 import PlatformAnalytics from './PlatformAnalytics';
 import NotificationManagement from './NotificationManagement';
 import WebsiteHomepageCMS from './WebsiteHomepageCMS';
+import RolesPermissions from './RolesPermissions';
 import './AdminDashboard.css';
 
 export default function AdminDashboard({
@@ -222,7 +223,13 @@ export default function AdminDashboard({
                       {item.icon === 'traders' && <TradersIcon size={14} />}
                       {item.icon === 'subscribers' && <span>👑</span>}
                       {item.icon === 'advertisers' && <span>📢</span>}
-                      {item.icon === 'roles' && <span>🛡</span>}
+                      {item.icon === 'roles' && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="4" y="4" width="16" height="16" rx="2" />
+                          <circle cx="12" cy="10" r="3" />
+                          <path d="M8 18a4 4 0 0 1 8 0" />
+                        </svg>
+                      )}
                       {item.icon === 'plans' && (
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <rect x="3" y="4" width="18" height="16" rx="2" />
@@ -291,7 +298,9 @@ export default function AdminDashboard({
               type="text"
               className="dash-search-input"
               placeholder={
-                activeNav === 'Homepage'
+                activeNav === 'Roles & Permissions'
+                  ? 'Search users, roles, permissions, modules...'
+                  : activeNav === 'Homepage'
                   ? 'Search pages, sections, content...'
                   : activeNav === 'Notifications'
                   ? 'Search notifications, title, target audience...'
@@ -359,7 +368,9 @@ export default function AdminDashboard({
         <div className="dash-welcome-banner">
           <div className="dash-welcome-left">
             <h1 className="dash-welcome-title">
-              {activeNav === 'Homepage'
+              {activeNav === 'Roles & Permissions'
+                ? 'Roles & Permissions'
+                : activeNav === 'Homepage'
                 ? 'Website / Homepage CMS'
                 : activeNav === 'Notifications'
                 ? 'Notifications'
@@ -386,7 +397,9 @@ export default function AdminDashboard({
                     : 'Welcome Back, Admin 👋'}
             </h1>
             <p className="dash-welcome-subtitle">
-              {activeNav === 'Homepage'
+              {activeNav === 'Roles & Permissions'
+                ? 'Manage user roles, permissions and access control for the entire platform.'
+                : activeNav === 'Homepage'
                 ? 'Manage your website content, design and homepage sections. Update banners, text, images and more in real-time.'
                 : activeNav === 'Notifications'
                 ? 'Create, manage and send notifications to keep your traders, subscribers and users informed.'
@@ -416,7 +429,9 @@ export default function AdminDashboard({
 
           <div className="dash-welcome-center">
             <span className="dash-welcome-quote">
-              {activeNav === 'Homepage'
+              {activeNav === 'Roles & Permissions' ? (
+                <>“Right People<br />Right Access<br />A Stronger Platform.”</>
+              ) : activeNav === 'Homepage'
                 ? '“A Stronger Trading Community A Brighter Bharat.”'
                 : activeNav === 'Notifications'
                 ? '“Right Information At the Right Time Builds a Stronger Market.”'
@@ -453,7 +468,9 @@ export default function AdminDashboard({
             Dashboard Content Container (Notifications vs Platform Analytics vs Payments vs Advertisements vs Subscription Plans vs News & Articles vs Contact Unlocks vs Trader Directory vs Trade Requirements vs Mandi vs Overview vs Dashboard)
             ================================================================== */}
         <div className="dash-content-container">
-          {activeNav === 'Homepage' ? (
+          {activeNav === 'Roles & Permissions' ? (
+            <RolesPermissions />
+          ) : activeNav === 'Homepage' ? (
             <WebsiteHomepageCMS />
           ) : activeNav === 'Notifications' ? (
             <NotificationManagement />

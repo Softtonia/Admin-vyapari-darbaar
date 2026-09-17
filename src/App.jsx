@@ -26,8 +26,8 @@ const LANGUAGES = [
 ];
 
 export default function App() {
-  // Active View State ('homepage', 'notifications', 'analytics', 'payments', 'ads', 'subscriptions', 'news-cms', 'contact-unlocks', 'trader-directory', 'buy-requirements', 'mandi-rates', 'market-overview', 'dashboard', 'design-system', or 'login')
-  const [currentView, setCurrentView] = useState('homepage');
+  // Active View State ('roles', 'homepage', 'notifications', 'analytics', 'payments', 'ads', 'subscriptions', 'news-cms', 'contact-unlocks', 'trader-directory', 'buy-requirements', 'mandi-rates', 'market-overview', 'dashboard', 'design-system', or 'login')
+  const [currentView, setCurrentView] = useState('roles');
 
   // Form State
   const [identifier, setIdentifier] = useState('');
@@ -152,6 +152,13 @@ export default function App() {
       <div className="view-switcher-pill">
         <button
           type="button"
+          className={`switch-btn ${currentView === 'roles' ? 'active' : ''}`}
+          onClick={() => setCurrentView('roles')}
+        >
+          🛡 Roles & Permissions
+        </button>
+        <button
+          type="button"
           className={`switch-btn ${currentView === 'homepage' ? 'active' : ''}`}
           onClick={() => setCurrentView('homepage')}
         >
@@ -260,7 +267,8 @@ export default function App() {
       {/* Toast Notification */}
       {toastMessage && <div className="toast-notice">{toastMessage}</div>}
 
-      {currentView === 'homepage' ||
+      {currentView === 'roles' ||
+      currentView === 'homepage' ||
       currentView === 'notifications' ||
       currentView === 'analytics' ||
       currentView === 'payments' ||
@@ -275,7 +283,9 @@ export default function App() {
       currentView === 'dashboard' ? (
         <AdminDashboard
           initialNav={
-            currentView === 'homepage'
+            currentView === 'roles'
+              ? 'Roles & Permissions'
+              : currentView === 'homepage'
               ? 'Homepage'
               : currentView === 'notifications'
               ? 'Notifications'
