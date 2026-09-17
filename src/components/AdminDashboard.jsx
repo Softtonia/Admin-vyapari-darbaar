@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import sidebarLogoImg from '../assets/sidebar_logo.png';
 import adminAvatarImg from '../assets/admin_avatar.png';
 import welcomeBgImg from '../assets/welcome_banner_sketch.png';
@@ -40,20 +40,28 @@ import AdvertisementManagement from './AdvertisementManagement';
 import PaymentsManagement from './PaymentsManagement';
 import PlatformAnalytics from './PlatformAnalytics';
 import NotificationManagement from './NotificationManagement';
+import WebsiteHomepageCMS from './WebsiteHomepageCMS';
 import './AdminDashboard.css';
 
 export default function AdminDashboard({
   onNavigateToDesignSystem,
   onNavigateToLogin,
-  initialNav = 'Notifications',
+  initialNav = 'Homepage',
 }) {
   const [activeNav, setActiveNav] = useState(initialNav);
+  const activeItemRef = useRef(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (initialNav) {
       setActiveNav(initialNav);
     }
   }, [initialNav]);
+
+  useEffect(() => {
+    if (activeItemRef.current) {
+      activeItemRef.current.scrollIntoView({ block: 'center', behavior: 'auto' });
+    }
+  }, [activeNav]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [requirementsFilter, setRequirementsFilter] = useState('Last 30 Days');
@@ -134,9 +142,12 @@ export default function AdminDashboard({
     {
       title: 'WEBSITE',
       items: [
-        { name: 'Homepage', icon: 'home' },
+        { name: 'Homepage', icon: 'homepage_cms' },
         { name: 'Menus', icon: 'menus' },
         { name: 'Banners', icon: 'banners' },
+        { name: 'SEO', icon: 'seo' },
+        { name: 'Custom Pages', icon: 'custom_pages' },
+        { name: 'Themes', icon: 'themes' },
       ],
     },
     {
@@ -172,6 +183,7 @@ export default function AdminDashboard({
                 return (
                   <button
                     key={iIdx}
+                    ref={isActive ? activeItemRef : null}
                     type="button"
                     className={`dash-nav-item ${isActive ? 'active' : ''}`}
                     onClick={() => setActiveNav(item.name)}
@@ -234,9 +246,19 @@ export default function AdminDashboard({
                       {item.icon === 'bell' && <BellIcon size={14} />}
                       {item.icon === 'whatsapp' && <span>💬</span>}
                       {item.icon === 'campaigns' && <span>⚡</span>}
+                      {item.icon === 'homepage_cms' && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="2" />
+                          <line x1="3" y1="9" x2="21" y2="9" />
+                          <line x1="9" y1="21" x2="9" y2="9" />
+                        </svg>
+                      )}
                       {item.icon === 'home' && <span>🏠</span>}
                       {item.icon === 'menus' && <span>☰</span>}
                       {item.icon === 'banners' && <span>🖼</span>}
+                      {item.icon === 'seo' && <span>🔍</span>}
+                      {item.icon === 'custom_pages' && <span>📄</span>}
+                      {item.icon === 'themes' && <span>🎨</span>}
                       {item.icon === 'settings' && <SettingsIcon size={14} />}
                       {item.icon === 'api' && <span>🔌</span>}
                       {item.icon === 'logs' && <span>📜</span>}
@@ -269,10 +291,12 @@ export default function AdminDashboard({
               type="text"
               className="dash-search-input"
               placeholder={
-                activeNav === 'Notifications'
-                  ? 'Search notifications, users, title, message...'
+                activeNav === 'Homepage'
+                  ? 'Search pages, sections, content...'
+                  : activeNav === 'Notifications'
+                  ? 'Search notifications, title, target audience...'
                   : activeNav === 'Platform Analytics'
-                  ? 'Search traders, commodities, orders, subscriptions, ads...'
+                  ? 'Search metrics, reports, timeframes...'
                   : activeNav === 'Payments'
                   ? 'Search transactions, order ID, trader name, plan, UPI ID...'
                   : activeNav === 'Advertisements'
@@ -335,7 +359,9 @@ export default function AdminDashboard({
         <div className="dash-welcome-banner">
           <div className="dash-welcome-left">
             <h1 className="dash-welcome-title">
-              {activeNav === 'Notifications'
+              {activeNav === 'Homepage'
+                ? 'Website / Homepage CMS'
+                : activeNav === 'Notifications'
                 ? 'Notifications'
                 : activeNav === 'Platform Analytics'
                 ? 'Analytics'
@@ -360,7 +386,9 @@ export default function AdminDashboard({
                     : 'Welcome Back, Admin 👋'}
             </h1>
             <p className="dash-welcome-subtitle">
-              {activeNav === 'Notifications'
+              {activeNav === 'Homepage'
+                ? 'Manage your website content, design and homepage sections. Update banners, text, images and more in real-time.'
+                : activeNav === 'Notifications'
                 ? 'Create, manage and send notifications to keep your traders, subscribers and users informed.'
                 : activeNav === 'Platform Analytics'
                 ? 'Get real-time insights into platform performance, users, revenue, and market engagement.'
@@ -388,7 +416,9 @@ export default function AdminDashboard({
 
           <div className="dash-welcome-center">
             <span className="dash-welcome-quote">
-              {activeNav === 'Notifications'
+              {activeNav === 'Homepage'
+                ? '“A Stronger Trading Community A Brighter Bharat.”'
+                : activeNav === 'Notifications'
                 ? '“Right Information At the Right Time Builds a Stronger Market.”'
                 : activeNav === 'Platform Analytics'
                 ? '“Data Today. Better Decisions Tomorrow.”'
@@ -423,7 +453,9 @@ export default function AdminDashboard({
             Dashboard Content Container (Notifications vs Platform Analytics vs Payments vs Advertisements vs Subscription Plans vs News & Articles vs Contact Unlocks vs Trader Directory vs Trade Requirements vs Mandi vs Overview vs Dashboard)
             ================================================================== */}
         <div className="dash-content-container">
-          {activeNav === 'Notifications' ? (
+          {activeNav === 'Homepage' ? (
+            <WebsiteHomepageCMS />
+          ) : activeNav === 'Notifications' ? (
             <NotificationManagement />
           ) : activeNav === 'Platform Analytics' ? (
             <PlatformAnalytics />

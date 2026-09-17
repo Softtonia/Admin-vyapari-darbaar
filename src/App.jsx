@@ -26,8 +26,8 @@ const LANGUAGES = [
 ];
 
 export default function App() {
-  // Active View State ('notifications', 'analytics', 'payments', 'ads', 'subscriptions', 'news-cms', 'contact-unlocks', 'trader-directory', 'buy-requirements', 'mandi-rates', 'market-overview', 'dashboard', 'design-system', or 'login')
-  const [currentView, setCurrentView] = useState('notifications');
+  // Active View State ('homepage', 'notifications', 'analytics', 'payments', 'ads', 'subscriptions', 'news-cms', 'contact-unlocks', 'trader-directory', 'buy-requirements', 'mandi-rates', 'market-overview', 'dashboard', 'design-system', or 'login')
+  const [currentView, setCurrentView] = useState('homepage');
 
   // Form State
   const [identifier, setIdentifier] = useState('');
@@ -152,6 +152,13 @@ export default function App() {
       <div className="view-switcher-pill">
         <button
           type="button"
+          className={`switch-btn ${currentView === 'homepage' ? 'active' : ''}`}
+          onClick={() => setCurrentView('homepage')}
+        >
+          🌐 Homepage CMS
+        </button>
+        <button
+          type="button"
           className={`switch-btn ${currentView === 'notifications' ? 'active' : ''}`}
           onClick={() => setCurrentView('notifications')}
         >
@@ -253,7 +260,8 @@ export default function App() {
       {/* Toast Notification */}
       {toastMessage && <div className="toast-notice">{toastMessage}</div>}
 
-      {currentView === 'notifications' ||
+      {currentView === 'homepage' ||
+      currentView === 'notifications' ||
       currentView === 'analytics' ||
       currentView === 'payments' ||
       currentView === 'ads' ||
@@ -267,7 +275,9 @@ export default function App() {
       currentView === 'dashboard' ? (
         <AdminDashboard
           initialNav={
-            currentView === 'notifications'
+            currentView === 'homepage'
+              ? 'Homepage'
+              : currentView === 'notifications'
               ? 'Notifications'
               : currentView === 'analytics'
               ? 'Platform Analytics'
