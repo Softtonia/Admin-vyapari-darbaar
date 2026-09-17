@@ -26,8 +26,8 @@ const LANGUAGES = [
 ];
 
 export default function App() {
-  // Active View State ('buy-requirements', 'mandi-rates', 'market-overview', 'dashboard', 'design-system', or 'login')
-  const [currentView, setCurrentView] = useState('buy-requirements');
+  // Active View State ('trader-directory', 'buy-requirements', 'mandi-rates', 'market-overview', 'dashboard', 'design-system', or 'login')
+  const [currentView, setCurrentView] = useState('trader-directory');
 
   // Form State
   const [identifier, setIdentifier] = useState('');
@@ -152,6 +152,13 @@ export default function App() {
       <div className="view-switcher-pill">
         <button
           type="button"
+          className={`switch-btn ${currentView === 'trader-directory' ? 'active' : ''}`}
+          onClick={() => setCurrentView('trader-directory')}
+        >
+          👥 Trader Directory
+        </button>
+        <button
+          type="button"
           className={`switch-btn ${currentView === 'buy-requirements' ? 'active' : ''}`}
           onClick={() => setCurrentView('buy-requirements')}
         >
@@ -197,13 +204,16 @@ export default function App() {
       {/* Toast Notification */}
       {toastMessage && <div className="toast-notice">{toastMessage}</div>}
 
-      {currentView === 'buy-requirements' ||
+      {currentView === 'trader-directory' ||
+      currentView === 'buy-requirements' ||
       currentView === 'mandi-rates' ||
       currentView === 'market-overview' ||
       currentView === 'dashboard' ? (
         <AdminDashboard
           initialNav={
-            currentView === 'buy-requirements'
+            currentView === 'trader-directory'
+              ? 'Trader Directory'
+              : currentView === 'buy-requirements'
               ? 'Buy Requirements'
               : currentView === 'mandi-rates'
               ? 'Mandi Rates'
