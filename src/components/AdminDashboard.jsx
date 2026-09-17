@@ -33,12 +33,13 @@ import MarketOverview from './MarketOverview';
 import MandiRates from './MandiRates';
 import TradeRequirements from './TradeRequirements';
 import TraderDirectory from './TraderDirectory';
+import ContactUnlocks from './ContactUnlocks';
 import './AdminDashboard.css';
 
 export default function AdminDashboard({
   onNavigateToDesignSystem,
   onNavigateToLogin,
-  initialNav = 'Trader Directory',
+  initialNav = 'Contact Unlocks',
 }) {
   const [activeNav, setActiveNav] = useState(initialNav);
 
@@ -187,7 +188,12 @@ export default function AdminDashboard({
                           <path d="M7 16a2 2 0 0 1 4 0" />
                         </svg>
                       )}
-                      {item.icon === 'unlocks' && <span>🔓</span>}
+                      {item.icon === 'unlocks' && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                          <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+                        </svg>
+                      )}
                       {item.icon === 'categories' && <span>🏷</span>}
                       {item.icon === 'news' && <NewsIcon size={14} />}
                       {item.icon === 'gov' && <span>🏛</span>}
@@ -242,7 +248,9 @@ export default function AdminDashboard({
               type="text"
               className="dash-search-input"
               placeholder={
-                activeNav === 'Trader Directory'
+                activeNav === 'Contact Unlocks'
+                  ? 'Search traders, commodity, location, transaction ID...'
+                  : activeNav === 'Trader Directory'
                   ? 'Search traders, company name, email, mobile, location...'
                   : activeNav === 'Buy Requirements'
                   ? 'Search trade requirements, trader, commodity...'
@@ -294,7 +302,9 @@ export default function AdminDashboard({
         <div className="dash-welcome-banner">
           <div className="dash-welcome-left">
             <h1 className="dash-welcome-title">
-              {activeNav === 'Trader Directory'
+              {activeNav === 'Contact Unlocks'
+                ? 'Contact Unlocks'
+                : activeNav === 'Trader Directory'
                 ? 'Trader Management'
                 : activeNav === 'Buy Requirements'
                 ? 'Trade Requirements'
@@ -305,7 +315,9 @@ export default function AdminDashboard({
                     : 'Welcome Back, Admin 👋'}
             </h1>
             <p className="dash-welcome-subtitle">
-              {activeNav === 'Trader Directory'
+              {activeNav === 'Contact Unlocks'
+                ? 'Track and manage contact information access. Monitor usage, revenue and connect genuine traders.'
+                : activeNav === 'Trader Directory'
                 ? 'Manage traders, verify profiles, monitor activity, and grow a trusted trading community.'
                 : activeNav === 'Buy Requirements'
                 ? 'Manage buy and sell requirements. Connect traders. Grow Indian trade.'
@@ -319,7 +331,9 @@ export default function AdminDashboard({
 
           <div className="dash-welcome-center">
             <span className="dash-welcome-quote">
-              {activeNav === 'Trader Directory'
+              {activeNav === 'Contact Unlocks'
+                ? '“Connections Create Stronger Markets.”'
+                : activeNav === 'Trader Directory'
                 ? '“Trusted Traders. Stronger Markets.”'
                 : activeNav === 'Buy Requirements'
                 ? '“Real Traders. Real Opportunities.”'
@@ -337,10 +351,12 @@ export default function AdminDashboard({
         </div>
 
         {/* ==================================================================
-            Dashboard Content Container (Trader Directory vs Trade Requirements vs Mandi vs Overview vs Dashboard)
+            Dashboard Content Container (Contact Unlocks vs Trader Directory vs Trade Requirements vs Mandi vs Overview vs Dashboard)
             ================================================================== */}
         <div className="dash-content-container">
-          {activeNav === 'Trader Directory' ? (
+          {activeNav === 'Contact Unlocks' ? (
+            <ContactUnlocks />
+          ) : activeNav === 'Trader Directory' ? (
             <TraderDirectory />
           ) : activeNav === 'Buy Requirements' ? (
             <TradeRequirements />
