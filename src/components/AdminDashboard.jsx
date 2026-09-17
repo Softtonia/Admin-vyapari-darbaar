@@ -43,6 +43,7 @@ import NotificationManagement from './NotificationManagement';
 import WebsiteHomepageCMS from './WebsiteHomepageCMS';
 import RolesPermissions from './RolesPermissions';
 import SystemSettingsAudit from './SystemSettingsAudit';
+import CommodityPrices from './CommodityPrices';
 import './AdminDashboard.css';
 
 export default function AdminDashboard({
@@ -192,7 +193,16 @@ export default function AdminDashboard({
                     <span className="dash-nav-icon">
                       {item.icon === 'dashboard' && <DashboardIcon size={14} />}
                       {item.icon === 'market' && <MarketIcon size={14} />}
-                      {item.icon === 'prices' && <span>₹</span>}
+                      {item.icon === 'prices' && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                          <path d="M12 7v10" />
+                          <path d="M9.5 9.5c1-1 2-1 2.5 0" />
+                          <path d="M12 9.5c.5-1 1.5-1 2.5 0" />
+                          <path d="M9.5 12.5c1-1 2-1 2.5 0" />
+                          <path d="M12 12.5c.5-1 1.5-1 2.5 0" />
+                        </svg>
+                      )}
                       {item.icon === 'mandi' && <span>🏛</span>}
                       {item.icon === 'exchange' && <span>⇄</span>}
                       {item.icon === 'alerts' && <span>🔔</span>}
@@ -322,7 +332,9 @@ export default function AdminDashboard({
                   ? 'Search traders, company name, email, mobile, location...'
                   : activeNav === 'Buy Requirements'
                   ? 'Search trade requirements, trader, commodity...'
-                  : activeNav === 'Mandi Rates'
+                  : activeNav === 'Commodity Prices'
+                    ? 'Search commodities, mandis, traders, news...'
+                    : activeNav === 'Mandi Rates'
                     ? 'Search commodity, mandi, state...'
                     : activeNav === 'Market Overview'
                       ? 'Search commodity, mandi, trader, news...'
@@ -394,7 +406,9 @@ export default function AdminDashboard({
                 ? 'Trader Management'
                 : activeNav === 'Buy Requirements'
                 ? 'Trade Requirements'
-                : activeNav === 'Mandi Rates'
+                : activeNav === 'Commodity Prices'
+                  ? 'Commodity Prices'
+                  : activeNav === 'Mandi Rates'
                   ? 'Mandi Rates'
                   : activeNav === 'Market Overview'
                     ? 'Market Intelligence'
@@ -425,7 +439,9 @@ export default function AdminDashboard({
                 ? 'Manage traders, verify profiles, monitor activity, and grow a trusted trading community.'
                 : activeNav === 'Buy Requirements'
                 ? 'Manage buy and sell requirements. Connect traders. Grow Indian trade.'
-                : activeNav === 'Mandi Rates'
+                : activeNav === 'Commodity Prices'
+                  ? 'Real-time and historical prices of agricultural commodities across major mandis in India.'
+                  : activeNav === 'Mandi Rates'
                   ? 'Get latest mandi rates from across India. Compare prices, track trends and make better business decisions.'
                   : activeNav === 'Market Overview'
                     ? 'Live commodity markets, mandi rates, exchange data and market insights.'
@@ -459,7 +475,9 @@ export default function AdminDashboard({
                 ? '“Trusted Traders. Stronger Markets.”'
                 : activeNav === 'Buy Requirements'
                 ? '“Real Traders. Real Opportunities.”'
-                : activeNav === 'Mandi Rates'
+                : activeNav === 'Commodity Prices' ? (
+                  <>“Better Market<br />Information<br />Stronger Farmers<br />A Prosperous Bharat.”</>
+                ) : activeNav === 'Mandi Rates'
                   ? '“From Every Mandi To A Stronger Bharat”'
                   : activeNav === 'Market Overview'
                     ? '“Real Markets. Real Opportunities.”'
@@ -500,6 +518,8 @@ export default function AdminDashboard({
             <TraderDirectory />
           ) : activeNav === 'Buy Requirements' ? (
             <TradeRequirements />
+          ) : activeNav === 'Commodity Prices' ? (
+            <CommodityPrices />
           ) : activeNav === 'Mandi Rates' ? (
             <MandiRates />
           ) : activeNav === 'Market Overview' ? (

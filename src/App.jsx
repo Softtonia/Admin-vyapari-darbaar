@@ -26,8 +26,8 @@ const LANGUAGES = [
 ];
 
 export default function App() {
-  // Active View State ('system-settings', 'roles', 'homepage', 'notifications', 'analytics', 'payments', 'ads', 'subscriptions', 'news-cms', 'contact-unlocks', 'trader-directory', 'buy-requirements', 'mandi-rates', 'market-overview', 'dashboard', 'design-system', or 'login')
-  const [currentView, setCurrentView] = useState('system-settings');
+  // Active View State ('commodity-prices', 'system-settings', 'roles', 'homepage', 'notifications', 'analytics', 'payments', 'ads', 'subscriptions', 'news-cms', 'contact-unlocks', 'trader-directory', 'buy-requirements', 'mandi-rates', 'market-overview', 'dashboard', 'design-system', or 'login')
+  const [currentView, setCurrentView] = useState('commodity-prices');
 
   // Form State
   const [identifier, setIdentifier] = useState('');
@@ -236,6 +236,13 @@ export default function App() {
         </button>
         <button
           type="button"
+          className={`switch-btn ${currentView === 'commodity-prices' ? 'active' : ''}`}
+          onClick={() => setCurrentView('commodity-prices')}
+        >
+          🌾 Commodity Prices
+        </button>
+        <button
+          type="button"
           className={`switch-btn ${currentView === 'mandi-rates' ? 'active' : ''}`}
           onClick={() => setCurrentView('mandi-rates')}
         >
@@ -274,7 +281,8 @@ export default function App() {
       {/* Toast Notification */}
       {toastMessage && <div className="toast-notice">{toastMessage}</div>}
 
-      {currentView === 'system-settings' ||
+      {currentView === 'commodity-prices' ||
+      currentView === 'system-settings' ||
       currentView === 'roles' ||
       currentView === 'homepage' ||
       currentView === 'notifications' ||
@@ -291,7 +299,9 @@ export default function App() {
       currentView === 'dashboard' ? (
         <AdminDashboard
           initialNav={
-            currentView === 'system-settings'
+            currentView === 'commodity-prices'
+              ? 'Commodity Prices'
+              : currentView === 'system-settings'
               ? 'System Settings'
               : currentView === 'roles'
               ? 'Roles & Permissions'
