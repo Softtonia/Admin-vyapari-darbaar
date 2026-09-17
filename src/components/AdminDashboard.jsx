@@ -42,6 +42,7 @@ import PlatformAnalytics from './PlatformAnalytics';
 import NotificationManagement from './NotificationManagement';
 import WebsiteHomepageCMS from './WebsiteHomepageCMS';
 import RolesPermissions from './RolesPermissions';
+import SystemSettingsAudit from './SystemSettingsAudit';
 import './AdminDashboard.css';
 
 export default function AdminDashboard({
@@ -154,8 +155,7 @@ export default function AdminDashboard({
     {
       title: 'SYSTEM',
       items: [
-        { name: 'Settings', icon: 'settings' },
-        { name: 'API / Data Sources', icon: 'api' },
+        { name: 'System Settings', icon: 'settings' },
         { name: 'Audit Logs', icon: 'logs' },
       ],
     },
@@ -298,7 +298,9 @@ export default function AdminDashboard({
               type="text"
               className="dash-search-input"
               placeholder={
-                activeNav === 'Roles & Permissions'
+                activeNav === 'System Settings' || activeNav === 'Audit Logs'
+                  ? 'Search settings, logs, users, modules...'
+                  : activeNav === 'Roles & Permissions'
                   ? 'Search users, roles, permissions, modules...'
                   : activeNav === 'Homepage'
                   ? 'Search pages, sections, content...'
@@ -368,7 +370,9 @@ export default function AdminDashboard({
         <div className="dash-welcome-banner">
           <div className="dash-welcome-left">
             <h1 className="dash-welcome-title">
-              {activeNav === 'Roles & Permissions'
+              {activeNav === 'System Settings' || activeNav === 'Audit Logs'
+                ? 'System Settings / Audit Logs'
+                : activeNav === 'Roles & Permissions'
                 ? 'Roles & Permissions'
                 : activeNav === 'Homepage'
                 ? 'Website / Homepage CMS'
@@ -397,7 +401,9 @@ export default function AdminDashboard({
                     : 'Welcome Back, Admin 👋'}
             </h1>
             <p className="dash-welcome-subtitle">
-              {activeNav === 'Roles & Permissions'
+              {activeNav === 'System Settings' || activeNav === 'Audit Logs'
+                ? 'Configure platform settings and monitor all system activities for complete transparency and security.'
+                : activeNav === 'Roles & Permissions'
                 ? 'Manage user roles, permissions and access control for the entire platform.'
                 : activeNav === 'Homepage'
                 ? 'Manage your website content, design and homepage sections. Update banners, text, images and more in real-time.'
@@ -429,7 +435,9 @@ export default function AdminDashboard({
 
           <div className="dash-welcome-center">
             <span className="dash-welcome-quote">
-              {activeNav === 'Roles & Permissions' ? (
+              {activeNav === 'System Settings' || activeNav === 'Audit Logs' ? (
+                <>“Transparent Systems<br />Build Greater Trust.”</>
+              ) : activeNav === 'Roles & Permissions' ? (
                 <>“Right People<br />Right Access<br />A Stronger Platform.”</>
               ) : activeNav === 'Homepage'
                 ? '“A Stronger Trading Community A Brighter Bharat.”'
@@ -468,7 +476,9 @@ export default function AdminDashboard({
             Dashboard Content Container (Notifications vs Platform Analytics vs Payments vs Advertisements vs Subscription Plans vs News & Articles vs Contact Unlocks vs Trader Directory vs Trade Requirements vs Mandi vs Overview vs Dashboard)
             ================================================================== */}
         <div className="dash-content-container">
-          {activeNav === 'Roles & Permissions' ? (
+          {activeNav === 'System Settings' || activeNav === 'Audit Logs' ? (
+            <SystemSettingsAudit />
+          ) : activeNav === 'Roles & Permissions' ? (
             <RolesPermissions />
           ) : activeNav === 'Homepage' ? (
             <WebsiteHomepageCMS />

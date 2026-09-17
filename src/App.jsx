@@ -26,8 +26,8 @@ const LANGUAGES = [
 ];
 
 export default function App() {
-  // Active View State ('roles', 'homepage', 'notifications', 'analytics', 'payments', 'ads', 'subscriptions', 'news-cms', 'contact-unlocks', 'trader-directory', 'buy-requirements', 'mandi-rates', 'market-overview', 'dashboard', 'design-system', or 'login')
-  const [currentView, setCurrentView] = useState('roles');
+  // Active View State ('system-settings', 'roles', 'homepage', 'notifications', 'analytics', 'payments', 'ads', 'subscriptions', 'news-cms', 'contact-unlocks', 'trader-directory', 'buy-requirements', 'mandi-rates', 'market-overview', 'dashboard', 'design-system', or 'login')
+  const [currentView, setCurrentView] = useState('system-settings');
 
   // Form State
   const [identifier, setIdentifier] = useState('');
@@ -152,6 +152,13 @@ export default function App() {
       <div className="view-switcher-pill">
         <button
           type="button"
+          className={`switch-btn ${currentView === 'system-settings' ? 'active' : ''}`}
+          onClick={() => setCurrentView('system-settings')}
+        >
+          ⚙ System Settings
+        </button>
+        <button
+          type="button"
           className={`switch-btn ${currentView === 'roles' ? 'active' : ''}`}
           onClick={() => setCurrentView('roles')}
         >
@@ -267,7 +274,8 @@ export default function App() {
       {/* Toast Notification */}
       {toastMessage && <div className="toast-notice">{toastMessage}</div>}
 
-      {currentView === 'roles' ||
+      {currentView === 'system-settings' ||
+      currentView === 'roles' ||
       currentView === 'homepage' ||
       currentView === 'notifications' ||
       currentView === 'analytics' ||
@@ -283,7 +291,9 @@ export default function App() {
       currentView === 'dashboard' ? (
         <AdminDashboard
           initialNav={
-            currentView === 'roles'
+            currentView === 'system-settings'
+              ? 'System Settings'
+              : currentView === 'roles'
               ? 'Roles & Permissions'
               : currentView === 'homepage'
               ? 'Homepage'
