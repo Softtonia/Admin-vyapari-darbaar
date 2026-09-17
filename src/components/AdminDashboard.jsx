@@ -37,12 +37,13 @@ import ContactUnlocks from './ContactUnlocks';
 import NewsContentCMS from './NewsContentCMS';
 import SubscriptionPlans from './SubscriptionPlans';
 import AdvertisementManagement from './AdvertisementManagement';
+import PaymentsManagement from './PaymentsManagement';
 import './AdminDashboard.css';
 
 export default function AdminDashboard({
   onNavigateToDesignSystem,
   onNavigateToLogin,
-  initialNav = 'Advertisements',
+  initialNav = 'Payments',
 }) {
   const [activeNav, setActiveNav] = useState(initialNav);
 
@@ -257,7 +258,9 @@ export default function AdminDashboard({
               type="text"
               className="dash-search-input"
               placeholder={
-                activeNav === 'Advertisements'
+                activeNav === 'Payments'
+                  ? 'Search transactions, order ID, trader name, plan, UPI ID...'
+                  : activeNav === 'Advertisements'
                   ? 'Search ads, advertisers, campaigns, slots...'
                   : activeNav === 'Subscription Plans'
                   ? 'Search subscribers, plans, transactions, trader name...'
@@ -317,7 +320,9 @@ export default function AdminDashboard({
         <div className="dash-welcome-banner">
           <div className="dash-welcome-left">
             <h1 className="dash-welcome-title">
-              {activeNav === 'Advertisements'
+              {activeNav === 'Payments'
+                ? 'Payments'
+                : activeNav === 'Advertisements'
                 ? 'Advertisement Management'
                 : activeNav === 'Subscription Plans'
                 ? 'Subscription Management'
@@ -336,7 +341,9 @@ export default function AdminDashboard({
                     : 'Welcome Back, Admin 👋'}
             </h1>
             <p className="dash-welcome-subtitle">
-              {activeNav === 'Advertisements'
+              {activeNav === 'Payments'
+                ? 'Track and manage all payments, transactions, refunds and settlements across the platform.'
+                : activeNav === 'Advertisements'
                 ? 'Manage ad campaigns, banners, slots and revenue. Monetize your platform with trusted advertisers.'
                 : activeNav === 'Subscription Plans'
                 ? 'Manage subscription plans, track payments, monitor renewals and grow your member base.'
@@ -358,7 +365,9 @@ export default function AdminDashboard({
 
           <div className="dash-welcome-center">
             <span className="dash-welcome-quote">
-              {activeNav === 'Advertisements'
+              {activeNav === 'Payments'
+                ? '“Secure Payments. Stronger Trade Relationships.”'
+                : activeNav === 'Advertisements'
                 ? '“Advertise Today. Reach Real Traders.”'
                 : activeNav === 'Subscription Plans'
                 ? '“Empowering Traders. Growing Together.”'
@@ -384,10 +393,12 @@ export default function AdminDashboard({
         </div>
 
         {/* ==================================================================
-            Dashboard Content Container (Advertisements vs Subscription Plans vs News & Articles vs Contact Unlocks vs Trader Directory vs Trade Requirements vs Mandi vs Overview vs Dashboard)
+            Dashboard Content Container (Payments vs Advertisements vs Subscription Plans vs News & Articles vs Contact Unlocks vs Trader Directory vs Trade Requirements vs Mandi vs Overview vs Dashboard)
             ================================================================== */}
         <div className="dash-content-container">
-          {activeNav === 'Advertisements' ? (
+          {activeNav === 'Payments' ? (
+            <PaymentsManagement />
+          ) : activeNav === 'Advertisements' ? (
             <AdvertisementManagement />
           ) : activeNav === 'Subscription Plans' ? (
             <SubscriptionPlans />
