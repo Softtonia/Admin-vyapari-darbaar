@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import leftBannerImg from './assets/left_banner_clean.png';
 import DesignSystem from './components/DesignSystem';
+import AdminDashboard from './components/AdminDashboard';
 import {
   UserIcon,
   LockIcon,
@@ -25,8 +26,8 @@ const LANGUAGES = [
 ];
 
 export default function App() {
-  // Active View State ('design-system' or 'login')
-  const [currentView, setCurrentView] = useState('design-system');
+  // Active View State ('dashboard', 'design-system', or 'login')
+  const [currentView, setCurrentView] = useState('dashboard');
 
   // Form State
   const [identifier, setIdentifier] = useState('');
@@ -151,6 +152,13 @@ export default function App() {
       <div className="view-switcher-pill">
         <button
           type="button"
+          className={`switch-btn ${currentView === 'dashboard' ? 'active' : ''}`}
+          onClick={() => setCurrentView('dashboard')}
+        >
+          📊 Dashboard
+        </button>
+        <button
+          type="button"
           className={`switch-btn ${currentView === 'design-system' ? 'active' : ''}`}
           onClick={() => setCurrentView('design-system')}
         >
@@ -168,7 +176,12 @@ export default function App() {
       {/* Toast Notification */}
       {toastMessage && <div className="toast-notice">{toastMessage}</div>}
 
-      {currentView === 'design-system' ? (
+      {currentView === 'dashboard' ? (
+        <AdminDashboard
+          onNavigateToDesignSystem={() => setCurrentView('design-system')}
+          onNavigateToLogin={() => setCurrentView('login')}
+        />
+      ) : currentView === 'design-system' ? (
         <DesignSystem onNavigateToLogin={() => setCurrentView('login')} />
       ) : (
         <div className="app-viewport">
