@@ -35,12 +35,13 @@ import TradeRequirements from './TradeRequirements';
 import TraderDirectory from './TraderDirectory';
 import ContactUnlocks from './ContactUnlocks';
 import NewsContentCMS from './NewsContentCMS';
+import SubscriptionPlans from './SubscriptionPlans';
 import './AdminDashboard.css';
 
 export default function AdminDashboard({
   onNavigateToDesignSystem,
   onNavigateToLogin,
-  initialNav = 'News & Articles',
+  initialNav = 'Subscription Plans',
 }) {
   const [activeNav, setActiveNav] = useState(initialNav);
 
@@ -97,17 +98,10 @@ export default function AdminDashboard({
         { name: 'Users', icon: 'users' },
         { name: 'Traders', icon: 'traders' },
         { name: 'Subscribers', icon: 'subscribers' },
-        { name: 'Advertisers', icon: 'advertisers' },
-        { name: 'Roles & Permissions', icon: 'roles' },
-      ],
-    },
-    {
-      title: 'MONETISATION',
-      items: [
         { name: 'Subscription Plans', icon: 'plans' },
         { name: 'Payments', icon: 'payments' },
         { name: 'Advertisements', icon: 'ads' },
-        { name: 'Advertising Slots', icon: 'slots' },
+        { name: 'Roles & Permissions', icon: 'roles' },
       ],
     },
     {
@@ -206,7 +200,13 @@ export default function AdminDashboard({
                       {item.icon === 'subscribers' && <span>👑</span>}
                       {item.icon === 'advertisers' && <span>📢</span>}
                       {item.icon === 'roles' && <span>🛡</span>}
-                      {item.icon === 'plans' && <span>📋</span>}
+                      {item.icon === 'plans' && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="4" width="18" height="16" rx="2" />
+                          <circle cx="8" cy="10" r="2" />
+                          <path d="M14 9h4M14 13h4M5.5 16c0-1.5 1.5-2 2.5-2s2.5.5 2.5 2" />
+                        </svg>
+                      )}
                       {item.icon === 'payments' && <PaymentsIcon size={14} />}
                       {item.icon === 'ads' && <AdsIcon size={14} />}
                       {item.icon === 'slots' && <span>🎯</span>}
@@ -249,7 +249,9 @@ export default function AdminDashboard({
               type="text"
               className="dash-search-input"
               placeholder={
-                activeNav === 'News & Articles'
+                activeNav === 'Subscription Plans'
+                  ? 'Search subscribers, plans, transactions, trader name...'
+                  : activeNav === 'News & Articles'
                   ? 'Search news, keywords, author, category...'
                   : activeNav === 'Contact Unlocks'
                   ? 'Search traders, commodity, location, transaction ID...'
@@ -305,7 +307,9 @@ export default function AdminDashboard({
         <div className="dash-welcome-banner">
           <div className="dash-welcome-left">
             <h1 className="dash-welcome-title">
-              {activeNav === 'News & Articles'
+              {activeNav === 'Subscription Plans'
+                ? 'Subscription Management'
+                : activeNav === 'News & Articles'
                 ? 'News & Content CMS'
                 : activeNav === 'Contact Unlocks'
                 ? 'Contact Unlocks'
@@ -320,7 +324,9 @@ export default function AdminDashboard({
                     : 'Welcome Back, Admin 👋'}
             </h1>
             <p className="dash-welcome-subtitle">
-              {activeNav === 'News & Articles'
+              {activeNav === 'Subscription Plans'
+                ? 'Manage subscription plans, track payments, monitor renewals and grow your member base.'
+                : activeNav === 'News & Articles'
                 ? 'Create, manage and publish news, articles, government updates, global trade insights and multimedia content.'
                 : activeNav === 'Contact Unlocks'
                 ? 'Track and manage contact information access. Monitor usage, revenue and connect genuine traders.'
@@ -338,7 +344,9 @@ export default function AdminDashboard({
 
           <div className="dash-welcome-center">
             <span className="dash-welcome-quote">
-              {activeNav === 'News & Articles'
+              {activeNav === 'Subscription Plans'
+                ? '“Empowering Traders. Growing Together.”'
+                : activeNav === 'News & Articles'
                 ? '“Information Empowers Better Decisions.”'
                 : activeNav === 'Contact Unlocks'
                 ? '“Connections Create Stronger Markets.”'
@@ -360,10 +368,12 @@ export default function AdminDashboard({
         </div>
 
         {/* ==================================================================
-            Dashboard Content Container (News & Articles vs Contact Unlocks vs Trader Directory vs Trade Requirements vs Mandi vs Overview vs Dashboard)
+            Dashboard Content Container (Subscription Plans vs News & Articles vs Contact Unlocks vs Trader Directory vs Trade Requirements vs Mandi vs Overview vs Dashboard)
             ================================================================== */}
         <div className="dash-content-container">
-          {activeNav === 'News & Articles' ? (
+          {activeNav === 'Subscription Plans' ? (
+            <SubscriptionPlans />
+          ) : activeNav === 'News & Articles' ? (
             <NewsContentCMS />
           ) : activeNav === 'Contact Unlocks' ? (
             <ContactUnlocks />
