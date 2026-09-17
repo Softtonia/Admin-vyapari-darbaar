@@ -26,8 +26,8 @@ const LANGUAGES = [
 ];
 
 export default function App() {
-  // Active View State ('analytics', 'payments', 'ads', 'subscriptions', 'news-cms', 'contact-unlocks', 'trader-directory', 'buy-requirements', 'mandi-rates', 'market-overview', 'dashboard', 'design-system', or 'login')
-  const [currentView, setCurrentView] = useState('analytics');
+  // Active View State ('notifications', 'analytics', 'payments', 'ads', 'subscriptions', 'news-cms', 'contact-unlocks', 'trader-directory', 'buy-requirements', 'mandi-rates', 'market-overview', 'dashboard', 'design-system', or 'login')
+  const [currentView, setCurrentView] = useState('notifications');
 
   // Form State
   const [identifier, setIdentifier] = useState('');
@@ -152,6 +152,13 @@ export default function App() {
       <div className="view-switcher-pill">
         <button
           type="button"
+          className={`switch-btn ${currentView === 'notifications' ? 'active' : ''}`}
+          onClick={() => setCurrentView('notifications')}
+        >
+          🔔 Notifications
+        </button>
+        <button
+          type="button"
           className={`switch-btn ${currentView === 'analytics' ? 'active' : ''}`}
           onClick={() => setCurrentView('analytics')}
         >
@@ -246,7 +253,8 @@ export default function App() {
       {/* Toast Notification */}
       {toastMessage && <div className="toast-notice">{toastMessage}</div>}
 
-      {currentView === 'analytics' ||
+      {currentView === 'notifications' ||
+      currentView === 'analytics' ||
       currentView === 'payments' ||
       currentView === 'ads' ||
       currentView === 'subscriptions' ||
@@ -259,7 +267,9 @@ export default function App() {
       currentView === 'dashboard' ? (
         <AdminDashboard
           initialNav={
-            currentView === 'analytics'
+            currentView === 'notifications'
+              ? 'Notifications'
+              : currentView === 'analytics'
               ? 'Platform Analytics'
               : currentView === 'payments'
               ? 'Payments'

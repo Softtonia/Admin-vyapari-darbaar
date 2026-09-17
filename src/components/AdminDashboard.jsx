@@ -39,12 +39,13 @@ import SubscriptionPlans from './SubscriptionPlans';
 import AdvertisementManagement from './AdvertisementManagement';
 import PaymentsManagement from './PaymentsManagement';
 import PlatformAnalytics from './PlatformAnalytics';
+import NotificationManagement from './NotificationManagement';
 import './AdminDashboard.css';
 
 export default function AdminDashboard({
   onNavigateToDesignSystem,
   onNavigateToLogin,
-  initialNav = 'Platform Analytics',
+  initialNav = 'Notifications',
 }) {
   const [activeNav, setActiveNav] = useState(initialNav);
 
@@ -125,7 +126,7 @@ export default function AdminDashboard({
     {
       title: 'COMMUNICATION',
       items: [
-        { name: 'Notifications', icon: 'bell' },
+        { name: 'Notifications', icon: 'notif_search' },
         { name: 'WhatsApp / SMS', icon: 'whatsapp' },
         { name: 'Alert Campaigns', icon: 'campaigns' },
       ],
@@ -229,6 +230,7 @@ export default function AdminDashboard({
                       ) : item.icon.startsWith('analytics') ? (
                         <ReportsIcon size={14} />
                       ) : null}
+                      {item.icon === 'notif_search' && <SearchIcon size={14} />}
                       {item.icon === 'bell' && <BellIcon size={14} />}
                       {item.icon === 'whatsapp' && <span>💬</span>}
                       {item.icon === 'campaigns' && <span>⚡</span>}
@@ -267,7 +269,9 @@ export default function AdminDashboard({
               type="text"
               className="dash-search-input"
               placeholder={
-                activeNav === 'Platform Analytics'
+                activeNav === 'Notifications'
+                  ? 'Search notifications, users, title, message...'
+                  : activeNav === 'Platform Analytics'
                   ? 'Search traders, commodities, orders, subscriptions, ads...'
                   : activeNav === 'Payments'
                   ? 'Search transactions, order ID, trader name, plan, UPI ID...'
@@ -331,7 +335,9 @@ export default function AdminDashboard({
         <div className="dash-welcome-banner">
           <div className="dash-welcome-left">
             <h1 className="dash-welcome-title">
-              {activeNav === 'Platform Analytics'
+              {activeNav === 'Notifications'
+                ? 'Notifications'
+                : activeNav === 'Platform Analytics'
                 ? 'Analytics'
                 : activeNav === 'Payments'
                 ? 'Payments'
@@ -354,7 +360,9 @@ export default function AdminDashboard({
                     : 'Welcome Back, Admin 👋'}
             </h1>
             <p className="dash-welcome-subtitle">
-              {activeNav === 'Platform Analytics'
+              {activeNav === 'Notifications'
+                ? 'Create, manage and send notifications to keep your traders, subscribers and users informed.'
+                : activeNav === 'Platform Analytics'
                 ? 'Get real-time insights into platform performance, users, revenue, and market engagement.'
                 : activeNav === 'Payments'
                 ? 'Track and manage all payments, transactions, refunds and settlements across the platform.'
@@ -380,7 +388,9 @@ export default function AdminDashboard({
 
           <div className="dash-welcome-center">
             <span className="dash-welcome-quote">
-              {activeNav === 'Platform Analytics'
+              {activeNav === 'Notifications'
+                ? '“Right Information At the Right Time Builds a Stronger Market.”'
+                : activeNav === 'Platform Analytics'
                 ? '“Data Today. Better Decisions Tomorrow.”'
                 : activeNav === 'Payments'
                 ? '“Secure Payments. Stronger Trade Relationships.”'
@@ -410,10 +420,12 @@ export default function AdminDashboard({
         </div>
 
         {/* ==================================================================
-            Dashboard Content Container (Platform Analytics vs Payments vs Advertisements vs Subscription Plans vs News & Articles vs Contact Unlocks vs Trader Directory vs Trade Requirements vs Mandi vs Overview vs Dashboard)
+            Dashboard Content Container (Notifications vs Platform Analytics vs Payments vs Advertisements vs Subscription Plans vs News & Articles vs Contact Unlocks vs Trader Directory vs Trade Requirements vs Mandi vs Overview vs Dashboard)
             ================================================================== */}
         <div className="dash-content-container">
-          {activeNav === 'Platform Analytics' ? (
+          {activeNav === 'Notifications' ? (
+            <NotificationManagement />
+          ) : activeNav === 'Platform Analytics' ? (
             <PlatformAnalytics />
           ) : activeNav === 'Payments' ? (
             <PaymentsManagement />
