@@ -26,8 +26,8 @@ const LANGUAGES = [
 ];
 
 export default function App() {
-  // Active View State ('dashboard', 'design-system', or 'login')
-  const [currentView, setCurrentView] = useState('dashboard');
+  // Active View State ('market-overview', 'dashboard', 'design-system', or 'login')
+  const [currentView, setCurrentView] = useState('market-overview');
 
   // Form State
   const [identifier, setIdentifier] = useState('');
@@ -152,6 +152,13 @@ export default function App() {
       <div className="view-switcher-pill">
         <button
           type="button"
+          className={`switch-btn ${currentView === 'market-overview' ? 'active' : ''}`}
+          onClick={() => setCurrentView('market-overview')}
+        >
+          📈 Market Overview
+        </button>
+        <button
+          type="button"
           className={`switch-btn ${currentView === 'dashboard' ? 'active' : ''}`}
           onClick={() => setCurrentView('dashboard')}
         >
@@ -176,8 +183,9 @@ export default function App() {
       {/* Toast Notification */}
       {toastMessage && <div className="toast-notice">{toastMessage}</div>}
 
-      {currentView === 'dashboard' ? (
+      {currentView === 'market-overview' || currentView === 'dashboard' ? (
         <AdminDashboard
+          initialNav={currentView === 'market-overview' ? 'Market Overview' : 'Dashboard'}
           onNavigateToDesignSystem={() => setCurrentView('design-system')}
           onNavigateToLogin={() => setCurrentView('login')}
         />

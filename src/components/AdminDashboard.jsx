@@ -29,10 +29,22 @@ import {
   ChevronDownIcon,
   CheckIcon,
 } from './Icons';
+import MarketOverview from './MarketOverview';
 import './AdminDashboard.css';
 
-export default function AdminDashboard({ onNavigateToDesignSystem, onNavigateToLogin }) {
-  const [activeNav, setActiveNav] = useState('Dashboard');
+export default function AdminDashboard({
+  onNavigateToDesignSystem,
+  onNavigateToLogin,
+  initialNav = 'Market Overview',
+}) {
+  const [activeNav, setActiveNav] = useState(initialNav);
+
+  React.useEffect(() => {
+    if (initialNav) {
+      setActiveNav(initialNav);
+    }
+  }, [initialNav]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [requirementsFilter, setRequirementsFilter] = useState('Last 30 Days');
   const [userGrowthFilter, setUserGrowthFilter] = useState('Last 6 Months');
@@ -218,7 +230,11 @@ export default function AdminDashboard({ onNavigateToDesignSystem, onNavigateToL
             <input
               type="text"
               className="dash-search-input"
-              placeholder="Search here... (Commodity, Trader, News, etc.)"
+              placeholder={
+                activeNav === 'Market Overview'
+                  ? 'Search commodity, mandi, trader, news...'
+                  : 'Search here... (Commodity, Trader, News, etc.)'
+              }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -260,12 +276,22 @@ export default function AdminDashboard({ onNavigateToDesignSystem, onNavigateToL
         {/* Welcome Banner */}
         <div className="dash-welcome-banner">
           <div className="dash-welcome-left">
-            <h1 className="dash-welcome-title">Welcome Back, Admin 👋</h1>
-            <p className="dash-welcome-subtitle">Here's what's happening with Vyapari Darbaar today.</p>
+            <h1 className="dash-welcome-title">
+              {activeNav === 'Market Overview' ? 'Market Intelligence' : 'Welcome Back, Admin 👋'}
+            </h1>
+            <p className="dash-welcome-subtitle">
+              {activeNav === 'Market Overview'
+                ? 'Live commodity markets, mandi rates, exchange data and market insights.'
+                : "Here's what's happening with Vyapari Darbaar today."}
+            </p>
           </div>
 
           <div className="dash-welcome-center">
-            <span className="dash-welcome-quote">“Indian Commodities. Global Opportunities.”</span>
+            <span className="dash-welcome-quote">
+              {activeNav === 'Market Overview'
+                ? '“Real Markets. Real Opportunities.”'
+                : '“Indian Commodities. Global Opportunities.”'}
+            </span>
           </div>
 
           <div className="dash-welcome-right">
@@ -274,11 +300,15 @@ export default function AdminDashboard({ onNavigateToDesignSystem, onNavigateToL
         </div>
 
         {/* ==================================================================
-            Dashboard Content (Top grid with side column + Full-width bottom rows)
+            Dashboard Content Container (Market Overview vs General Dashboard)
             ================================================================== */}
         <div className="dash-content-container">
-          {/* Top Section: Main 3 rows + Right action column */}
-          <div className="dash-top-split-layout">
+          {activeNav === 'Market Overview' ? (
+            <MarketOverview />
+          ) : (
+            <>
+              {/* Top Section: Main 3 rows + Right action column */}
+              <div className="dash-top-split-layout">
             <div className="dash-top-left-area">
               {/* Row 1: 4 Large KPI Cards */}
               <div className="dash-kpi-row-4">
@@ -1053,7 +1083,9 @@ export default function AdminDashboard({ onNavigateToDesignSystem, onNavigateToL
               </div>
             </div>
           </div>
-        </div>
+        </>
+      )}
+    </div>
 
         {/* Global Bottom Bar */}
         <footer className="dash-global-footer">
