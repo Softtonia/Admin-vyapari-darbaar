@@ -38,12 +38,13 @@ import NewsContentCMS from './NewsContentCMS';
 import SubscriptionPlans from './SubscriptionPlans';
 import AdvertisementManagement from './AdvertisementManagement';
 import PaymentsManagement from './PaymentsManagement';
+import PlatformAnalytics from './PlatformAnalytics';
 import './AdminDashboard.css';
 
 export default function AdminDashboard({
   onNavigateToDesignSystem,
   onNavigateToLogin,
-  initialNav = 'Payments',
+  initialNav = 'Platform Analytics',
 }) {
   const [activeNav, setActiveNav] = useState(initialNav);
 
@@ -219,7 +220,15 @@ export default function AdminDashboard({
                       {item.icon === 'payments' && <PaymentsIcon size={14} />}
                       {item.icon === 'ads' && <AdsIcon size={14} />}
                       {item.icon === 'slots' && <span>🎯</span>}
-                      {item.icon.startsWith('analytics') && <ReportsIcon size={14} />}
+                      {item.icon === 'analytics1' ? (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="18" y1="20" x2="18" y2="10" />
+                          <line x1="12" y1="20" x2="12" y2="4" />
+                          <line x1="6" y1="20" x2="6" y2="14" />
+                        </svg>
+                      ) : item.icon.startsWith('analytics') ? (
+                        <ReportsIcon size={14} />
+                      ) : null}
                       {item.icon === 'bell' && <BellIcon size={14} />}
                       {item.icon === 'whatsapp' && <span>💬</span>}
                       {item.icon === 'campaigns' && <span>⚡</span>}
@@ -258,7 +267,9 @@ export default function AdminDashboard({
               type="text"
               className="dash-search-input"
               placeholder={
-                activeNav === 'Payments'
+                activeNav === 'Platform Analytics'
+                  ? 'Search traders, commodities, orders, subscriptions, ads...'
+                  : activeNav === 'Payments'
                   ? 'Search transactions, order ID, trader name, plan, UPI ID...'
                   : activeNav === 'Advertisements'
                   ? 'Search ads, advertisers, campaigns, slots...'
@@ -320,7 +331,9 @@ export default function AdminDashboard({
         <div className="dash-welcome-banner">
           <div className="dash-welcome-left">
             <h1 className="dash-welcome-title">
-              {activeNav === 'Payments'
+              {activeNav === 'Platform Analytics'
+                ? 'Analytics'
+                : activeNav === 'Payments'
                 ? 'Payments'
                 : activeNav === 'Advertisements'
                 ? 'Advertisement Management'
@@ -341,7 +354,9 @@ export default function AdminDashboard({
                     : 'Welcome Back, Admin 👋'}
             </h1>
             <p className="dash-welcome-subtitle">
-              {activeNav === 'Payments'
+              {activeNav === 'Platform Analytics'
+                ? 'Get real-time insights into platform performance, users, revenue, and market engagement.'
+                : activeNav === 'Payments'
                 ? 'Track and manage all payments, transactions, refunds and settlements across the platform.'
                 : activeNav === 'Advertisements'
                 ? 'Manage ad campaigns, banners, slots and revenue. Monetize your platform with trusted advertisers.'
@@ -365,7 +380,9 @@ export default function AdminDashboard({
 
           <div className="dash-welcome-center">
             <span className="dash-welcome-quote">
-              {activeNav === 'Payments'
+              {activeNav === 'Platform Analytics'
+                ? '“Data Today. Better Decisions Tomorrow.”'
+                : activeNav === 'Payments'
                 ? '“Secure Payments. Stronger Trade Relationships.”'
                 : activeNav === 'Advertisements'
                 ? '“Advertise Today. Reach Real Traders.”'
@@ -393,10 +410,12 @@ export default function AdminDashboard({
         </div>
 
         {/* ==================================================================
-            Dashboard Content Container (Payments vs Advertisements vs Subscription Plans vs News & Articles vs Contact Unlocks vs Trader Directory vs Trade Requirements vs Mandi vs Overview vs Dashboard)
+            Dashboard Content Container (Platform Analytics vs Payments vs Advertisements vs Subscription Plans vs News & Articles vs Contact Unlocks vs Trader Directory vs Trade Requirements vs Mandi vs Overview vs Dashboard)
             ================================================================== */}
         <div className="dash-content-container">
-          {activeNav === 'Payments' ? (
+          {activeNav === 'Platform Analytics' ? (
+            <PlatformAnalytics />
+          ) : activeNav === 'Payments' ? (
             <PaymentsManagement />
           ) : activeNav === 'Advertisements' ? (
             <AdvertisementManagement />
