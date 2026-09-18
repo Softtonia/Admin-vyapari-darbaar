@@ -20,6 +20,8 @@ export default function App() {
         <Route path="/dashboard" element={<AdminDashboard initialNav="Dashboard" />} />
         <Route path="/market-overview" element={<AdminDashboard initialNav="Market Overview" />} />
         <Route path="/commodity-prices" element={<AdminDashboard initialNav="Commodity Prices" />} />
+        <Route path="/all-commodities" element={<AdminDashboard initialNav="All Commodities" />} />
+        <Route path="/add-commodity" element={<AdminDashboard initialNav="Add Commodity" />} />
         <Route path="/mandi-rates" element={<AdminDashboard initialNav="Mandi Rates" />} />
         <Route path="/buy-requirements" element={<AdminDashboard initialNav="Buy Requirements" />} />
         <Route path="/trader-directory" element={<AdminDashboard initialNav="Trader Directory" />} />

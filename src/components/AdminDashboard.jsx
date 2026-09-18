@@ -45,6 +45,8 @@ import WebsiteHomepageCMS from './WebsiteHomepageCMS';
 import RolesPermissions from './RolesPermissions';
 import SystemSettingsAudit from './SystemSettingsAudit';
 import CommodityPrices from './CommodityPrices';
+import AllCommodities from './AllCommodities';
+import AddCommodity from './AddCommodity';
 import './AdminDashboard.css';
 
 // Routes implemented strictly for the modules worked on so far
@@ -52,6 +54,8 @@ export const ROUTE_MAP = {
   'Dashboard': '/dashboard',
   'Market Overview': '/market-overview',
   'Commodity Prices': '/commodity-prices',
+  'All Commodities': '/all-commodities',
+  'Add Commodity': '/add-commodity',
   'Mandi Rates': '/mandi-rates',
   'Buy Requirements': '/buy-requirements',
   'Trader Directory': '/trader-directory',
@@ -73,6 +77,8 @@ export const PATH_TO_NAV = {
   '/dashboard': 'Dashboard',
   '/market-overview': 'Market Overview',
   '/commodity-prices': 'Commodity Prices',
+  '/all-commodities': 'All Commodities',
+  '/add-commodity': 'Add Commodity',
   '/mandi-rates': 'Mandi Rates',
   '/buy-requirements': 'Buy Requirements',
   '/trader-directory': 'Trader Directory',
@@ -239,7 +245,10 @@ export default function AdminDashboard({
                 <div className="dash-nav-section-title">{section.title}</div>
               )}
               {section.items.map((item, iIdx) => {
-                const isActive = activeNav === item.name;
+                const isActive =
+                  activeNav === item.name ||
+                  (item.name === 'Commodity Prices' &&
+                    (activeNav === 'All Commodities' || activeNav === 'Add Commodity'));
                 return (
                   <button
                     key={iIdx}
@@ -391,8 +400,10 @@ export default function AdminDashboard({
                   ? 'Search traders, company name, email, mobile, location...'
                   : activeNav === 'Buy Requirements'
                   ? 'Search trade requirements, trader, commodity...'
-                  : activeNav === 'Commodity Prices'
-                    ? 'Search commodities, mandis, traders, news...'
+                  : activeNav === 'Add Commodity'
+                  ? 'Search commodities, mandis, traders, news...'
+                  : activeNav === 'Commodity Prices' || activeNav === 'All Commodities'
+                    ? 'Search commodities, mandis, states, varieties...'
                     : activeNav === 'Mandi Rates'
                     ? 'Search commodity, mandi, state...'
                     : activeNav === 'Market Overview'
@@ -438,121 +449,123 @@ export default function AdminDashboard({
         </header>
 
         {/* Welcome Banner */}
-        <div className="dash-welcome-banner">
-          <div className="dash-welcome-left">
-            <h1 className="dash-welcome-title">
-              {activeNav === 'System Settings' || activeNav === 'Audit Logs'
-                ? 'System Settings / Audit Logs'
-                : activeNav === 'Roles & Permissions'
-                ? 'Roles & Permissions'
-                : activeNav === 'Homepage'
-                ? 'Website / Homepage CMS'
-                : activeNav === 'Notifications'
-                ? 'Notifications'
-                : activeNav === 'Platform Analytics'
-                ? 'Analytics'
-                : activeNav === 'Payments'
-                ? 'Payments'
-                : activeNav === 'Advertisements'
-                ? 'Advertisement Management'
-                : activeNav === 'Subscription Plans'
-                ? 'Subscription Management'
-                : activeNav === 'News & Articles'
-                ? 'News & Content CMS'
-                : activeNav === 'Contact Unlocks'
-                ? 'Contact Unlocks'
-                : activeNav === 'Trader Directory'
-                ? 'Trader Management'
-                : activeNav === 'Buy Requirements'
-                ? 'Trade Requirements'
-                : activeNav === 'Commodity Prices'
-                  ? 'Commodity Prices'
-                  : activeNav === 'Mandi Rates'
-                  ? 'Mandi Rates'
-                  : activeNav === 'Market Overview'
-                    ? 'Market Intelligence'
-                    : 'Welcome Back, Admin 👋'}
-            </h1>
-            <p className="dash-welcome-subtitle">
-              {activeNav === 'System Settings' || activeNav === 'Audit Logs'
-                ? 'Configure platform settings and monitor all system activities for complete transparency and security.'
-                : activeNav === 'Roles & Permissions'
-                ? 'Manage user roles, permissions and access control for the entire platform.'
-                : activeNav === 'Homepage'
-                ? 'Manage your website content, design and homepage sections. Update banners, text, images and more in real-time.'
-                : activeNav === 'Notifications'
-                ? 'Create, manage and send notifications to keep your traders, subscribers and users informed.'
-                : activeNav === 'Platform Analytics'
-                ? 'Get real-time insights into platform performance, users, revenue, and market engagement.'
-                : activeNav === 'Payments'
-                ? 'Track and manage all payments, transactions, refunds and settlements across the platform.'
-                : activeNav === 'Advertisements'
-                ? 'Manage ad campaigns, banners, slots and revenue. Monetize your platform with trusted advertisers.'
-                : activeNav === 'Subscription Plans'
-                ? 'Manage subscription plans, track payments, monitor renewals and grow your member base.'
-                : activeNav === 'News & Articles'
-                ? 'Create, manage and publish news, articles, government updates, global trade insights and multimedia content.'
-                : activeNav === 'Contact Unlocks'
-                ? 'Track and manage contact information access. Monitor usage, revenue and connect genuine traders.'
-                : activeNav === 'Trader Directory'
-                ? 'Manage traders, verify profiles, monitor activity, and grow a trusted trading community.'
-                : activeNav === 'Buy Requirements'
-                ? 'Manage buy and sell requirements. Connect traders. Grow Indian trade.'
-                : activeNav === 'Commodity Prices'
-                  ? 'Real-time and historical prices of agricultural commodities across major mandis in India.'
-                  : activeNav === 'Mandi Rates'
-                  ? 'Get latest mandi rates from across India. Compare prices, track trends and make better business decisions.'
-                  : activeNav === 'Market Overview'
-                    ? 'Live commodity markets, mandi rates, exchange data and market insights.'
-                    : "Here's what's happening with Vyapari Darbaar today."}
-            </p>
-          </div>
+        {activeNav !== 'Add Commodity' && activeNav !== 'All Commodities' && (
+          <div className="dash-welcome-banner">
+            <div className="dash-welcome-left">
+              <h1 className="dash-welcome-title">
+                {activeNav === 'System Settings' || activeNav === 'Audit Logs'
+                  ? 'System Settings / Audit Logs'
+                  : activeNav === 'Roles & Permissions'
+                  ? 'Roles & Permissions'
+                  : activeNav === 'Homepage'
+                  ? 'Website / Homepage CMS'
+                  : activeNav === 'Notifications'
+                  ? 'Notifications'
+                  : activeNav === 'Platform Analytics'
+                  ? 'Analytics'
+                  : activeNav === 'Payments'
+                  ? 'Payments'
+                  : activeNav === 'Advertisements'
+                  ? 'Advertisement Management'
+                  : activeNav === 'Subscription Plans'
+                  ? 'Subscription Management'
+                  : activeNav === 'News & Articles'
+                  ? 'News & Content CMS'
+                  : activeNav === 'Contact Unlocks'
+                  ? 'Contact Unlocks'
+                  : activeNav === 'Trader Directory'
+                  ? 'Trader Management'
+                  : activeNav === 'Buy Requirements'
+                  ? 'Trade Requirements'
+                  : activeNav === 'Commodity Prices'
+                    ? 'Commodity Prices'
+                    : activeNav === 'Mandi Rates'
+                    ? 'Mandi Rates'
+                    : activeNav === 'Market Overview'
+                      ? 'Market Intelligence'
+                      : 'Welcome Back, Admin 👋'}
+              </h1>
+              <p className="dash-welcome-subtitle">
+                {activeNav === 'System Settings' || activeNav === 'Audit Logs'
+                  ? 'Configure platform settings and monitor all system activities for complete transparency and security.'
+                  : activeNav === 'Roles & Permissions'
+                  ? 'Manage user roles, permissions and access control for the entire platform.'
+                  : activeNav === 'Homepage'
+                  ? 'Manage your website content, design and homepage sections. Update banners, text, images and more in real-time.'
+                  : activeNav === 'Notifications'
+                  ? 'Create, manage and send notifications to keep your traders, subscribers and users informed.'
+                  : activeNav === 'Platform Analytics'
+                  ? 'Get real-time insights into platform performance, users, revenue, and market engagement.'
+                  : activeNav === 'Payments'
+                  ? 'Track and manage all payments, transactions, refunds and settlements across the platform.'
+                  : activeNav === 'Advertisements'
+                  ? 'Manage ad campaigns, banners, slots and revenue. Monetize your platform with trusted advertisers.'
+                  : activeNav === 'Subscription Plans'
+                  ? 'Manage subscription plans, track payments, monitor renewals and grow your member base.'
+                  : activeNav === 'News & Articles'
+                  ? 'Create, manage and publish news, articles, government updates, global trade insights and multimedia content.'
+                  : activeNav === 'Contact Unlocks'
+                  ? 'Track and manage contact information access. Monitor usage, revenue and connect genuine traders.'
+                  : activeNav === 'Trader Directory'
+                  ? 'Manage traders, verify profiles, monitor activity, and grow a trusted trading community.'
+                  : activeNav === 'Buy Requirements'
+                  ? 'Manage buy and sell requirements. Connect traders. Grow Indian trade.'
+                  : activeNav === 'Commodity Prices'
+                    ? 'Real-time and historical prices of agricultural commodities across major mandis in India.'
+                    : activeNav === 'Mandi Rates'
+                    ? 'Get latest mandi rates from across India. Compare prices, track trends and make better business decisions.'
+                    : activeNav === 'Market Overview'
+                      ? 'Live commodity markets, mandi rates, exchange data and market insights.'
+                      : "Here's what's happening with Vyapari Darbaar today."}
+              </p>
+            </div>
 
-          <div className="dash-welcome-center">
-            <span className="dash-welcome-quote">
-              {activeNav === 'System Settings' || activeNav === 'Audit Logs' ? (
-                <>“Transparent Systems<br />Build Greater Trust.”</>
-              ) : activeNav === 'Roles & Permissions' ? (
-                <>“Right People<br />Right Access<br />A Stronger Platform.”</>
-              ) : activeNav === 'Homepage'
-                ? '“A Stronger Trading Community A Brighter Bharat.”'
-                : activeNav === 'Notifications'
-                ? '“Right Information At the Right Time Builds a Stronger Market.”'
-                : activeNav === 'Platform Analytics'
-                ? '“Data Today. Better Decisions Tomorrow.”'
-                : activeNav === 'Payments'
-                ? '“Secure Payments. Stronger Trade Relationships.”'
-                : activeNav === 'Advertisements'
-                ? '“Advertise Today. Reach Real Traders.”'
-                : activeNav === 'Subscription Plans'
-                ? '“Empowering Traders. Growing Together.”'
-                : activeNav === 'News & Articles'
-                ? '“Information Empowers Better Decisions.”'
-                : activeNav === 'Contact Unlocks'
-                ? '“Connections Create Stronger Markets.”'
-                : activeNav === 'Trader Directory'
-                ? '“Trusted Traders. Stronger Markets.”'
-                : activeNav === 'Buy Requirements'
-                ? '“Real Traders. Real Opportunities.”'
-                : activeNav === 'Commodity Prices' ? (
-                  <>“Better Market<br />Information<br />Stronger Farmers<br />A Prosperous Bharat.”</>
-                ) : activeNav === 'Mandi Rates'
-                  ? '“From Every Mandi To A Stronger Bharat”'
-                  : activeNav === 'Market Overview'
-                    ? '“Real Markets. Real Opportunities.”'
-                    : '“Indian Commodities. Global Opportunities.”'}
-            </span>
-          </div>
+            <div className="dash-welcome-center">
+              <span className="dash-welcome-quote">
+                {activeNav === 'System Settings' || activeNav === 'Audit Logs' ? (
+                  <>“Transparent Systems<br />Build Greater Trust.”</>
+                ) : activeNav === 'Roles & Permissions' ? (
+                  <>“Right People<br />Right Access<br />A Stronger Platform.”</>
+                ) : activeNav === 'Homepage'
+                  ? '“A Stronger Trading Community A Brighter Bharat.”'
+                  : activeNav === 'Notifications'
+                  ? '“Right Information At the Right Time Builds a Stronger Market.”'
+                  : activeNav === 'Platform Analytics'
+                  ? '“Data Today. Better Decisions Tomorrow.”'
+                  : activeNav === 'Payments'
+                  ? '“Secure Payments. Stronger Trade Relationships.”'
+                  : activeNav === 'Advertisements'
+                  ? '“Advertise Today. Reach Real Traders.”'
+                  : activeNav === 'Subscription Plans'
+                  ? '“Empowering Traders. Growing Together.”'
+                  : activeNav === 'News & Articles'
+                  ? '“Information Empowers Better Decisions.”'
+                  : activeNav === 'Contact Unlocks'
+                  ? '“Connections Create Stronger Markets.”'
+                  : activeNav === 'Trader Directory'
+                  ? '“Trusted Traders. Stronger Markets.”'
+                  : activeNav === 'Buy Requirements'
+                  ? '“Real Traders. Real Opportunities.”'
+                  : activeNav === 'Commodity Prices' ? (
+                    <>“Better Market<br />Information<br />Stronger Farmers<br />A Prosperous Bharat.”</>
+                  ) : activeNav === 'Mandi Rates'
+                    ? '“From Every Mandi To A Stronger Bharat”'
+                    : activeNav === 'Market Overview'
+                      ? '“Real Markets. Real Opportunities.”'
+                      : '“Indian Commodities. Global Opportunities.”'}
+              </span>
+            </div>
 
-          <div className="dash-welcome-right">
-            <img src={welcomeBgImg} alt="" className="dash-welcome-sketch" />
+            <div className="dash-welcome-right">
+              <img src={welcomeBgImg} alt="" className="dash-welcome-sketch" />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ==================================================================
             Dashboard Content Container (Notifications vs Platform Analytics vs Payments vs Advertisements vs Subscription Plans vs News & Articles vs Contact Unlocks vs Trader Directory vs Trade Requirements vs Mandi vs Overview vs Dashboard)
             ================================================================== */}
-        <div className="dash-content-container">
+        <div className={`dash-content-container ${activeNav === 'Add Commodity' || activeNav === 'All Commodities' ? 'flush-content' : ''}`}>
           {activeNav === 'System Settings' || activeNav === 'Audit Logs' ? (
             <SystemSettingsAudit />
           ) : activeNav === 'Roles & Permissions' ? (
@@ -577,8 +590,15 @@ export default function AdminDashboard({
             <TraderDirectory />
           ) : activeNav === 'Buy Requirements' ? (
             <TradeRequirements />
+          ) : activeNav === 'Add Commodity' ? (
+            <AddCommodity onBack={() => handleNavClick('All Commodities')} />
+          ) : activeNav === 'All Commodities' ? (
+            <AllCommodities
+              onNavigateToAdd={() => handleNavClick('Add Commodity')}
+              onBackToPrices={() => handleNavClick('Commodity Prices')}
+            />
           ) : activeNav === 'Commodity Prices' ? (
-            <CommodityPrices />
+            <CommodityPrices onNavigateToAllCommodities={() => handleNavClick('All Commodities')} />
           ) : activeNav === 'Mandi Rates' ? (
             <MandiRates />
           ) : activeNav === 'Market Overview' ? (

@@ -11,7 +11,7 @@ import commSugar from '../assets/comm_sugar.png';
 import commTur from '../assets/comm_tur.png';
 import './CommodityPrices.css';
 
-export default function CommodityPrices() {
+export default function CommodityPrices({ onNavigateToAllCommodities }) {
   const [timeRange, setTimeRange] = useState('1M');
   const [searchCommodity, setSearchCommodity] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All Categories');
@@ -224,7 +224,12 @@ export default function CommodityPrices() {
         ))}
 
         {/* View All Action Card */}
-        <div className="comm-ticker-action-card">
+        <div
+          className="comm-ticker-action-card"
+          onClick={onNavigateToAllCommodities}
+          style={{ cursor: 'pointer' }}
+          title="View All Commodities"
+        >
           <div className="action-grid-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#026544" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="3" width="7" height="7" rx="1.5" />
