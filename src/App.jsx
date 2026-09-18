@@ -24,6 +24,16 @@ export default function App() {
             }
           />
 
+          {/* Reset Password Routes (from email link) */}
+          <Route
+            path="/admin/reset-password"
+            element={<LoginPortal />}
+          />
+          <Route
+            path="/reset-password"
+            element={<LoginPortal />}
+          />
+
           <Route
             path="/design-system"
             element={

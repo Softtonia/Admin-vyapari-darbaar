@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import leftBannerImg from '../assets/left_banner_clean.png';
 import {
   UserIcon,
@@ -27,6 +27,8 @@ const LANGUAGES = [
 
 export default function LoginPortal() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { login, forgotPassword, resetPassword } = useAdminAuth();
 
   // Form State
@@ -59,6 +61,26 @@ export default function LoginPortal() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isForgotSubmitting, setIsForgotSubmitting] = useState(false);
+  const [isTokenFromUrl, setIsTokenFromUrl] = useState(false);
+
+  // Auto-detect reset password token and email from URL (e.g. from email reset link)
+  useEffect(() => {
+    const tokenParam = searchParams.get('token');
+    const emailParam = searchParams.get('email');
+    const isResetPath = location.pathname.includes('reset-password');
+
+    if (tokenParam || emailParam || isResetPath) {
+      if (tokenParam) {
+        setResetToken(tokenParam);
+        setIsTokenFromUrl(true);
+      }
+      if (emailParam) {
+        setForgotEmail(decodeURIComponent(emailParam));
+      }
+      setForgotStep(2);
+      setShowForgotModal(true);
+    }
+  }, [searchParams, location.pathname]);
 
   // Close language dropdown when clicking outside
   useEffect(() => {
@@ -130,6 +152,13 @@ export default function LoginPortal() {
     }
   };
 
+  const handleCloseForgotModal = () => {
+    setShowForgotModal(false);
+    if (location.pathname.includes('reset-password')) {
+      navigate('/login', { replace: true });
+    }
+  };
+
   const handleResetPasswordSubmit = async (e) => {
     e.preventDefault();
     if (!resetToken || !newPassword || !confirmPassword) {
@@ -153,8 +182,10 @@ export default function LoginPortal() {
       setForgotStep(1);
       setPassword('');
       setResetToken('');
+      setIsTokenFromUrl(false);
+      navigate('/login', { replace: true });
     } catch (err) {
-      showToast(err.message || 'Failed to reset password. The reset token may be invalid.');
+      showToast(err.message || 'Failed to reset password. The reset token may be invalid or expired.');
     } finally {
       setIsForgotSubmitting(false);
     }
@@ -521,7 +552,7 @@ export default function LoginPortal() {
 
       {/* Forgot / Reset Password Modal */}
       {showForgotModal && (
-        <div className="portal-modal-overlay" onClick={() => setShowForgotModal(false)}>
+        <div className="portal-modal-overlay" onClick={handleCloseForgotModal}>
           <div className="portal-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="portal-modal-header">
               <div className="portal-modal-title-box">
@@ -531,13 +562,13 @@ export default function LoginPortal() {
                 <p className="portal-modal-subtitle">
                   {forgotStep === 1
                     ? 'Enter your registered admin email address. We will send you instructions to reset your password.'
-                    : 'Enter the reset token received via email along with your new password.'}
+                    : 'Enter your new password below to reset your admin account credentials.'}
                 </p>
               </div>
               <button
                 type="button"
                 className="portal-modal-close-btn"
-                onClick={() => setShowForgotModal(false)}
+                onClick={handleCloseForgotModal}
               >
                 ✕
               </button>
@@ -570,7 +601,7 @@ export default function LoginPortal() {
                   <button
                     type="button"
                     className="btn-modal-cancel"
-                    onClick={() => setShowForgotModal(false)}
+                    onClick={handleCloseForgotModal}
                   >
                     Cancel
                   </button>
@@ -596,6 +627,27 @@ export default function LoginPortal() {
               </form>
             ) : (
               <form onSubmit={handleResetPasswordSubmit} className="portal-modal-form">
+                {isTokenFromUrl && (
+                  <div
+                    style={{
+                      backgroundColor: '#ecfdf5',
+                      border: '1px solid #6ee7b7',
+                      borderRadius: '8px',
+                      padding: '10px 14px',
+                      marginBottom: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      fontSize: '13px',
+                      color: '#065f46',
+                      fontWeight: 500,
+                    }}
+                  >
+                    <span style={{ fontSize: '16px' }}>✓</span>
+                    <span>Reset link verified. Set your new admin password below.</span>
+                  </div>
+                )}
+
                 <div className="form-group">
                   <label className="form-label" htmlFor="reset-token">
                     Reset Token <span className="required-star">*</span>
@@ -607,6 +659,8 @@ export default function LoginPortal() {
                     placeholder="Paste the reset token here"
                     value={resetToken}
                     onChange={(e) => setResetToken(e.target.value)}
+                    readOnly={isTokenFromUrl}
+                    style={isTokenFromUrl ? { backgroundColor: '#f8fafc', color: '#475569', cursor: 'default' } : {}}
                     required
                   />
                 </div>
@@ -622,6 +676,8 @@ export default function LoginPortal() {
                     placeholder="admin@example.com"
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
+                    readOnly={isTokenFromUrl}
+                    style={isTokenFromUrl ? { backgroundColor: '#f8fafc', color: '#475569', cursor: 'default' } : {}}
                     required
                   />
                 </div>
@@ -638,6 +694,7 @@ export default function LoginPortal() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
+                    autoFocus={isTokenFromUrl}
                   />
                 </div>
 
@@ -660,9 +717,9 @@ export default function LoginPortal() {
                   <button
                     type="button"
                     className="btn-modal-cancel"
-                    onClick={() => setForgotStep(1)}
+                    onClick={isTokenFromUrl ? handleCloseForgotModal : () => setForgotStep(1)}
                   >
-                    ← Back
+                    {isTokenFromUrl ? 'Cancel' : '← Back'}
                   </button>
                   <button
                     type="submit"
