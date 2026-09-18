@@ -47,6 +47,7 @@ import SystemSettingsAudit from './SystemSettingsAudit';
 import CommodityPrices from './CommodityPrices';
 import AllCommodities from './AllCommodities';
 import AddCommodity from './AddCommodity';
+import { useAdminAuth } from '../context/AdminAuthContext';
 import './AdminDashboard.css';
 
 // Routes implemented strictly for the modules worked on so far
@@ -107,6 +108,11 @@ export default function AdminDashboard({
   const [activeNav, setActiveNav] = useState(navFromPath || initialNav || 'Dashboard');
   const activeItemRef = useRef(null);
 
+  // Admin Auth Context
+  const { admin, logout } = useAdminAuth();
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef(null);
+
   useEffect(() => {
     if (navFromPath) {
       setActiveNav(navFromPath);
@@ -129,6 +135,21 @@ export default function AdminDashboard({
       activeItemRef.current.scrollIntoView({ block: 'center', behavior: 'auto' });
     }
   }, [activeNav]);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
+        setIsProfileMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   const [searchQuery, setSearchQuery] = useState('');
   const [requirementsFilter, setRequirementsFilter] = useState('Last 30 Days');
@@ -437,13 +458,44 @@ export default function AdminDashboard({
             </a>
 
             {/* Admin Profile */}
-            <div className="dash-admin-profile">
+            <div
+              className="dash-admin-profile"
+              ref={profileMenuRef}
+              onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+              style={{ position: 'relative', cursor: 'pointer' }}
+            >
               <img src={adminAvatarImg} alt="Admin" className="dash-avatar-img" />
               <div className="dash-admin-meta">
-                <span className="dash-admin-name">Admin</span>
-                <span className="dash-admin-role">Super Administrator</span>
+                <span className="dash-admin-name">{admin?.name || admin?.username || 'Admin'}</span>
+                <span className="dash-admin-role">{admin?.role?.name || admin?.role || 'Super Administrator'}</span>
               </div>
               <ChevronDownIcon size={12} color="#6b7280" />
+
+              {isProfileMenuOpen && (
+                <div
+                  className="admin-profile-dropdown"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="dropdown-user-header">
+                    <span className="dropdown-user-name">{admin?.name || admin?.username || 'Admin'}</span>
+                    <span className="dropdown-user-email">{admin?.email || 'admin@example.com'}</span>
+                    <span className="dropdown-user-badge">{admin?.role?.name || admin?.role || 'Super Administrator'}</span>
+                  </div>
+                  <div className="dropdown-divider" />
+                  <button
+                    type="button"
+                    className="dropdown-action-btn logout-btn"
+                    onClick={handleLogout}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <polyline points="16 17 21 12 16 7" />
+                      <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    <span>Logout</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>

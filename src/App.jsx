@@ -3,11 +3,13 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AdminDashboard from './components/AdminDashboard';
 import LoginPortal from './components/LoginPortal';
 import DesignSystem from './components/DesignSystem';
+import { AdminAuthProvider } from './context/AdminAuthContext';
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <AdminAuthProvider>
+        <Routes>
         {/* Auth & Standalone Routes */}
         <Route path="/login" element={<LoginPortal />} />
         <Route
@@ -40,6 +42,7 @@ export default function App() {
         {/* Fallback for undefined routes */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+      </AdminAuthProvider>
     </BrowserRouter>
   );
 }

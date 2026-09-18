@@ -15,6 +15,7 @@ import {
   ChevronDownIcon,
   FiligreeDivider,
 } from './Icons';
+import { useAdminAuth } from '../context/AdminAuthContext';
 import '../App.css';
 
 const LANGUAGES = [
@@ -26,6 +27,7 @@ const LANGUAGES = [
 
 export default function LoginPortal() {
   const navigate = useNavigate();
+  const { login, forgotPassword, resetPassword } = useAdminAuth();
 
   // Form State
   const [identifier, setIdentifier] = useState('');
@@ -48,6 +50,15 @@ export default function LoginPortal() {
   // UI State
   const [isLoading, setIsLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+
+  // Forgot Password Modal State
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotStep, setForgotStep] = useState(1);
+  const [resetToken, setResetToken] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isForgotSubmitting, setIsForgotSubmitting] = useState(false);
 
   // Close language dropdown when clicking outside
   useEffect(() => {
@@ -77,21 +88,76 @@ export default function LoginPortal() {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage('');
-    }, 3500);
+    }, 4500);
   };
 
-  const handlePasswordLogin = (e) => {
+  const handlePasswordLogin = async (e) => {
     e.preventDefault();
     if (!identifier || !password) {
-      showToast('Please enter both Email/Mobile and Password.');
+      showToast('Please enter both Email and Password.');
       return;
     }
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await login(identifier, password, 'Vyapari Darbaar Admin Web');
+      showToast(res?.message || 'Login successful! Redirecting to Dashboard...');
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 600);
+    } catch (err) {
+      const errMsg = err.message || 'Invalid credentials or login failed. Please try again.';
+      showToast(errMsg);
+    } finally {
       setIsLoading(false);
-      showToast(`Welcome back! Authenticating ${identifier}...`);
-      navigate('/dashboard');
-    }, 800);
+    }
+  };
+
+  const handleForgotPasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (!forgotEmail) {
+      showToast('Please enter your admin email address.');
+      return;
+    }
+    setIsForgotSubmitting(true);
+    try {
+      const res = await forgotPassword(forgotEmail);
+      showToast(res?.message || 'Password reset instructions sent to your email.');
+      setForgotStep(2);
+    } catch (err) {
+      showToast(err.message || 'Failed to send reset link. Please verify the email address.');
+    } finally {
+      setIsForgotSubmitting(false);
+    }
+  };
+
+  const handleResetPasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (!resetToken || !newPassword || !confirmPassword) {
+      showToast('Please fill in all reset fields.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showToast('Passwords do not match.');
+      return;
+    }
+    setIsForgotSubmitting(true);
+    try {
+      const res = await resetPassword({
+        token: resetToken,
+        email: forgotEmail,
+        password: newPassword,
+        password_confirmation: confirmPassword,
+      });
+      showToast(res?.message || 'Password reset successfully! You can now log in.');
+      setShowForgotModal(false);
+      setForgotStep(1);
+      setPassword('');
+      setResetToken('');
+    } catch (err) {
+      showToast(err.message || 'Failed to reset password. The reset token may be invalid.');
+    } finally {
+      setIsForgotSubmitting(false);
+    }
   };
 
   const handleOtpChange = (index, value) => {
@@ -294,7 +360,9 @@ export default function LoginPortal() {
                       href="#forgot"
                       onClick={(e) => {
                         e.preventDefault();
-                        showToast('Password reset link sent to your registered contact.');
+                        setForgotEmail(identifier || '');
+                        setForgotStep(1);
+                        setShowForgotModal(true);
                       }}
                       className="forgot-link"
                     >
@@ -450,6 +518,165 @@ export default function LoginPortal() {
           </footer>
         </main>
       </div>
+
+      {/* Forgot / Reset Password Modal */}
+      {showForgotModal && (
+        <div className="portal-modal-overlay" onClick={() => setShowForgotModal(false)}>
+          <div className="portal-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="portal-modal-header">
+              <div className="portal-modal-title-box">
+                <h3 className="portal-modal-title">
+                  {forgotStep === 1 ? 'Forgot Admin Password' : 'Reset Admin Password'}
+                </h3>
+                <p className="portal-modal-subtitle">
+                  {forgotStep === 1
+                    ? 'Enter your registered admin email address. We will send you instructions to reset your password.'
+                    : 'Enter the reset token received via email along with your new password.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="portal-modal-close-btn"
+                onClick={() => setShowForgotModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            {forgotStep === 1 ? (
+              <form onSubmit={handleForgotPasswordSubmit} className="portal-modal-form">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="forgot-email">
+                    Admin Email Address <span className="required-star">*</span>
+                  </label>
+                  <div className="input-with-icon">
+                    <span className="input-icon-left">
+                      <UserIcon size={18} color="#6b7280" />
+                    </span>
+                    <input
+                      id="forgot-email"
+                      type="email"
+                      className="form-input"
+                      placeholder="admin@example.com"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      required
+                      autoFocus
+                    />
+                  </div>
+                </div>
+
+                <div className="portal-modal-actions">
+                  <button
+                    type="button"
+                    className="btn-modal-cancel"
+                    onClick={() => setShowForgotModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-modal-submit"
+                    disabled={isForgotSubmitting}
+                  >
+                    {isForgotSubmitting ? 'Sending Request...' : 'Send Reset Link'}
+                  </button>
+                </div>
+
+                <div className="portal-modal-switch">
+                  <span>Already received a reset token? </span>
+                  <button
+                    type="button"
+                    className="modal-link-btn"
+                    onClick={() => setForgotStep(2)}
+                  >
+                    Enter Token &amp; Reset Password
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleResetPasswordSubmit} className="portal-modal-form">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="reset-token">
+                    Reset Token <span className="required-star">*</span>
+                  </label>
+                  <input
+                    id="reset-token"
+                    type="text"
+                    className="form-input no-icon"
+                    placeholder="Paste the reset token here"
+                    value={resetToken}
+                    onChange={(e) => setResetToken(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="reset-email">
+                    Admin Email <span className="required-star">*</span>
+                  </label>
+                  <input
+                    id="reset-email"
+                    type="email"
+                    className="form-input no-icon"
+                    placeholder="admin@example.com"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="new-password">
+                    New Password <span className="required-star">*</span>
+                  </label>
+                  <input
+                    id="new-password"
+                    type="password"
+                    className="form-input no-icon"
+                    placeholder="Enter new strong password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="confirm-password">
+                    Confirm New Password <span className="required-star">*</span>
+                  </label>
+                  <input
+                    id="confirm-password"
+                    type="password"
+                    className="form-input no-icon"
+                    placeholder="Re-enter new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="portal-modal-actions">
+                  <button
+                    type="button"
+                    className="btn-modal-cancel"
+                    onClick={() => setForgotStep(1)}
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-modal-submit"
+                    disabled={isForgotSubmitting}
+                  >
+                    {isForgotSubmitting ? 'Resetting Password...' : 'Reset Password'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }
