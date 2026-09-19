@@ -307,9 +307,12 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
     if (!res) return [];
     if (Array.isArray(res)) return res;
     if (Array.isArray(res.data)) return res.data;
+    if (res.data && Array.isArray(res.data.items)) return res.data.items;
     if (res.data && Array.isArray(res.data.data)) return res.data.data;
     if (res.data && Array.isArray(res.data.commodities)) return res.data.commodities;
+    if (Array.isArray(res.items)) return res.items;
     if (Array.isArray(res.commodities)) return res.commodities;
+    if (res.commodities && Array.isArray(res.commodities.data)) return res.commodities.data;
     return [];
   }
 
@@ -378,7 +381,13 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
         if (isMounted && res) {
           const list = extractCommoditiesList(res);
           setLiveCommodities(list);
-          const total = res?.meta?.total ?? res?.data?.total ?? res?.total ?? list.length;
+          const total =
+            res?.data?.pagination?.total ??
+            res?.meta?.total ??
+            res?.data?.total ??
+            res?.pagination?.total ??
+            res?.total ??
+            list.length;
           setTotalCount(total);
           setHasLoadedApi(true);
         }
