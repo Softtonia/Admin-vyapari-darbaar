@@ -90,6 +90,31 @@ export async function adminResetPassword({ token, email, password, password_conf
 }
 
 /**
+ * Verify Reset Password Token
+ * @param {Object} params
+ * @param {string} params.email
+ * @param {string} params.token
+ * @returns {Promise<{ status: boolean, message: string, data?: any }>}
+ */
+export async function adminVerifyResetToken({ email, token }) {
+  const query = `?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
+  try {
+    return await apiFetch(`/api/user/verify-reset-token${query}`, {
+      method: 'GET',
+      skipAuth: true,
+    });
+  } catch (err) {
+    if (err.status === 404 || (err.message && (err.message.includes('404') || err.message.includes('Not Found')))) {
+      return await apiFetch(`/api/auth/admin/verify-reset-token${query}`, {
+        method: 'GET',
+        skipAuth: true,
+      });
+    }
+    throw err;
+  }
+}
+
+/**
  * Admin Logout (Current Device)
  * @returns {Promise<{ status: boolean, message: string }>}
  */
@@ -197,6 +222,7 @@ export default {
   login: adminLogin,
   forgotPassword: adminForgotPassword,
   resetPassword: adminResetPassword,
+  verifyResetToken: adminVerifyResetToken,
   logout: adminLogout,
   logoutAll: adminLogoutAll,
   getProfile: getAdminProfile,

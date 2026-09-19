@@ -5,6 +5,7 @@ import adminAuthService, {
   adminLogoutAll,
   adminForgotPassword,
   adminResetPassword,
+  adminVerifyResetToken,
   getAdminProfile,
 } from '../api/adminAuth';
 import { getAdminToken, getAdminUser } from '../api/config';
@@ -83,6 +84,10 @@ export function AdminAuthProvider({ children }) {
     return await adminResetPassword(payload);
   };
 
+  const verifyResetToken = async ({ email, token }) => {
+    return await adminVerifyResetToken({ email, token });
+  };
+
   const refreshProfile = async () => {
     if (!token) return null;
     try {
@@ -106,6 +111,7 @@ export function AdminAuthProvider({ children }) {
     logoutAll,
     forgotPassword,
     resetPassword,
+    verifyResetToken,
     refreshProfile,
   };
 

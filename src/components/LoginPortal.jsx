@@ -29,7 +29,7 @@ export default function LoginPortal() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { login, forgotPassword, resetPassword } = useAdminAuth();
+  const { login, forgotPassword, resetPassword, verifyResetToken } = useAdminAuth();
 
   // Form State
   const [identifier, setIdentifier] = useState('');
@@ -64,22 +64,69 @@ export default function LoginPortal() {
   const [isForgotSubmitting, setIsForgotSubmitting] = useState(false);
   const [isTokenFromUrl, setIsTokenFromUrl] = useState(false);
 
-  // Auto-detect reset password token and email from URL (e.g. from email reset link)
+  // Reset Token Verification State
+  const [isVerifyingToken, setIsVerifyingToken] = useState(false);
+  const [isTokenValid, setIsTokenValid] = useState(false);
+  const [isInvalidOrExpired, setIsInvalidOrExpired] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Auto-detect reset password token and email from URL & verify token
   useEffect(() => {
-    const tokenParam = searchParams.get('token');
-    const emailParam = searchParams.get('email');
+    const queryParams = new URLSearchParams(window.location.search);
+    const tokenParam = queryParams.get('token') || searchParams.get('token');
+    const emailParam = queryParams.get('email') || searchParams.get('email');
     const isResetPath = location.pathname.includes('reset-password');
 
     if (tokenParam || emailParam || isResetPath) {
+      setShowForgotModal(true);
+      setForgotStep(2);
+
+      const decodedEmail = emailParam ? decodeURIComponent(emailParam) : '';
+      if (decodedEmail) {
+        setForgotEmail(decodedEmail);
+      }
       if (tokenParam) {
         setResetToken(tokenParam);
         setIsTokenFromUrl(true);
       }
-      if (emailParam) {
-        setForgotEmail(decodeURIComponent(emailParam));
+
+      // If token or email is missing
+      if (!tokenParam || !decodedEmail) {
+        setIsInvalidOrExpired(true);
+        setIsTokenValid(false);
+        setErrorMessage('This password reset link is invalid or has expired. Please request a new link.');
+        return;
       }
-      setForgotStep(2);
-      setShowForgotModal(true);
+
+      // Verify token with backend
+      setIsVerifyingToken(true);
+      setIsInvalidOrExpired(false);
+      setIsTokenValid(false);
+
+      verifyResetToken({ email: decodedEmail, token: tokenParam })
+        .then((response) => {
+          if (response?.status) {
+            setIsTokenValid(true);
+            setIsInvalidOrExpired(false);
+          } else {
+            setIsInvalidOrExpired(true);
+            setIsTokenValid(false);
+            setErrorMessage(response?.message || 'This password reset link is invalid or has expired. Please request a new link.');
+          }
+        })
+        .catch((error) => {
+          // Agar password reset pehle ho chuka hai ya 60 min expire ho chuke hain
+          setIsInvalidOrExpired(true);
+          setIsTokenValid(false);
+          setErrorMessage(
+            error.data?.message ||
+            error.message ||
+            'This password reset link is invalid or has expired. Please request a new link.'
+          );
+        })
+        .finally(() => {
+          setIsVerifyingToken(false);
+        });
     }
   }, [searchParams, location.pathname]);
 
@@ -156,11 +203,29 @@ export default function LoginPortal() {
   const handleCloseForgotModal = () => {
     setShowForgotModal(false);
     setResetEmailSent(false);
+    setIsInvalidOrExpired(false);
+    setIsTokenValid(false);
+    setIsVerifyingToken(false);
+    setErrorMessage('');
     setNewPassword('');
     setConfirmPassword('');
     if (location.pathname.includes('reset-password') || searchParams.get('token')) {
       navigate('/login', { replace: true });
     }
+  };
+
+  const handleRequestNewLink = () => {
+    setIsInvalidOrExpired(false);
+    setIsTokenValid(false);
+    setIsVerifyingToken(false);
+    setErrorMessage('');
+    setResetToken('');
+    setForgotStep(1);
+    setResetEmailSent(false);
+    if (location.pathname.includes('reset-password') || searchParams.get('token')) {
+      navigate('/login', { replace: true });
+    }
+    setShowForgotModal(true);
   };
 
   const handleResetPasswordSubmit = async (e) => {
@@ -572,14 +637,22 @@ export default function LoginPortal() {
                 <h3 className="portal-modal-title">
                   {forgotStep === 1
                     ? (resetEmailSent ? 'Check Your Email' : 'Forgot Admin Password')
-                    : 'Reset Admin Password'}
+                    : isInvalidOrExpired
+                      ? 'Link Expired or Invalid'
+                      : isVerifyingToken
+                        ? 'Verifying Link...'
+                        : 'Reset Admin Password'}
                 </h3>
                 <p className="portal-modal-subtitle">
                   {forgotStep === 1
                     ? (resetEmailSent
                         ? 'Follow the link sent to your email to set a new password.'
                         : 'Enter your registered admin email address. We will send you instructions to reset your password.')
-                    : 'Enter your new password below to reset your admin account credentials.'}
+                    : isInvalidOrExpired
+                      ? 'This password reset link is invalid or has expired.'
+                      : isVerifyingToken
+                        ? 'Validating your security token, please wait...'
+                        : 'Enter your new password below to reset your admin account credentials.'}
                 </p>
               </div>
               <button
@@ -669,7 +742,88 @@ export default function LoginPortal() {
                   </div>
                 </form>
               )
+            ) : isVerifyingToken ? (
+              /* Loading / Token verification state */
+              <div className="portal-modal-form" style={{ textAlign: 'center', padding: '24px 0 16px' }}>
+                <div
+                  style={{
+                    width: '38px',
+                    height: '38px',
+                    border: '3px solid #e2e8f0',
+                    borderTopColor: '#083e28',
+                    borderRadius: '50%',
+                    animation: 'spin 0.8s linear infinite',
+                    margin: '0 auto 16px',
+                  }}
+                />
+                <h4 style={{ margin: '0 0 6px', color: '#0f172a', fontSize: '15px', fontWeight: 600 }}>
+                  Verifying Reset Link...
+                </h4>
+                <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
+                  Please wait while we validate your security token.
+                </p>
+              </div>
+            ) : isInvalidOrExpired ? (
+              /* Invalid or expired token alert state */
+              <div className="portal-modal-form" style={{ textAlign: 'center', padding: '16px 0 6px' }}>
+                <div
+                  style={{
+                    width: '52px',
+                    height: '52px',
+                    borderRadius: '50%',
+                    backgroundColor: '#fef2f2',
+                    border: '1px solid #fecaca',
+                    color: '#dc2626',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '22px',
+                    margin: '0 auto 14px',
+                    fontWeight: 700,
+                  }}
+                >
+                  ✕
+                </div>
+                <h4 style={{ margin: '0 0 8px', color: '#991b1b', fontSize: '16px', fontWeight: 600 }}>
+                  Link Invalid or Expired
+                </h4>
+                <div
+                  style={{
+                    backgroundColor: '#fef2f2',
+                    border: '1px solid #fecaca',
+                    borderRadius: '8px',
+                    padding: '12px 14px',
+                    marginBottom: '20px',
+                    fontSize: '13.5px',
+                    color: '#b91c1c',
+                    lineHeight: 1.5,
+                    textAlign: 'center',
+                    fontWeight: 500,
+                  }}
+                >
+                  ❌ {errorMessage || 'This password reset link is invalid or has expired. Please request a new link.'}
+                </div>
+                <div className="portal-modal-actions" style={{ flexDirection: 'column', gap: '8px' }}>
+                  <button
+                    type="button"
+                    className="btn-modal-submit"
+                    style={{ width: '100%' }}
+                    onClick={handleRequestNewLink}
+                  >
+                    Request a New Link
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-modal-cancel"
+                    style={{ width: '100%', textAlign: 'center' }}
+                    onClick={handleCloseForgotModal}
+                  >
+                    Back to Login
+                  </button>
+                </div>
+              </div>
             ) : (
+              /* Valid Token: Set New Password Form */
               <form onSubmit={handleResetPasswordSubmit} className="portal-modal-form">
                 {/* Hidden Token & Email inputs - not taken as user inputs */}
                 <input type="hidden" name="token" value={resetToken} />
@@ -692,9 +846,7 @@ export default function LoginPortal() {
                     }}
                   >
                     <span>Resetting account: <strong>{forgotEmail}</strong></span>
-                    {isTokenFromUrl && (
-                      <span style={{ fontSize: '12px', fontWeight: 600 }}>✓ Verified Link</span>
-                    )}
+                    <span style={{ fontSize: '12px', fontWeight: 600 }}>✓ Verified Link</span>
                   </div>
                 )}
 
