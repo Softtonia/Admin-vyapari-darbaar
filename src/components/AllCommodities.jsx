@@ -22,6 +22,9 @@ import {
   getMandiOptions,
   deleteCommodity,
   updateCommodityStatus,
+  updateCommodity,
+  bulkDeleteCommodities,
+  bulkUpdateCommodityStatus,
 } from '../api/commodityService';
 import { API_BASE_URL } from '../api/config';
 import './AllCommodities.css';
@@ -405,17 +408,145 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
     };
   }, [currentPage, pageSize, searchCommodity, categoryFilter, categoriesOptions, refreshTrigger]);
 
-  // Action: Delete Commodity
-  const handleDeleteCommodity = async (id, name) => {
-    if (!window.confirm(`Are you sure you want to delete commodity "${name}"?`)) {
+  // View Modal State
+  const [viewModalItem, setViewModalItem] = useState(null);
+
+  // Edit Modal State
+  const [editModalItem, setEditModalItem] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    commodity_category_id: '',
+    code: '',
+    slug: '',
+    unit: 'QUINTAL',
+    description: '',
+    sort_order: '1',
+    status: true,
+  });
+  const [editImageFile, setEditImageFile] = useState(null);
+  const [editImagePreview, setEditImagePreview] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Delete Modal State
+  const [deleteModalItem, setDeleteModalItem] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Bulk Delete Modal State
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
+  // Bulk Update Modal State
+  const [isBulkUpdateOpen, setIsBulkUpdateOpen] = useState(false);
+  const [bulkStatusValue, setBulkStatusValue] = useState(1);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+
+  // Action: Open Edit Modal
+  const handleOpenEdit = (c) => {
+    const raw = c.raw || {};
+    const catId =
+      raw.commodity_category_id ||
+      raw.category?.id ||
+      categoriesOptions.find((cat) => cat.name === c.category)?.id ||
+      '';
+    setEditModalItem(c);
+    setEditForm({
+      name: c.name || '',
+      commodity_category_id: catId,
+      code: c.code || '',
+      slug: c.slug || '',
+      unit: c.unit || 'QUINTAL',
+      description: raw.description || '',
+      sort_order: String(raw.sort_order || '1'),
+      status: c.status,
+    });
+    setEditImageFile(null);
+    setEditImagePreview(c.image || null);
+  };
+
+  // Action: Submit Edit Modal
+  const handleSaveEdit = async (e) => {
+    if (e) e.preventDefault();
+    if (!editForm.name.trim()) {
+      showToast('Please enter a commodity name', 'error');
       return;
     }
+    if (!editForm.commodity_category_id) {
+      showToast('Please select a category', 'error');
+      return;
+    }
+    setIsUpdating(true);
     try {
-      await deleteCommodity(id);
-      showToast(`Commodity "${name}" deleted successfully!`, 'success');
+      const formData = new FormData();
+      formData.append('commodity_category_id', editForm.commodity_category_id);
+      formData.append('name', editForm.name.trim());
+      formData.append('slug', editForm.slug.trim());
+      formData.append('code', editForm.code.trim() || 'COMM');
+      formData.append('unit', editForm.unit);
+      formData.append('description', editForm.description || '');
+      formData.append('sort_order', editForm.sort_order || '1');
+      formData.append('status', editForm.status ? '1' : '0');
+      if (editImageFile) {
+        formData.append('image', editImageFile);
+      }
+      await updateCommodity(editModalItem.id, formData);
+      showToast(`Commodity "${editForm.name}" updated successfully!`, 'success');
+      setEditModalItem(null);
+      refetchCommodities();
+    } catch (err) {
+      showToast(err.message || 'Failed to update commodity', 'error');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Action: Confirm Single Delete
+  const handleConfirmDelete = async () => {
+    if (!deleteModalItem) return;
+    setIsDeleting(true);
+    try {
+      await deleteCommodity(deleteModalItem.id);
+      showToast(`Commodity "${deleteModalItem.name}" deleted successfully!`, 'success');
+      setDeleteModalItem(null);
+      setSelectedIds((prev) => prev.filter((id) => id !== deleteModalItem.id));
       refetchCommodities();
     } catch (err) {
       showToast(err.message || 'Failed to delete commodity', 'error');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Action: Confirm Bulk Delete
+  const handleConfirmBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setIsBulkDeleting(true);
+    try {
+      await bulkDeleteCommodities(selectedIds);
+      showToast(`Deleted ${selectedIds.length} commodities successfully!`, 'success');
+      setSelectedIds([]);
+      setIsBulkDeleteOpen(false);
+      refetchCommodities();
+    } catch (err) {
+      showToast(err.message || 'Failed to delete selected commodities', 'error');
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
+  // Action: Confirm Bulk Update
+  const handleConfirmBulkUpdate = async () => {
+    if (selectedIds.length === 0) return;
+    setIsBulkUpdating(true);
+    try {
+      await bulkUpdateCommodityStatus(selectedIds, bulkStatusValue === 1);
+      showToast(`Updated status for ${selectedIds.length} commodities!`, 'success');
+      setSelectedIds([]);
+      setIsBulkUpdateOpen(false);
+      refetchCommodities();
+    } catch (err) {
+      showToast(err.message || 'Failed to bulk update status', 'error');
+    } finally {
+      setIsBulkUpdating(false);
     }
   };
 
@@ -858,14 +989,40 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
               <span>Export</span>
             </button>
 
-            <button type="button" className="btn-table-action" title="Bulk Update">
+            {selectedIds.length > 0 && (
+              <button
+                type="button"
+                className="btn-table-action-danger"
+                title="Bulk delete selected commodities"
+                onClick={() => setIsBulkDeleteOpen(true)}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                </svg>
+                <span>Bulk Delete ({selectedIds.length})</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              className="btn-table-action"
+              title="Bulk Update"
+              onClick={() => {
+                if (selectedIds.length === 0) {
+                  showToast('Please select at least one commodity from the table to bulk update.', 'info');
+                  return;
+                }
+                setIsBulkUpdateOpen(true);
+              }}
+            >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="7" height="7" rx="1.5" />
                 <rect x="14" y="3" width="7" height="7" rx="1.5" />
                 <rect x="14" y="14" width="7" height="7" rx="1.5" />
                 <rect x="3" y="14" width="7" height="7" rx="1.5" />
               </svg>
-              <span>Bulk Update</span>
+              <span>Bulk Update {selectedIds.length > 0 ? `(${selectedIds.length})` : ''}</span>
             </button>
 
             <button type="button" className="btn-table-action" title="Manage Categories">
@@ -904,7 +1061,7 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
                 <th>Last Updated</th>
                 <th style={{ width: '70px' }}>Trend (7D)</th>
                 <th style={{ width: '40px' }}>Trend</th>
-                <th style={{ width: '90px', textAlign: 'center' }}>Action</th>
+                <th style={{ width: '115px', textAlign: 'center' }}>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -1018,18 +1175,28 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
                         <button
                           type="button"
                           className="btn-action-view"
-                          title="View details"
-                          onClick={() => showToast(`Commodity: ${c.name} (Code: ${c.code || 'N/A'}, Unit: ${c.unit})`, 'info')}
+                          title="View full details"
+                          onClick={() => setViewModalItem(c)}
                         >
                           View
                         </button>
                         <button
                           type="button"
+                          className="btn-action-edit"
+                          title={`Edit ${c.name}`}
+                          onClick={() => handleOpenEdit(c)}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
                           className="btn-action-delete"
                           title={`Delete ${c.name}`}
-                          onClick={() => handleDeleteCommodity(c.id, c.name)}
+                          onClick={() => setDeleteModalItem(c)}
                         >
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="3 6 5 6 21 6" />
                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                           </svg>
@@ -1158,6 +1325,463 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
           </div>
         </div>
       </div>
+
+      {/* ====================================================================
+          MODALS: View, Edit, Delete, Bulk Delete, Bulk Update
+          ==================================================================== */}
+
+      {/* 1. View Commodity Modal */}
+      {viewModalItem && (
+        <div className="comm-modal-backdrop" onClick={() => setViewModalItem(null)}>
+          <div className="comm-modal-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="comm-modal-header">
+              <h3 className="comm-modal-title">
+                <span>Commodity Details</span>
+              </h3>
+              <button
+                type="button"
+                className="comm-modal-close-btn"
+                onClick={() => setViewModalItem(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="comm-modal-body">
+              <div className="view-modal-hero">
+                <img
+                  src={viewModalItem.image}
+                  alt={viewModalItem.name}
+                  className="view-modal-thumb"
+                />
+                <div className="view-modal-title-area">
+                  <h4 className="view-modal-name">{viewModalItem.name}</h4>
+                  <div className="view-modal-badges">
+                    <span className="view-modal-tag">{viewModalItem.category}</span>
+                    <span className="view-modal-tag">{viewModalItem.unit}</span>
+                    <span className={`comm-status-badge ${viewModalItem.status ? 'active' : 'inactive'}`}>
+                      <span className="status-dot" />
+                      {viewModalItem.status ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="view-modal-grid">
+                <div className="view-detail-item">
+                  <span className="view-detail-label">Commodity ID</span>
+                  <span className="view-detail-value">#{viewModalItem.id}</span>
+                </div>
+                <div className="view-detail-item">
+                  <span className="view-detail-label">Commodity Code</span>
+                  <span className="view-detail-value">{viewModalItem.code || '—'}</span>
+                </div>
+                <div className="view-detail-item">
+                  <span className="view-detail-label">Slug</span>
+                  <span className="view-detail-value">{viewModalItem.slug || '—'}</span>
+                </div>
+                <div className="view-detail-item">
+                  <span className="view-detail-label">Category</span>
+                  <span className="view-detail-value">{viewModalItem.category || 'General'}</span>
+                </div>
+                <div className="view-detail-item">
+                  <span className="view-detail-label">Measurement Unit</span>
+                  <span className="view-detail-value">{viewModalItem.unit || 'QUINTAL'}</span>
+                </div>
+                <div className="view-detail-item">
+                  <span className="view-detail-label">Sort Order</span>
+                  <span className="view-detail-value">{viewModalItem.raw?.sort_order ?? 1}</span>
+                </div>
+                <div className="view-detail-item">
+                  <span className="view-detail-label">Last Updated</span>
+                  <span className="view-detail-value">
+                    {viewModalItem.updatedDate} {viewModalItem.updatedTime}
+                  </span>
+                </div>
+                <div className="view-detail-item">
+                  <span className="view-detail-label">Created At</span>
+                  <span className="view-detail-value">
+                    {viewModalItem.raw?.created_at
+                      ? new Date(viewModalItem.raw.created_at).toLocaleDateString('en-GB', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })
+                      : '—'}
+                  </span>
+                </div>
+
+                {viewModalItem.raw?.description && (
+                  <div className="view-detail-item view-detail-desc">
+                    <span className="view-detail-label">Description</span>
+                    <span className="view-detail-value">{viewModalItem.raw.description}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="comm-modal-footer">
+              <button
+                type="button"
+                className="btn-modal-cancel"
+                onClick={() => setViewModalItem(null)}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                className="btn-modal-primary"
+                onClick={() => {
+                  const item = viewModalItem;
+                  setViewModalItem(null);
+                  handleOpenEdit(item);
+                }}
+              >
+                Edit Commodity
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Edit Commodity Modal */}
+      {editModalItem && (
+        <div className="comm-modal-backdrop" onClick={() => !isUpdating && setEditModalItem(null)}>
+          <div className="comm-modal-dialog modal-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="comm-modal-header">
+              <h3 className="comm-modal-title">
+                <span>Edit Commodity: {editModalItem.name}</span>
+              </h3>
+              <button
+                type="button"
+                className="comm-modal-close-btn"
+                disabled={isUpdating}
+                onClick={() => setEditModalItem(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit}>
+              <div className="comm-modal-body">
+                <div className="comm-form-grid">
+                  <div className="comm-form-group">
+                    <label className="comm-form-label">Commodity Name *</label>
+                    <input
+                      type="text"
+                      className="comm-form-input"
+                      value={editForm.name}
+                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                      placeholder="e.g. Wheat"
+                      required
+                    />
+                  </div>
+
+                  <div className="comm-form-group">
+                    <label className="comm-form-label">Category *</label>
+                    <select
+                      className="comm-form-select"
+                      value={editForm.commodity_category_id}
+                      onChange={(e) => setEditForm({ ...editForm, commodity_category_id: e.target.value })}
+                      required
+                    >
+                      <option value="">Select Category</option>
+                      {categoriesOptions.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="comm-form-group">
+                    <label className="comm-form-label">Commodity Code</label>
+                    <input
+                      type="text"
+                      className="comm-form-input"
+                      value={editForm.code}
+                      onChange={(e) => setEditForm({ ...editForm, code: e.target.value.toUpperCase() })}
+                      placeholder="e.g. WHEAT01"
+                    />
+                  </div>
+
+                  <div className="comm-form-group">
+                    <label className="comm-form-label">Slug</label>
+                    <input
+                      type="text"
+                      className="comm-form-input"
+                      value={editForm.slug}
+                      onChange={(e) => setEditForm({ ...editForm, slug: e.target.value })}
+                      placeholder="e.g. wheat"
+                    />
+                  </div>
+
+                  <div className="comm-form-group">
+                    <label className="comm-form-label">Measurement Unit</label>
+                    <select
+                      className="comm-form-select"
+                      value={editForm.unit}
+                      onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })}
+                    >
+                      <option value="QUINTAL">QUINTAL (100 Kg)</option>
+                      <option value="KG">KG (Kilogram)</option>
+                      <option value="TONNE">TONNE (Metric Ton)</option>
+                      <option value="BUSHEL">BUSHEL</option>
+                      <option value="BAG">BAG</option>
+                      <option value="BALES">BALES</option>
+                    </select>
+                  </div>
+
+                  <div className="comm-form-group">
+                    <label className="comm-form-label">Sort Order</label>
+                    <input
+                      type="number"
+                      className="comm-form-input"
+                      value={editForm.sort_order}
+                      onChange={(e) => setEditForm({ ...editForm, sort_order: e.target.value })}
+                      min="1"
+                    />
+                  </div>
+
+                  <div className="comm-form-group">
+                    <label className="comm-form-label">Status</label>
+                    <select
+                      className="comm-form-select"
+                      value={editForm.status ? '1' : '0'}
+                      onChange={(e) => setEditForm({ ...editForm, status: e.target.value === '1' })}
+                    >
+                      <option value="1">Active</option>
+                      <option value="0">Inactive</option>
+                    </select>
+                  </div>
+
+                  <div className="comm-form-group">
+                    <label className="comm-form-label">Commodity Image</label>
+                    <div className="comm-form-upload-box">
+                      {editImagePreview && (
+                        <img src={editImagePreview} alt="Preview" className="comm-upload-preview" />
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setEditImageFile(file);
+                            const reader = new FileReader();
+                            reader.onload = () => setEditImagePreview(reader.result);
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="comm-form-group full-width">
+                    <label className="comm-form-label">Description</label>
+                    <textarea
+                      className="comm-form-textarea"
+                      value={editForm.description}
+                      onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                      placeholder="Enter commodity description..."
+                      rows="3"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="comm-modal-footer">
+                <button
+                  type="button"
+                  className="btn-modal-cancel"
+                  disabled={isUpdating}
+                  onClick={() => setEditModalItem(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-modal-primary"
+                  disabled={isUpdating}
+                >
+                  {isUpdating ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Delete Single Commodity Confirmation Modal */}
+      {deleteModalItem && (
+        <div className="comm-modal-backdrop" onClick={() => !isDeleting && setDeleteModalItem(null)}>
+          <div className="comm-modal-dialog modal-sm" onClick={(e) => e.stopPropagation()}>
+            <div className="comm-modal-header">
+              <h3 className="comm-modal-title" style={{ color: '#dc2626' }}>
+                <span>Delete Commodity</span>
+              </h3>
+              <button
+                type="button"
+                className="comm-modal-close-btn"
+                disabled={isDeleting}
+                onClick={() => setDeleteModalItem(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="comm-modal-body">
+              <div className="comm-danger-box">
+                <div className="comm-danger-icon-circle">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
+                </div>
+                <div className="comm-danger-content">
+                  <h4>Delete "{deleteModalItem.name}"?</h4>
+                  <p>
+                    Are you sure you want to delete this commodity? This action cannot be undone and will remove all associated settings.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="comm-modal-footer">
+              <button
+                type="button"
+                className="btn-modal-cancel"
+                disabled={isDeleting}
+                onClick={() => setDeleteModalItem(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-modal-danger"
+                disabled={isDeleting}
+                onClick={handleConfirmDelete}
+              >
+                {isDeleting ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Bulk Delete Confirmation Modal */}
+      {isBulkDeleteOpen && (
+        <div className="comm-modal-backdrop" onClick={() => !isBulkDeleting && setIsBulkDeleteOpen(false)}>
+          <div className="comm-modal-dialog modal-sm" onClick={(e) => e.stopPropagation()}>
+            <div className="comm-modal-header">
+              <h3 className="comm-modal-title" style={{ color: '#dc2626' }}>
+                <span>Bulk Delete Commodities</span>
+              </h3>
+              <button
+                type="button"
+                className="comm-modal-close-btn"
+                disabled={isBulkDeleting}
+                onClick={() => setIsBulkDeleteOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="comm-modal-body">
+              <div className="comm-danger-box">
+                <div className="comm-danger-icon-circle">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
+                </div>
+                <div className="comm-danger-content">
+                  <h4>Delete {selectedIds.length} Commodities?</h4>
+                  <p>
+                    Are you sure you want to delete all <strong>{selectedIds.length}</strong> selected commodities? This permanent action will remove them completely from the database.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="comm-modal-footer">
+              <button
+                type="button"
+                className="btn-modal-cancel"
+                disabled={isBulkDeleting}
+                onClick={() => setIsBulkDeleteOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-modal-danger"
+                disabled={isBulkDeleting}
+                onClick={handleConfirmBulkDelete}
+              >
+                {isBulkDeleting ? 'Deleting...' : `Delete ${selectedIds.length} Items`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Bulk Update Modal */}
+      {isBulkUpdateOpen && (
+        <div className="comm-modal-backdrop" onClick={() => !isBulkUpdating && setIsBulkUpdateOpen(false)}>
+          <div className="comm-modal-dialog modal-sm" onClick={(e) => e.stopPropagation()}>
+            <div className="comm-modal-header">
+              <h3 className="comm-modal-title">
+                <span>Bulk Update ({selectedIds.length} Selected)</span>
+              </h3>
+              <button
+                type="button"
+                className="comm-modal-close-btn"
+                disabled={isBulkUpdating}
+                onClick={() => setIsBulkUpdateOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="comm-modal-body">
+              <p style={{ margin: '0 0 12px 0', color: '#64748b' }}>
+                Select the new status to apply to all <strong>{selectedIds.length}</strong> selected commodities:
+              </p>
+              <div className="comm-form-group">
+                <label className="comm-form-label">Update Status To</label>
+                <select
+                  className="comm-form-select"
+                  value={bulkStatusValue}
+                  onChange={(e) => setBulkStatusValue(Number(e.target.value))}
+                >
+                  <option value={1}>Active</option>
+                  <option value={0}>Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="comm-modal-footer">
+              <button
+                type="button"
+                className="btn-modal-cancel"
+                disabled={isBulkUpdating}
+                onClick={() => setIsBulkUpdateOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-modal-primary"
+                disabled={isBulkUpdating}
+                onClick={handleConfirmBulkUpdate}
+              >
+                {isBulkUpdating ? 'Updating...' : 'Apply Bulk Update'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

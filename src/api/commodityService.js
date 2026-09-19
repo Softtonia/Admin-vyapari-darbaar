@@ -204,6 +204,15 @@ export async function getCommodity(id) {
  * @param {FormData|Object} data
  */
 export async function updateCommodity(id, data) {
+  if (data instanceof FormData) {
+    if (!data.has('_method')) {
+      data.append('_method', 'PUT');
+    }
+    return await apiFetch(`/api/admin/commodities/${id}`, {
+      method: 'POST',
+      body: data,
+    });
+  }
   return await apiFetch(`/api/admin/commodities/${id}`, {
     method: 'PUT',
     body: data,
