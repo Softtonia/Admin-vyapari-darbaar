@@ -63,11 +63,8 @@ export default function AddCommodity({ onBack }) {
   const [trend, setTrend] = useState('No Change');
   const [priceChange, setPriceChange] = useState('₹ 0.00');
 
-  // Form State - Status & Visibility
+  // Form State - Status
   const [statusActive, setStatusActive] = useState(true);
-  const [featuredCommodity, setFeaturedCommodity] = useState(false);
-  const [showOnHomepage, setShowOnHomepage] = useState(true);
-  const [sendPriceAlerts, setSendPriceAlerts] = useState(false);
 
   // Form State - Pricing & Market Data Tab
   const [modalPrice, setModalPrice] = useState('1,250');
@@ -1061,7 +1058,7 @@ export default function AddCommodity({ onBack }) {
 
 
 
-            {/* Card 5: Status & Visibility */}
+            {/* Card 5: Status */}
             <div className="add-comm-card">
               <div className="add-comm-card-header">
                 <div className="card-header-icon-box">
@@ -1071,14 +1068,14 @@ export default function AddCommodity({ onBack }) {
                   </svg>
                 </div>
                 <div className="card-header-titles">
-                  <h2 className="card-heading">Status & Visibility</h2>
-                  <p className="card-subheading">Set the status and visibility for this commodity.</p>
+                  <h2 className="card-heading">Status</h2>
+                  <p className="card-subheading">Set the status for this commodity.</p>
                 </div>
               </div>
 
               <div className="add-comm-card-body">
-                <div className="toggle-grid-2x2">
-                  {/* Toggle 1: Active */}
+                <div className="toggle-grid-2x2" style={{ gridTemplateColumns: '1fr' }}>
+                  {/* Status Toggle: Active */}
                   <div className="toggle-item" onClick={() => setStatusActive(!statusActive)}>
                     <button
                       type="button"
@@ -1090,55 +1087,11 @@ export default function AddCommodity({ onBack }) {
                     </button>
                     <div className="toggle-text-block">
                       <span className="toggle-title">Active</span>
-                      <span className="toggle-subtitle">Make this commodity visible on the platform</span>
-                    </div>
-                  </div>
-
-                  {/* Toggle 2: Featured Commodity */}
-                  <div className="toggle-item" onClick={() => setFeaturedCommodity(!featuredCommodity)}>
-                    <button
-                      type="button"
-                      className={`switch-track ${featuredCommodity ? 'on' : 'off'}`}
-                      aria-checked={featuredCommodity}
-                      role="switch"
-                    >
-                      <span className="switch-thumb" />
-                    </button>
-                    <div className="toggle-text-block">
-                      <span className="toggle-title">Featured Commodity</span>
-                      <span className="toggle-subtitle">Highlight this commodity</span>
-                    </div>
-                  </div>
-
-                  {/* Toggle 3: Show on Homepage */}
-                  <div className="toggle-item" onClick={() => setShowOnHomepage(!showOnHomepage)}>
-                    <button
-                      type="button"
-                      className={`switch-track ${showOnHomepage ? 'on' : 'off'}`}
-                      aria-checked={showOnHomepage}
-                      role="switch"
-                    >
-                      <span className="switch-thumb" />
-                    </button>
-                    <div className="toggle-text-block">
-                      <span className="toggle-title">Show on Homepage</span>
-                      <span className="toggle-subtitle">Display in featured section (if applicable)</span>
-                    </div>
-                  </div>
-
-                  {/* Toggle 4: Send Price Alerts */}
-                  <div className="toggle-item" onClick={() => setSendPriceAlerts(!sendPriceAlerts)}>
-                    <button
-                      type="button"
-                      className={`switch-track ${sendPriceAlerts ? 'on' : 'off'}`}
-                      aria-checked={sendPriceAlerts}
-                      role="switch"
-                    >
-                      <span className="switch-thumb" />
-                    </button>
-                    <div className="toggle-text-block">
-                      <span className="toggle-title">Send Price Alerts</span>
-                      <span className="toggle-subtitle">Include in automated price alerts</span>
+                      <span className="toggle-subtitle">
+                        {statusActive
+                          ? 'This commodity is active and visible on the platform'
+                          : 'This commodity is inactive and hidden from active listings'}
+                      </span>
                     </div>
                   </div>
                 </div>
