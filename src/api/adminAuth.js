@@ -115,6 +115,86 @@ export async function adminVerifyResetToken({ email, token }) {
 }
 
 /**
+ * Send Login OTP (Email / Phone / Username)
+ * @param {Object} payload
+ * @param {string} payload.email - email, username, or phone_number
+ * @param {string} [payload.purpose] - default 'login'
+ * @returns {Promise<{ status: boolean, message: string }>}
+ */
+export async function sendLoginOtp({ email, purpose = 'login' }) {
+  try {
+    return await apiFetch('/api/user/send-login-otp', {
+      method: 'POST',
+      body: {
+        email: email.trim(),
+        purpose,
+      },
+      skipAuth: true,
+    });
+  } catch (err) {
+    if (err.status === 404 || (err.message && (err.message.includes('404') || err.message.includes('Not Found')))) {
+      return await apiFetch('/api/auth/admin/send-login-otp', {
+        method: 'POST',
+        body: {
+          email: email.trim(),
+          purpose,
+        },
+        skipAuth: true,
+      });
+    }
+    throw err;
+  }
+}
+
+/**
+ * Login with OTP
+ * @param {Object} payload
+ * @param {string} payload.email - email, username, or phone_number
+ * @param {string} payload.otp - 6-digit OTP code
+ * @returns {Promise<{ status: boolean, message: string, data?: { token: string, user?: any } }>}
+ */
+export async function loginWithOtp({ email, otp }) {
+  let response;
+  try {
+    response = await apiFetch('/api/user/login-with-otp', {
+      method: 'POST',
+      body: {
+        email: email.trim(),
+        otp: otp.trim(),
+      },
+      skipAuth: true,
+    });
+  } catch (err) {
+    if (err.status === 404 || (err.message && (err.message.includes('404') || err.message.includes('Not Found')))) {
+      response = await apiFetch('/api/auth/admin/login-with-otp', {
+        method: 'POST',
+        body: {
+          email: email.trim(),
+          otp: otp.trim(),
+        },
+        skipAuth: true,
+      });
+    } else {
+      throw err;
+    }
+  }
+
+  const token = response?.data?.token || response?.token || response?.data?.access_token;
+  if (token) {
+    setAdminToken(token);
+    try {
+      localStorage.setItem('auth_token', token);
+    } catch {}
+  }
+  const user = response?.data?.user || response?.user || response?.data?.admin;
+  if (user) {
+    setAdminUser(user);
+  }
+
+  return response;
+}
+
+/**
  * Admin Logout (Current Device)
  * @returns {Promise<{ status: boolean, message: string }>}
  */
@@ -228,7 +308,8 @@ export default {
   getProfile: getAdminProfile,
   updateProfileName: updateAdminProfileName,
   sendEmailOtp: sendEmailUpdateOtp,
-  updateProfileEmail: updateAdminProfileEmail,
+  sendLoginOtp,
+  loginWithOtp,
   getToken: getAdminToken,
   getUser: getAdminUser,
 };

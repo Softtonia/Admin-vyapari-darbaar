@@ -7,6 +7,8 @@ import adminAuthService, {
   adminResetPassword,
   adminVerifyResetToken,
   getAdminProfile,
+  sendLoginOtp as apiSendLoginOtp,
+  loginWithOtp as apiLoginWithOtp,
 } from '../api/adminAuth';
 import { getAdminToken, getAdminUser } from '../api/config';
 
@@ -88,6 +90,20 @@ export function AdminAuthProvider({ children }) {
     return await adminVerifyResetToken({ email, token });
   };
 
+  const sendLoginOtp = async (emailOrUsername, purpose = 'login') => {
+    return await apiSendLoginOtp({ email: emailOrUsername, purpose });
+  };
+
+  const loginWithOtp = async (emailOrUsername, otp) => {
+    const res = await apiLoginWithOtp({ email: emailOrUsername, otp });
+    const newToken = res?.data?.token || res?.token || getAdminToken();
+    const newUser = res?.data?.user || res?.data?.admin || getAdminUser() || { email: emailOrUsername };
+
+    setToken(newToken);
+    setAdmin(newUser);
+    return res;
+  };
+
   const refreshProfile = async () => {
     if (!token) return null;
     try {
@@ -112,6 +128,8 @@ export function AdminAuthProvider({ children }) {
     forgotPassword,
     resetPassword,
     verifyResetToken,
+    sendLoginOtp,
+    loginWithOtp,
     refreshProfile,
   };
 

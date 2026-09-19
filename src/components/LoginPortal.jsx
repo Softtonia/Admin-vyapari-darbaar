@@ -31,7 +31,14 @@ export default function LoginPortal() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { login, forgotPassword, resetPassword, verifyResetToken } = useAdminAuth();
+  const {
+    login,
+    forgotPassword,
+    resetPassword,
+    verifyResetToken,
+    sendLoginOtp,
+    loginWithOtp,
+  } = useAdminAuth();
 
   // Form State
   const [identifier, setIdentifier] = useState('');
@@ -340,7 +347,7 @@ export default function LoginPortal() {
   };
 
   const handleSendOtp = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const cleanId = otpIdentifier.trim();
     if (!cleanId) {
       showToast(otpChannel === 'mobile' ? 'Please enter your mobile number.' : 'Please enter your email address.', 'warning');
@@ -363,17 +370,21 @@ export default function LoginPortal() {
 
     setIsOtpSending(true);
     try {
-      const targetDisplay = otpChannel === 'mobile' ? `+91 ${cleanId}` : cleanId;
-      showToast(`OTP dispatched successfully to ${targetDisplay}!`, 'success');
-      setOtpStep(2);
-      setOtpDigits(['', '', '', '', '', '']);
-      setOtpTimer(30);
-      setCanResend(false);
-      setTimeout(() => {
-        otpInputRefs.current[0]?.focus();
-      }, 150);
+      const response = await sendLoginOtp(cleanId, 'login');
+      if (response?.status) {
+        showToast(response.message || 'OTP has been sent successfully.', 'success');
+        setOtpStep(2);
+        setOtpDigits(['', '', '', '', '', '']);
+        setOtpTimer(30);
+        setCanResend(false);
+        setTimeout(() => {
+          otpInputRefs.current[0]?.focus();
+        }, 150);
+      } else {
+        showToast(response?.message || 'Failed to send OTP.', 'error');
+      }
     } catch (err) {
-      showToast(err.message || 'Failed to dispatch OTP. Please try again.', 'error');
+      showToast(err.data?.message || err.message || 'Failed to send OTP.', 'error');
     } finally {
       setIsOtpSending(false);
     }
@@ -397,29 +408,63 @@ export default function LoginPortal() {
     }
   };
 
-  const handleVerifyOtp = (e) => {
-    e.preventDefault();
+  const handleVerifyOtp = async (e) => {
+    if (e) e.preventDefault();
     const enteredOtp = otpDigits.join('');
     if (enteredOtp.length < 6) {
       showToast('Please enter the complete 6-digit OTP.', 'warning');
       return;
     }
+
+    const cleanId = otpIdentifier.trim();
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const response = await loginWithOtp(cleanId, enteredOtp);
+      if (response?.status) {
+        const token = response.data?.token || response.token;
+        if (token) {
+          try {
+            localStorage.setItem('auth_token', token);
+          } catch {}
+        }
+        showToast(response.message || 'OTP verified successfully! Redirecting to Dashboard...', 'success');
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 600);
+      } else {
+        showToast(response?.message || 'Invalid or expired OTP.', 'error');
+      }
+    } catch (err) {
+      showToast(err.data?.message || err.message || 'Invalid or expired OTP.', 'error');
+    } finally {
       setIsLoading(false);
-      showToast('OTP verified successfully! Redirecting to Dashboard...', 'success');
-      navigate('/dashboard');
-    }, 800);
+    }
   };
 
-  const handleResendOtp = () => {
+  const handleResendOtp = async () => {
     if (!canResend) return;
-    setOtpDigits(['', '', '', '', '', '']);
-    setOtpTimer(30);
-    setCanResend(false);
-    const targetDisplay = otpChannel === 'mobile' ? `+91 ${otpIdentifier}` : otpIdentifier;
-    showToast(`A fresh OTP has been sent to ${targetDisplay}`, 'success');
-    otpInputRefs.current[0]?.focus();
+    const cleanId = otpIdentifier.trim();
+    if (!cleanId) {
+      showToast('Please enter your email or mobile number.', 'warning');
+      return;
+    }
+    setIsOtpSending(true);
+    try {
+      const response = await sendLoginOtp(cleanId, 'login');
+      if (response?.status) {
+        showToast(response.message || 'A fresh OTP has been sent successfully.', 'success');
+        setOtpDigits(['', '', '', '', '', '']);
+        setOtpTimer(30);
+        setCanResend(false);
+        otpInputRefs.current[0]?.focus();
+      } else {
+        showToast(response?.message || 'Failed to resend OTP.', 'error');
+      }
+    } catch (err) {
+      showToast(err.data?.message || err.message || 'Failed to resend OTP.', 'error');
+    } finally {
+      setIsOtpSending(false);
+    }
   };
 
   return (
