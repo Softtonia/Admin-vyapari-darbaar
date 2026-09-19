@@ -153,7 +153,6 @@ export async function getCommodities(params = {}) {
   const defaultParams = {
     page: 1,
     per_page: 20,
-    status: 1,
     sort_by: 'sort_order',
     sort_order: 'asc',
   };

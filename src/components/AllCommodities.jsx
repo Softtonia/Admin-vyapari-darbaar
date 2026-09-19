@@ -31,13 +31,12 @@ import { API_BASE_URL } from '../api/config';
 import './AllCommodities.css';
 
 export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
-  // Search & Filter state
+  // Search & Filter state (aligned with backend API: search, commodity_category_id, status, sort_by, sort_order)
   const [searchCommodity, setSearchCommodity] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All Categories');
-  const [stateFilter, setStateFilter] = useState('All States');
-  const [mandiFilter, setMandiFilter] = useState('All Mandis');
-  const [priceTrendFilter, setPriceTrendFilter] = useState('All');
-  const [sortBy, setSortBy] = useState('Latest Updated');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('sort_order');
+  const [sortOrder, setSortOrder] = useState('asc');
   const [selectedIds, setSelectedIds] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState('20 / page');
@@ -355,7 +354,7 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
       .catch(() => {});
   }, []);
 
-  // Fetch Stored Commodities from API
+  // Fetch Stored Commodities from API (fetches both active & inactive by default)
   useEffect(() => {
     let isMounted = true;
     setIsLoading(true);
@@ -364,9 +363,8 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
     const params = {
       page: currentPage || 1,
       per_page: parsedPageSize,
-      status: 1,
-      sort_by: 'sort_order',
-      sort_order: 'asc',
+      sort_by: sortBy || 'sort_order',
+      sort_order: sortOrder || 'asc',
       search: searchCommodity.trim() || undefined,
     };
     if (categoryFilter && categoryFilter !== 'All Categories') {
@@ -378,6 +376,13 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
       } else if (!isNaN(Number(categoryFilter))) {
         params.commodity_category_id = categoryFilter;
       }
+    }
+
+    // Status filter: Only pass 1 or 0 when explicitly filtered; undefined loads both active and inactive
+    if (statusFilter === 'Active' || statusFilter === 1 || statusFilter === '1') {
+      params.status = 1;
+    } else if (statusFilter === 'Inactive' || statusFilter === 0 || statusFilter === '0') {
+      params.status = 0;
     }
 
     getCommodities(params)
@@ -407,7 +412,7 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
     return () => {
       isMounted = false;
     };
-  }, [currentPage, pageSize, searchCommodity, categoryFilter, categoriesOptions, refreshTrigger]);
+  }, [currentPage, pageSize, searchCommodity, categoryFilter, statusFilter, sortBy, sortOrder, categoriesOptions, refreshTrigger]);
 
   // View Modal State
   const [viewModalItem, setViewModalItem] = useState(null);
@@ -677,17 +682,22 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
       }))
     : commoditiesList;
 
-  // Filter and sort commodities
+  // Filter commodities (client-side fallback for mock / offline data)
   const filteredCommodities = displayCommodities.filter((c) => {
-    if (stateFilter && stateFilter !== 'All States' && c.state !== stateFilter) {
-      return false;
-    }
-    if (mandiFilter && mandiFilter !== 'All Mandis' && c.mandi !== mandiFilter) {
-      return false;
-    }
-    if (priceTrendFilter && priceTrendFilter !== 'All') {
-      if (priceTrendFilter === 'Rising (↑)' && c.trend !== 'up') return false;
-      if (priceTrendFilter === 'Falling (↓)' && c.trend !== 'down') return false;
+    if (!hasLoadedApi) {
+      if (statusFilter === 'Active' && !c.status) return false;
+      if (statusFilter === 'Inactive' && c.status) return false;
+      if (categoryFilter && categoryFilter !== 'All Categories') {
+        if (c.category !== categoryFilter && String(c.commodity_category_id) !== String(categoryFilter)) {
+          return false;
+        }
+      }
+      if (searchCommodity.trim()) {
+        const query = searchCommodity.trim().toLowerCase();
+        const matchName = c.name && c.name.toLowerCase().includes(query);
+        const matchCode = c.code && c.code.toLowerCase().includes(query);
+        if (!matchName && !matchCode) return false;
+      }
     }
     return true;
   });
@@ -713,10 +723,10 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
   const handleResetFilters = () => {
     setSearchCommodity('');
     setCategoryFilter('All Categories');
-    setStateFilter('All States');
-    setMandiFilter('All Mandis');
-    setPriceTrendFilter('All');
-    setSortBy('Latest Updated');
+    setStatusFilter('All');
+    setSortBy('sort_order');
+    setSortOrder('asc');
+    setCurrentPage(1);
   };
 
   return (
@@ -854,7 +864,7 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
       </div>
 
       {/* ====================================================================
-          3. Filter Toolbar
+          3. Filter Toolbar (API aligned: Search, Category, Status, Sort By, Sort Order)
           ==================================================================== */}
       <div className="comm-filter-toolbar">
         {/* Search Commodity */}
@@ -868,9 +878,12 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
             <input
               type="text"
               className="filter-text-input"
-              placeholder="Enter commodity name..."
+              placeholder="Search by name or code..."
               value={searchCommodity}
-              onChange={(e) => setSearchCommodity(e.target.value)}
+              onChange={(e) => {
+                setSearchCommodity(e.target.value);
+                setCurrentPage(1);
+              }}
             />
           </div>
         </div>
@@ -882,7 +895,10 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
             <select
               className="filter-select"
               value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
+              onChange={(e) => {
+                setCategoryFilter(e.target.value);
+                setCurrentPage(1);
+              }}
             >
               <option value="All Categories">All Categories</option>
               {categoriesOptions.length > 0 ? (
@@ -910,98 +926,21 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
           </div>
         </div>
 
-        {/* State */}
+        {/* Status */}
         <div className="filter-group">
-          <label className="filter-label">State</label>
+          <label className="filter-label">Status</label>
           <div className="filter-select-wrapper">
             <select
               className="filter-select"
-              value={stateFilter}
-              onChange={(e) => setStateFilter(e.target.value)}
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1);
+              }}
             >
-              <option value="All States">All States</option>
-              {statesOptions.length > 0 ? (
-                statesOptions.map((st) => (
-                  <option key={st.id} value={st.name}>
-                    {st.name}
-                  </option>
-                ))
-              ) : (
-                <>
-                  <option>Bihar</option>
-                  <option>Madhya Pradesh</option>
-                  <option>Haryana</option>
-                  <option>Rajasthan</option>
-                  <option>Maharashtra</option>
-                  <option>Gujarat</option>
-                  <option>Tamil Nadu</option>
-                  <option>Uttar Pradesh</option>
-                  <option>Karnataka</option>
-                  <option>Andhra Pradesh</option>
-                </>
-              )}
-            </select>
-            <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5">
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </div>
-        </div>
-
-        {/* Mandi */}
-        <div className="filter-group">
-          <label className="filter-label">Mandi</label>
-          <div className="filter-select-wrapper">
-            <select
-              className="filter-select"
-              value={mandiFilter}
-              onChange={(e) => setMandiFilter(e.target.value)}
-            >
-              <option value="All Mandis">All Mandis</option>
-              {mandisOptions.length > 0 ? (
-                mandisOptions.map((m) => (
-                  <option key={m.id} value={m.name}>
-                    {m.name}
-                  </option>
-                ))
-              ) : (
-                <>
-                  <option>Darbhanga</option>
-                  <option>Indore</option>
-                  <option>Karnal</option>
-                  <option>Ratlam</option>
-                  <option>Jaipur</option>
-                  <option>Latur</option>
-                  <option>Ujjain</option>
-                  <option>Rajkot</option>
-                  <option>Erode</option>
-                  <option>Muzaffarnagar</option>
-                  <option>Lasalgaon</option>
-                  <option>Agra</option>
-                  <option>Kolar</option>
-                  <option>Guntur</option>
-                  <option>Kota</option>
-                </>
-              )}
-            </select>
-            <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5">
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </div>
-        </div>
-
-        {/* Price Trend */}
-        <div className="filter-group">
-          <label className="filter-label">Price Trend</label>
-          <div className="filter-select-wrapper">
-            <select
-              className="filter-select"
-              value={priceTrendFilter}
-              onChange={(e) => setPriceTrendFilter(e.target.value)}
-            >
-              <option>All</option>
-              <option>Increasing</option>
-              <option>Decreasing</option>
-              <option>Stable</option>
+              <option value="All">All Statuses</option>
+              <option value="Active">Active Only</option>
+              <option value="Inactive">Inactive Only</option>
             </select>
             <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5">
               <polyline points="6 9 12 15 18 9" />
@@ -1016,12 +955,36 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
             <select
               className="filter-select"
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={(e) => {
+                setSortBy(e.target.value);
+                setCurrentPage(1);
+              }}
             >
-              <option>Latest Updated</option>
-              <option>Price: High to Low</option>
-              <option>Price: Low to High</option>
-              <option>Commodity Name</option>
+              <option value="sort_order">Sort Order</option>
+              <option value="name">Commodity Name</option>
+              <option value="updated_at">Latest Updated</option>
+              <option value="created_at">Recently Created</option>
+            </select>
+            <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Sort Order */}
+        <div className="filter-group">
+          <label className="filter-label">Sort Order</label>
+          <div className="filter-select-wrapper">
+            <select
+              className="filter-select"
+              value={sortOrder}
+              onChange={(e) => {
+                setSortOrder(e.target.value);
+                setCurrentPage(1);
+              }}
+            >
+              <option value="asc">Ascending (ASC)</option>
+              <option value="desc">Descending (DESC)</option>
             </select>
             <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5">
               <polyline points="6 9 12 15 18 9" />
@@ -1031,13 +994,19 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
 
         {/* Filter Action Buttons */}
         <div className="filter-buttons-group">
-          <button type="button" className="btn-filter-apply">
+          <button
+            type="button"
+            className="btn-filter-apply"
+            onClick={refetchCommodities}
+            title="Apply Filters and Refresh"
+          >
             Apply Filters
           </button>
           <button
             type="button"
             className="btn-filter-reset"
             onClick={handleResetFilters}
+            title="Reset All Filters"
           >
             Reset
           </button>
