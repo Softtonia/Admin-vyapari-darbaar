@@ -57,7 +57,8 @@ export default function LoginPortal() {
 
   // UI State
   const [isLoading, setIsLoading] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+  const toastTimerRef = useRef(null);
 
   // Forgot Password Modal State
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -101,6 +102,7 @@ export default function LoginPortal() {
         setIsInvalidOrExpired(true);
         setIsTokenValid(false);
         setErrorMessage('This password reset link is invalid or has expired. Please request a new link.');
+        showToast('Password reset link is incomplete or invalid.', 'error');
         return;
       }
 
@@ -114,21 +116,25 @@ export default function LoginPortal() {
           if (response?.status) {
             setIsTokenValid(true);
             setIsInvalidOrExpired(false);
+            showToast('Reset link verified! Please set your new password.', 'success');
           } else {
             setIsInvalidOrExpired(true);
             setIsTokenValid(false);
-            setErrorMessage(response?.message || 'This password reset link is invalid or has expired. Please request a new link.');
+            const msg = response?.message || 'This password reset link is invalid or has expired. Please request a new link.';
+            setErrorMessage(msg);
+            showToast(msg, 'error');
           }
         })
         .catch((error) => {
           // Agar password reset pehle ho chuka hai ya 60 min expire ho chuke hain
           setIsInvalidOrExpired(true);
           setIsTokenValid(false);
-          setErrorMessage(
+          const msg =
             error.data?.message ||
             error.message ||
-            'This password reset link is invalid or has expired. Please request a new link.'
-          );
+            'This password reset link is invalid or has expired. Please request a new link.';
+          setErrorMessage(msg);
+          showToast(msg, 'error');
         })
         .finally(() => {
           setIsVerifyingToken(false);
@@ -160,29 +166,39 @@ export default function LoginPortal() {
     return () => clearInterval(interval);
   }, [isOtpMode, otpTimer]);
 
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage('');
-    }, 4500);
+  const showToast = (message, type = 'info', duration = 4000) => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+    setToast({ show: true, message, type });
+    toastTimerRef.current = setTimeout(() => {
+      setToast({ show: false, message: '', type: 'info' });
+    }, duration);
+  };
+
+  const hideToast = () => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+    setToast({ show: false, message: '', type: 'info' });
   };
 
   const handlePasswordLogin = async (e) => {
     e.preventDefault();
     if (!identifier || !password) {
-      showToast('Please enter both Email and Password.');
+      showToast('Please enter both Email/Mobile and Password.', 'warning');
       return;
     }
     setIsLoading(true);
     try {
       const res = await login(identifier, password, 'Vyapari Darbaar Admin Web');
-      showToast(res?.message || 'Login successful! Redirecting to Dashboard...');
+      showToast(res?.message || 'Login successful! Redirecting to Dashboard...', 'success');
       setTimeout(() => {
         navigate('/dashboard');
       }, 600);
     } catch (err) {
       const errMsg = err.message || 'Invalid credentials or login failed. Please try again.';
-      showToast(errMsg);
+      showToast(errMsg, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -191,16 +207,16 @@ export default function LoginPortal() {
   const handleForgotPasswordSubmit = async (e) => {
     e.preventDefault();
     if (!forgotEmail) {
-      showToast('Please enter your admin email address.');
+      showToast('Please enter your admin email address.', 'warning');
       return;
     }
     setIsForgotSubmitting(true);
     try {
       const res = await forgotPassword(forgotEmail);
-      showToast(res?.message || 'Password reset link sent to your email.');
+      showToast(res?.message || 'Password reset link sent to your email successfully!', 'success');
       setResetEmailSent(true);
     } catch (err) {
-      showToast(err.message || 'Failed to send reset link. Please verify the email address.');
+      showToast(err.message || 'Failed to send reset link. Please verify the email address.', 'error');
     } finally {
       setIsForgotSubmitting(false);
     }
@@ -228,6 +244,7 @@ export default function LoginPortal() {
     setResetToken('');
     setForgotStep(1);
     setResetEmailSent(false);
+    showToast('Enter your email to request a new reset link.', 'info', 2500);
     if (location.pathname.includes('reset-password') || searchParams.get('token')) {
       navigate('/login', { replace: true });
     }
@@ -237,19 +254,19 @@ export default function LoginPortal() {
   const handleResetPasswordSubmit = async (e) => {
     e.preventDefault();
     if (!resetToken) {
-      showToast('Reset token is missing. Please click the reset link received in your email.');
+      showToast('Reset token is missing. Please click the reset link received in your email.', 'error');
       return;
     }
     if (!newPassword || !confirmPassword) {
-      showToast('Please enter and confirm your new password.');
+      showToast('Please enter and confirm your new password.', 'warning');
       return;
     }
     if (newPassword.length < 6) {
-      showToast('Password must be at least 6 characters.');
+      showToast('Password must be at least 6 characters.', 'warning');
       return;
     }
     if (newPassword !== confirmPassword) {
-      showToast('Passwords do not match.');
+      showToast('Passwords do not match. Please verify and re-enter.', 'error');
       return;
     }
     setIsForgotSubmitting(true);
@@ -260,7 +277,7 @@ export default function LoginPortal() {
         password: newPassword,
         password_confirmation: confirmPassword,
       });
-      showToast(res?.message || 'Password reset successfully! You can now log in.');
+      showToast(res?.message || 'Password reset successfully! You can now log in.', 'success', 5000);
       setShowForgotModal(false);
       setForgotStep(1);
       setResetEmailSent(false);
@@ -271,7 +288,7 @@ export default function LoginPortal() {
       setIsTokenFromUrl(false);
       navigate('/login', { replace: true });
     } catch (err) {
-      showToast(err.message || 'Failed to reset password. The reset link may be invalid or expired.');
+      showToast(err.message || 'Failed to reset password. The reset link may be invalid or expired.', 'error');
     } finally {
       setIsForgotSubmitting(false);
     }
@@ -300,12 +317,16 @@ export default function LoginPortal() {
     if (channel === 'mobile') {
       const digits = otpIdentifier.replace(/\D/g, '').slice(0, 10);
       setOtpIdentifier(digits);
+      showToast('Switched to Mobile OTP (+91)', 'info', 2000);
+    } else {
+      showToast('Switched to Email OTP', 'info', 2000);
     }
   };
 
   const switchToOtpMode = () => {
     setIsOtpMode(true);
     setOtpStep(1);
+    showToast('Switched to Login with OTP mode.', 'info', 2000);
     if (identifier) {
       const trimmed = identifier.trim();
       if (/^\d/.test(trimmed)) {
@@ -322,20 +343,20 @@ export default function LoginPortal() {
     e.preventDefault();
     const cleanId = otpIdentifier.trim();
     if (!cleanId) {
-      showToast(otpChannel === 'mobile' ? 'Please enter your mobile number.' : 'Please enter your email address.');
+      showToast(otpChannel === 'mobile' ? 'Please enter your mobile number.' : 'Please enter your email address.', 'warning');
       return;
     }
 
     if (otpChannel === 'mobile') {
       const digits = cleanId.replace(/\D/g, '');
       if (digits.length !== 10) {
-        showToast('Please enter a valid 10-digit mobile number.');
+        showToast('Please enter a valid 10-digit Indian mobile number.', 'error');
         return;
       }
     } else {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(cleanId)) {
-        showToast('Please enter a valid email address.');
+        showToast('Please enter a valid email address.', 'error');
         return;
       }
     }
@@ -343,7 +364,7 @@ export default function LoginPortal() {
     setIsOtpSending(true);
     try {
       const targetDisplay = otpChannel === 'mobile' ? `+91 ${cleanId}` : cleanId;
-      showToast(`OTP dispatched successfully to ${targetDisplay}`);
+      showToast(`OTP dispatched successfully to ${targetDisplay}!`, 'success');
       setOtpStep(2);
       setOtpDigits(['', '', '', '', '', '']);
       setOtpTimer(30);
@@ -352,7 +373,7 @@ export default function LoginPortal() {
         otpInputRefs.current[0]?.focus();
       }, 150);
     } catch (err) {
-      showToast(err.message || 'Failed to dispatch OTP. Please try again.');
+      showToast(err.message || 'Failed to dispatch OTP. Please try again.', 'error');
     } finally {
       setIsOtpSending(false);
     }
@@ -380,13 +401,13 @@ export default function LoginPortal() {
     e.preventDefault();
     const enteredOtp = otpDigits.join('');
     if (enteredOtp.length < 6) {
-      showToast('Please enter the complete 6-digit OTP.');
+      showToast('Please enter the complete 6-digit OTP.', 'warning');
       return;
     }
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      showToast('OTP verified successfully! Redirecting...');
+      showToast('OTP verified successfully! Redirecting to Dashboard...', 'success');
       navigate('/dashboard');
     }, 800);
   };
@@ -397,7 +418,7 @@ export default function LoginPortal() {
     setOtpTimer(30);
     setCanResend(false);
     const targetDisplay = otpChannel === 'mobile' ? `+91 ${otpIdentifier}` : otpIdentifier;
-    showToast(`A new OTP has been sent to ${targetDisplay}`);
+    showToast(`A fresh OTP has been sent to ${targetDisplay}`, 'success');
     otpInputRefs.current[0]?.focus();
   };
 
@@ -444,6 +465,7 @@ export default function LoginPortal() {
                       onClick={() => {
                         setSelectedLang(lang);
                         setIsLangOpen(false);
+                        showToast(`Language switched to ${lang.label}`, 'info', 2500);
                       }}
                     >
                       {lang.label}
@@ -550,6 +572,7 @@ export default function LoginPortal() {
                         setForgotStep(1);
                         setResetEmailSent(false);
                         setShowForgotModal(true);
+                        showToast('Enter your registered email to receive password reset instructions.', 'info', 3000);
                       }}
                       className="forgot-link"
                     >
@@ -673,6 +696,7 @@ export default function LoginPortal() {
                     onClick={() => {
                       setIsOtpMode(false);
                       setOtpStep(1);
+                      showToast('Switched back to Password Login.', 'info', 2000);
                     }}
                   >
                     ← Back to Password Login
@@ -694,7 +718,10 @@ export default function LoginPortal() {
                     <button
                       type="button"
                       className="otp-change-btn"
-                      onClick={() => setOtpStep(1)}
+                      onClick={() => {
+                        setOtpStep(1);
+                        showToast('You can now change your email or mobile number.', 'info', 2000);
+                      }}
                     >
                       Change
                     </button>
@@ -747,7 +774,10 @@ export default function LoginPortal() {
                   <button
                     type="button"
                     className="btn-back-link"
-                    onClick={() => setOtpStep(1)}
+                    onClick={() => {
+                      setOtpStep(1);
+                      showToast('You can now update your email or mobile number.', 'info', 2000);
+                    }}
                   >
                     ← Change {otpChannel === 'mobile' ? 'Mobile Number' : 'Email Address'}
                   </button>
@@ -800,7 +830,7 @@ export default function LoginPortal() {
                 className="footer-link"
                 onClick={(e) => {
                   e.preventDefault();
-                  showToast('Privacy Policy');
+                  showToast('Opening Vyapari Darbaar Privacy Policy...', 'info', 2000);
                 }}
               >
                 Privacy Policy
@@ -811,7 +841,7 @@ export default function LoginPortal() {
                 className="footer-link"
                 onClick={(e) => {
                   e.preventDefault();
-                  showToast('Terms of Use');
+                  showToast('Opening Vyapari Darbaar Terms of Use...', 'info', 2000);
                 }}
               >
                 Terms of Use
@@ -1097,9 +1127,27 @@ export default function LoginPortal() {
       )}
 
       {/* Toast Notification (Rendered on top of all content and modals) */}
-      {toastMessage && (
-        <div className="toast-notice" role="status" aria-live="polite">
-          {toastMessage}
+      {toast.show && (
+        <div
+          className={`toast-notice toast-${toast.type}`}
+          role="status"
+          aria-live="polite"
+        >
+          <span className="toast-icon">
+            {toast.type === 'success' && '✓'}
+            {toast.type === 'error' && '✕'}
+            {toast.type === 'warning' && '⚠'}
+            {toast.type === 'info' && 'ℹ'}
+          </span>
+          <span className="toast-text">{toast.message}</span>
+          <button
+            type="button"
+            className="toast-close-btn"
+            onClick={hideToast}
+            aria-label="Close notification"
+          >
+            ✕
+          </button>
         </div>
       )}
     </>
