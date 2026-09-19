@@ -260,9 +260,6 @@ export default function LoginPortal() {
 
   return (
     <>
-      {/* Toast Notification */}
-      {toastMessage && <div className="toast-notice">{toastMessage}</div>}
-
       <div className="app-viewport">
         {/* Left Showcase (Emerald Imperial Banner with Spices & Logistics Art) */}
         <aside className="left-showcase" aria-label="Vyapari Darbaar Showcase">
@@ -751,6 +748,13 @@ export default function LoginPortal() {
               </form>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Toast Notification (Rendered on top of all content and modals) */}
+      {toastMessage && (
+        <div className="toast-notice" role="status" aria-live="polite">
+          {toastMessage}
         </div>
       )}
     </>
