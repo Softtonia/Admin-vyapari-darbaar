@@ -36,7 +36,7 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
   const [sortBy, setSortBy] = useState('Latest Updated');
   const [selectedIds, setSelectedIds] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState('15 / page');
+  const [pageSize, setPageSize] = useState('20 / page');
 
   // Exact 15 commodities from the design screenshot
   const commoditiesList = [
@@ -353,15 +353,24 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
     let isMounted = true;
     setIsLoading(true);
 
-    const parsedPageSize = parseInt(pageSize, 10) || 15;
+    const parsedPageSize = parseInt(pageSize, 10) || 20;
     const params = {
-      page: currentPage,
+      page: currentPage || 1,
       per_page: parsedPageSize,
+      status: 1,
+      sort_by: 'sort_order',
+      sort_order: 'asc',
       search: searchCommodity.trim() || undefined,
     };
     if (categoryFilter && categoryFilter !== 'All Categories') {
-      const matched = categoriesOptions.find((c) => c.name === categoryFilter || String(c.id) === String(categoryFilter));
-      if (matched) params.commodity_category_id = matched.id;
+      const matched = categoriesOptions.find(
+        (c) => c.name === categoryFilter || String(c.id) === String(categoryFilter)
+      );
+      if (matched) {
+        params.commodity_category_id = matched.id;
+      } else if (!isNaN(Number(categoryFilter))) {
+        params.commodity_category_id = categoryFilter;
+      }
     }
 
     getCommodities(params)
@@ -1048,7 +1057,7 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
             <button
               type="button"
               className="page-nav-btn next"
-              disabled={currentPage >= Math.max(1, Math.ceil((totalCount || filteredCommodities.length) / (parseInt(pageSize, 10) || 15)))}
+              disabled={currentPage >= Math.max(1, Math.ceil((totalCount || filteredCommodities.length) / (parseInt(pageSize, 10) || 20)))}
               onClick={() => setCurrentPage((p) => p + 1)}
             >
               ›
@@ -1064,6 +1073,7 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
                   setCurrentPage(1);
                 }}
               >
+                <option value="20 / page">20 / page</option>
                 <option value="15 / page">15 / page</option>
                 <option value="30 / page">30 / page</option>
                 <option value="50 / page">50 / page</option>

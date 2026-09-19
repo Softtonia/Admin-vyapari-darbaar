@@ -150,7 +150,14 @@ export async function bulkDeleteCommodityCategories(ids) {
  * @param {'asc'|'desc'} [params.sort_order='asc']
  */
 export async function getCommodities(params = {}) {
-  const url = buildUrl('/api/admin/commodities', params);
+  const defaultParams = {
+    page: 1,
+    per_page: 20,
+    status: 1,
+    sort_by: 'sort_order',
+    sort_order: 'asc',
+  };
+  const url = buildUrl('/api/admin/commodities', { ...defaultParams, ...params });
   return await apiFetch(url, { method: 'GET' });
 }
 
