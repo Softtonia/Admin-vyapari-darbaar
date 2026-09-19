@@ -156,7 +156,7 @@ export async function sendLoginOtp({ email, purpose = 'login' }) {
 export async function loginWithOtp({ email, otp }) {
   let response;
   try {
-    response = await apiFetch('/api/user/login-with-otp', {
+    response = await apiFetch('/api/auth/admin/login-with-otp', {
       method: 'POST',
       body: {
         email: email.trim(),
