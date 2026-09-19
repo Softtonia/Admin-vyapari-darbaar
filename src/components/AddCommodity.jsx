@@ -966,86 +966,8 @@ export default function AddCommodity({ onBack }) {
                   </div>
                 </div>
 
-                {/* Row 4: Unit & Sort Order */}
+                {/* Row 4: Quality Grade & Unit */}
                 <div className="form-row-2">
-                  <div className="form-group">
-                    <label className="form-label">
-                      Unit <span className="req-star">*</span>
-                    </label>
-                    <div className="select-wrapper">
-                      <select
-                        className={`form-select ${!unit ? 'is-placeholder' : ''}`}
-                        value={unit}
-                        onChange={(e) => setUnit(e.target.value)}
-                        required
-                      >
-                        <option value="QUINTAL">QUINTAL (100 Kg)</option>
-                        <option value="KILOGRAM">KILOGRAM (Kg)</option>
-                        <option value="METRIC_TON">METRIC TON</option>
-                        <option value="BAG">BAG (50 Kg)</option>
-                        <option value="PIECE">PIECE</option>
-                      </select>
-                      <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
-                    </div>
-                    <span className="field-hint">e.g. QUINTAL, KILOGRAM, BAG</span>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">
-                      Sort Order
-                    </label>
-                    <input
-                      type="number"
-                      className="form-input"
-                      placeholder="1"
-                      value={sortOrder}
-                      onChange={(e) => setSortOrder(e.target.value)}
-                      min="0"
-                    />
-                    <span className="field-hint">Display order (default: 1)</span>
-                  </div>
-                </div>
-
-                {/* Row 5: Description */}
-                <div className="form-group full-width">
-                  <label className="form-label">
-                    Description <span className="req-star">*</span>
-                  </label>
-                  <textarea
-                    className="form-textarea"
-                    rows={4}
-                    maxLength={500}
-                    placeholder="Provide a detailed description of the commodity, its uses, quality, and other relevant information..."
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    required
-                  />
-                  <div className="textarea-footer">
-                    <span className="char-counter">{description.length}/500</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 2: Commodity Specifications */}
-            <div className="add-comm-card">
-              <div className="add-comm-card-header">
-                <div className="card-header-icon-box">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1e293b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                  </svg>
-                </div>
-                <div className="card-header-titles">
-                  <h2 className="card-heading">Commodity Specifications</h2>
-                  <p className="card-subheading">Add key specifications and attributes.</p>
-                </div>
-              </div>
-
-              <div className="add-comm-card-body">
-                {/* Row 1: Quality Grade, Origin State, Common Uses */}
-                <div className="form-row-3">
                   <div className="form-group">
                     <label className="form-label">Quality Grade</label>
                     <div className="select-wrapper">
@@ -1078,113 +1000,62 @@ export default function AddCommodity({ onBack }) {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Origin State</label>
+                    <label className="form-label">
+                      Unit <span className="req-star">*</span>
+                    </label>
                     <div className="select-wrapper">
                       <select
-                        className={`form-select ${!originState ? 'is-placeholder' : ''}`}
-                        value={originState}
-                        onChange={(e) => setOriginState(e.target.value)}
+                        className={`form-select ${!unit ? 'is-placeholder' : ''}`}
+                        value={unit}
+                        onChange={(e) => setUnit(e.target.value)}
+                        required
                       >
-                        <option value="">Select State</option>
-                        {statesList.length > 0 ? (
-                          statesList.map((st) => (
-                            <option key={st.id} value={st.name}>
-                              {st.name}
-                            </option>
-                          ))
-                        ) : (
-                          <>
-                            <option value="Bihar">Bihar</option>
-                            <option value="Madhya Pradesh">Madhya Pradesh</option>
-                            <option value="Maharashtra">Maharashtra</option>
-                            <option value="Rajasthan">Rajasthan</option>
-                            <option value="Gujarat">Gujarat</option>
-                            <option value="Haryana">Haryana</option>
-                            <option value="Punjab">Punjab</option>
-                            <option value="Uttar Pradesh">Uttar Pradesh</option>
-                            <option value="Karnataka">Karnataka</option>
-                            <option value="West Bengal">West Bengal</option>
-                            <option value="Tamil Nadu">Tamil Nadu</option>
-                            <option value="Andhra Pradesh">Andhra Pradesh</option>
-                          </>
-                        )}
+                        <option value="QUINTAL">QUINTAL (100 Kg)</option>
+                        <option value="KILOGRAM">KILOGRAM (Kg)</option>
+                        <option value="METRIC_TON">METRIC TON</option>
+                        <option value="BAG">BAG (50 Kg)</option>
+                        <option value="PIECE">PIECE</option>
                       </select>
                       <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="6 9 12 15 18 9" />
                       </svg>
                     </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Common Uses</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="e.g. Food, Export, Industrial"
-                      value={commonUses}
-                      onChange={(e) => setCommonUses(e.target.value)}
-                    />
+                    <span className="field-hint">e.g. QUINTAL, KILOGRAM, BAG</span>
                   </div>
                 </div>
 
-                {/* Row 2: Harvest Season, Shelf Life, HSN Code */}
-                <div className="form-row-3">
-                  <div className="form-group">
-                    <label className="form-label">Harvest Season</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="e.g. Oct - Dec"
-                      value={harvestSeason}
-                      onChange={(e) => setHarvestSeason(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Shelf Life (Optional)</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="e.g. 12 months"
-                      value={shelfLife}
-                      onChange={(e) => setShelfLife(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">HSN Code (Optional)</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="e.g. 0714"
-                      value={hsnCode}
-                      onChange={(e) => setHSNCode(e.target.value)}
-                    />
-                  </div>
+                {/* Row 5: Sort Order */}
+                <div className="form-group">
+                  <label className="form-label">
+                    Sort Order
+                  </label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    placeholder="1"
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value)}
+                    min="0"
+                  />
+                  <span className="field-hint">Display order (default: 1)</span>
                 </div>
 
-                {/* Row 3: Minimum Order Quantity & Packing Type */}
-                <div className="form-row-2">
-                  <div className="form-group">
-                    <label className="form-label">Minimum Order Quantity (Optional)</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="e.g. 10 Quintals"
-                      value={minOrderQty}
-                      onChange={(e) => setMinOrderQty(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Packing Type (Optional)</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="e.g. Jute Bag, PP Bag, Loose"
-                      value={packingType}
-                      onChange={(e) => setPackingType(e.target.value)}
-                    />
+                {/* Row 6: Description */}
+                <div className="form-group full-width">
+                  <label className="form-label">
+                    Description <span className="req-star">*</span>
+                  </label>
+                  <textarea
+                    className="form-textarea"
+                    rows={4}
+                    maxLength={500}
+                    placeholder="Provide a detailed description of the commodity, its uses, quality, and other relevant information..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    required
+                  />
+                  <div className="textarea-footer">
+                    <span className="char-counter">{description.length}/500</span>
                   </div>
                 </div>
               </div>
@@ -1299,154 +1170,7 @@ export default function AddCommodity({ onBack }) {
               </div>
             </div>
 
-            {/* Card 4: Current Market Price */}
-            <div className="add-comm-card">
-              <div className="add-comm-card-header">
-                <div className="card-header-icon-box">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1e293b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <ellipse cx="12" cy="5" rx="9" ry="3" />
-                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
-                  </svg>
-                </div>
-                <div className="card-header-titles">
-                  <h2 className="card-heading">Current Market Price</h2>
-                  <p className="card-subheading">Add latest price information for this commodity.</p>
-                </div>
-              </div>
 
-              <div className="add-comm-card-body">
-                {/* Row 1: Current Price, Unit, Mandi */}
-                <div className="form-row-3">
-                  <div className="form-group">
-                    <label className="form-label">
-                      Current Price (₹) <span className="req-star">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="e.g. 1250"
-                      value={currentPrice}
-                      onChange={(e) => setCurrentPrice(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Unit</label>
-                    <div className="select-wrapper">
-                      <select
-                        className="form-select"
-                        value={priceUnit}
-                        onChange={(e) => setPriceUnit(e.target.value)}
-                      >
-                        <option value="Quintal">Quintal</option>
-                        <option value="Kilogram">Kilogram</option>
-                        <option value="Metric Ton">Metric Ton</option>
-                        <option value="Bag">Bag</option>
-                        <option value="Piece">Piece</option>
-                      </select>
-                      <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">
-                      Mandi <span className="req-star">*</span>
-                    </label>
-                    <div className="select-wrapper">
-                      <select
-                        className={`form-select ${!mandi ? 'is-placeholder' : ''}`}
-                        value={mandi}
-                        onChange={(e) => setMandi(e.target.value)}
-                      >
-                        <option value="">Select Mandi</option>
-                        {mandisList.length > 0 ? (
-                          mandisList.map((m) => (
-                            <option key={m.id} value={m.name}>
-                              {m.name}
-                            </option>
-                          ))
-                        ) : (
-                          <>
-                            <option value="Darbhanga">Darbhanga</option>
-                            <option value="Indore">Indore</option>
-                            <option value="Jaipur">Jaipur</option>
-                            <option value="Ratlam">Ratlam</option>
-                            <option value="Karnal">Karnal</option>
-                            <option value="Latur">Latur</option>
-                            <option value="Ujjain">Ujjain</option>
-                            <option value="Muzaffarpur">Muzaffarpur</option>
-                            <option value="Rajkot">Rajkot</option>
-                          </>
-                        )}
-                      </select>
-                      <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Row 2: Price Date, Trend, Price Change */}
-                <div className="form-row-3">
-                  <div className="form-group">
-                    <label className="form-label">
-                      Price Date <span className="req-star">*</span>
-                    </label>
-                    <div className="input-with-icon-left">
-                      <svg className="input-left-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                      </svg>
-                      <input
-                        type="text"
-                        className="form-input with-icon"
-                        value={priceDate}
-                        onChange={(e) => setPriceDate(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Trend</label>
-                    <div className="select-wrapper select-with-icon">
-                      <svg className="input-left-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1e293b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="22 12 18 12 15 9 9 15 6 12 2 12" />
-                      </svg>
-                      <select
-                        className="form-select with-icon"
-                        value={trend}
-                        onChange={(e) => setTrend(e.target.value)}
-                      >
-                        <option value="No Change">No Change</option>
-                        <option value="Increasing">Increasing</option>
-                        <option value="Decreasing">Decreasing</option>
-                      </select>
-                      <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Price Change (Optional)</label>
-                    <div className="input-with-badge-right">
-                      <input
-                        type="text"
-                        className="form-input with-badge"
-                        value={priceChange}
-                        onChange={(e) => setPriceChange(e.target.value)}
-                      />
-                      <span className="input-inner-badge green">0%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             {/* Card 5: Status & Visibility */}
             <div className="add-comm-card">
