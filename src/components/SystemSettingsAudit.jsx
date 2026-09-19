@@ -438,12 +438,9 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
         <div className="sys-settings-panel">
           <div className="sys-panel-header">
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h2 className="sys-panel-title">
-                  {activeTab === 'Site Settings' ? 'Site Settings' : 'System Settings'}
-                </h2>
-                <span className="site-api-badge">/api/admin/site-settings</span>
-              </div>
+              <h2 className="sys-panel-title">
+                {activeTab === 'Site Settings' ? 'Site Settings' : 'System Settings'}
+              </h2>
               <p className="sys-panel-subtitle">
                 {activeTab === 'Site Settings'
                   ? 'Manage site branding, logos, and platform metadata.'
@@ -1075,18 +1072,6 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                 <div className="serp-desc">
                   {siteDescription ||
                     'Explore real-time mandi rates, commodity prices, and connect with trusted agricultural traders across India on Vyapari Darbaar.'}
-                </div>
-              </div>
-
-              {/* Endpoint Information card */}
-              <div style={{ marginTop: '16px', padding: '12px', background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '6px' }}>
-                <div style={{ fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
-                  ⚡ API Endpoint Specifications
-                </div>
-                <div style={{ fontSize: '11.5px', color: '#6b7280', display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                  <div><strong>GET:</strong> <code>/api/admin/site-settings</code> (Requires Admin Bearer Token)</div>
-                  <div><strong>PATCH:</strong> <code>/api/admin/site-settings</code> (Multipart FormData or JSON)</div>
-                  <div><strong>PUBLIC:</strong> <code>/api/site-settings</code> (Public Cached Response, 1h TTL)</div>
                 </div>
               </div>
             </div>
