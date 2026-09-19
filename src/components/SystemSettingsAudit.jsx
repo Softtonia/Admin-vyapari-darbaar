@@ -717,25 +717,6 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                         />
                       </div>
 
-                      <div className="sys-form-group" style={{ gridColumn: 'span 2' }}>
-                        <label>Site Description</label>
-                        <textarea
-                          rows={2}
-                          value={siteDescription}
-                          placeholder="Brief platform description..."
-                          onChange={(e) => setSiteDescription(e.target.value)}
-                          style={{
-                            width: '100%',
-                            padding: '6px 10px',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '6px',
-                            fontSize: '12px',
-                            fontFamily: 'inherit',
-                            resize: 'vertical',
-                          }}
-                        />
-                      </div>
-
                       <div className="sys-form-group">
                         <label>Admin Email</label>
                         <input
@@ -781,55 +762,6 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                           <option>EUR (€)</option>
                         </select>
                       </div>
-                    </div>
-
-                    {/* Logos Upload Row for Accordion 1 */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '12px', marginBottom: '14px' }}>
-                      <div style={{ border: '1px solid #e5e7eb', borderRadius: '6px', padding: '10px', background: '#f9fafb' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Web Logo</div>
-                        {webLogoPreview && (
-                          <div style={{ height: '45px', display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
-                            <img src={webLogoPreview} alt="Web Logo" style={{ maxHeight: '40px', maxWidth: '100%', objectFit: 'contain' }} />
-                          </div>
-                        )}
-                        <button
-                          type="button"
-                          className="btn-upload-logo"
-                          onClick={() => webLogoInputRef.current?.click()}
-                          style={{ fontSize: '11px', padding: '5px 8px', width: '100%' }}
-                        >
-                          {webLogoFile ? 'Change File' : 'Upload Web Logo'}
-                        </button>
-                      </div>
-
-                      <div style={{ border: '1px solid #e5e7eb', borderRadius: '6px', padding: '10px', background: '#f9fafb' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Mobile Logo</div>
-                        {mobileLogoPreview && (
-                          <div style={{ height: '45px', display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
-                            <img src={mobileLogoPreview} alt="Mobile Logo" style={{ maxHeight: '40px', maxWidth: '100%', objectFit: 'contain' }} />
-                          </div>
-                        )}
-                        <button
-                          type="button"
-                          className="btn-upload-logo"
-                          onClick={() => mobileLogoInputRef.current?.click()}
-                          style={{ fontSize: '11px', padding: '5px 8px', width: '100%' }}
-                        >
-                          {mobileLogoFile ? 'Change File' : 'Upload Mobile Logo'}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div style={{ marginBottom: '16px' }}>
-                      <button
-                        type="button"
-                        className="btn-save-settings"
-                        onClick={handleSaveSiteSettings}
-                        disabled={isSavingSite}
-                        style={{ width: '100%', padding: '8px' }}
-                      >
-                        {isSavingSite ? 'Saving Site Settings...' : 'Save Site Settings (/api/admin/site-settings)'}
-                      </button>
                     </div>
 
                   {/* Platform Features Sub-section */}
