@@ -1,11 +1,160 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './SystemSettingsAudit.css';
+import {
+  getAdminSiteSettings,
+  updateAdminSiteSettings,
+  getSiteLogoUrl,
+} from '../api/siteSettingService';
+import sidebarLogoImg from '../assets/sidebar_logo.png';
 
-export default function SystemSettingsAudit() {
-  const [activeTab, setActiveTab] = useState('General Settings');
+export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
+  const [activeTab, setActiveTab] = useState(defaultTab || 'Site Settings');
   const [expandedSection, setExpandedSection] = useState('site'); // 'site' expanded by default
 
-  // Form states
+  useEffect(() => {
+    if (defaultTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab]);
+
+  // Site Settings API State (/api/admin/site-settings)
+  const [siteName, setSiteName] = useState('Vyapari Darbar');
+  const [siteTitle, setSiteTitle] = useState('');
+  const [siteDescription, setSiteDescription] = useState('');
+  const [webLogoUrl, setWebLogoUrl] = useState(null);
+  const [mobileLogoUrl, setMobileLogoUrl] = useState(null);
+  const [webLogoFile, setWebLogoFile] = useState(null);
+  const [webLogoPreview, setWebLogoPreview] = useState(null);
+  const [mobileLogoFile, setMobileLogoFile] = useState(null);
+  const [mobileLogoPreview, setMobileLogoPreview] = useState(null);
+  const [siteMeta, setSiteMeta] = useState(null);
+  const [isLoadingSite, setIsLoadingSite] = useState(false);
+  const [isSavingSite, setIsSavingSite] = useState(false);
+  const [siteToast, setSiteToast] = useState(null);
+
+  const webLogoInputRef = useRef(null);
+  const mobileLogoInputRef = useRef(null);
+
+  const showSiteToast = (msg, type = 'success') => {
+    setSiteToast({ msg, type });
+    setTimeout(() => setSiteToast(null), 4000);
+  };
+
+  const loadSiteSettings = () => {
+    setIsLoadingSite(true);
+    getAdminSiteSettings()
+      .then((res) => {
+        const item = res?.data || res;
+        if (item) {
+          setSiteName(item.site_name || 'Vyapari Darbar');
+          setSiteTitle(item.site_title || '');
+          setSiteDescription(item.site_description || '');
+          setWebLogoUrl(item.web_logo || null);
+          setMobileLogoUrl(item.mobile_logo || null);
+          setWebLogoPreview(item.web_logo ? getSiteLogoUrl(item.web_logo) : null);
+          setMobileLogoPreview(item.mobile_logo ? getSiteLogoUrl(item.mobile_logo) : null);
+          setSiteMeta({
+            id: item.id || 1,
+            created_at: item.created_at,
+            updated_at: item.updated_at,
+          });
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to load site settings from API:', err);
+      })
+      .finally(() => {
+        setIsLoadingSite(false);
+      });
+  };
+
+  useEffect(() => {
+    loadSiteSettings();
+  }, []);
+
+  const handleWebLogoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      showSiteToast('Web logo file size exceeds 2MB limit', 'error');
+      return;
+    }
+    setWebLogoFile(file);
+    setWebLogoPreview(URL.createObjectURL(file));
+  };
+
+  const handleMobileLogoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      showSiteToast('Mobile logo file size exceeds 2MB limit', 'error');
+      return;
+    }
+    setMobileLogoFile(file);
+    setMobileLogoPreview(URL.createObjectURL(file));
+  };
+
+  const handleClearWebLogo = () => {
+    setWebLogoFile(null);
+    setWebLogoPreview(webLogoUrl ? getSiteLogoUrl(webLogoUrl) : null);
+    if (webLogoInputRef.current) webLogoInputRef.current.value = '';
+  };
+
+  const handleClearMobileLogo = () => {
+    setMobileLogoFile(null);
+    setMobileLogoPreview(mobileLogoUrl ? getSiteLogoUrl(mobileLogoUrl) : null);
+    if (mobileLogoInputRef.current) mobileLogoInputRef.current.value = '';
+  };
+
+  const handleSaveSiteSettings = async (e) => {
+    if (e) e.preventDefault();
+    if (!siteName.trim()) {
+      showSiteToast('Site Name is required', 'error');
+      return;
+    }
+    setIsSavingSite(true);
+    try {
+      const payload = {
+        site_name: siteName.trim(),
+        site_title: siteTitle.trim(),
+        site_description: siteDescription.trim(),
+      };
+      if (webLogoFile) {
+        payload.web_logo = webLogoFile;
+      }
+      if (mobileLogoFile) {
+        payload.mobile_logo = mobileLogoFile;
+      }
+      const res = await updateAdminSiteSettings(payload);
+      showSiteToast('Site settings updated successfully!', 'success');
+      const updated = res?.data || res;
+      if (updated) {
+        if (updated.site_name) setSiteName(updated.site_name);
+        if (updated.site_title !== undefined) setSiteTitle(updated.site_title || '');
+        if (updated.site_description !== undefined) setSiteDescription(updated.site_description || '');
+        if (updated.web_logo) {
+          setWebLogoUrl(updated.web_logo);
+          setWebLogoPreview(getSiteLogoUrl(updated.web_logo));
+          setWebLogoFile(null);
+        }
+        if (updated.mobile_logo) {
+          setMobileLogoUrl(updated.mobile_logo);
+          setMobileLogoPreview(getSiteLogoUrl(updated.mobile_logo));
+          setMobileLogoFile(null);
+        }
+        setSiteMeta((prev) => ({
+          ...prev,
+          updated_at: updated.updated_at || new Date().toISOString(),
+        }));
+      }
+    } catch (err) {
+      showSiteToast(err.message || 'Failed to update site settings', 'error');
+    } finally {
+      setIsSavingSite(false);
+    }
+  };
+
+  // Form states (System config)
   const [platformName, setPlatformName] = useState('Vyapari Darbaar');
   const [siteUrl, setSiteUrl] = useState('https://www.vyaparidarbaar.com');
   const [adminEmail, setAdminEmail] = useState('admin@vyaparidarbaar.com');
@@ -257,9 +406,11 @@ export default function SystemSettingsAudit() {
       </div>
 
       {/* 2. Row 2: Tabs Bar */}
+      {/* 2. Row 2: Tabs Bar */}
       <div className="sys-tabs-bar">
         <div className="sys-nav-tabs">
           {[
+            'Site Settings',
             'General Settings',
             'Email & Notifications',
             'Security',
@@ -282,107 +433,336 @@ export default function SystemSettingsAudit() {
       {/* 3. Main Split Layout: Left Settings vs Right Audit Logs */}
       <div className="sys-main-split">
         {/* ==================================================================
-            Left Panel: System Settings
+            Left Panel: Settings (Site Settings vs System Settings)
             ================================================================== */}
         <div className="sys-settings-panel">
           <div className="sys-panel-header">
             <div>
-              <h2 className="sys-panel-title">System Settings</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h2 className="sys-panel-title">
+                  {activeTab === 'Site Settings' ? 'Site Settings' : 'System Settings'}
+                </h2>
+                <span className="site-api-badge">/api/admin/site-settings</span>
+              </div>
               <p className="sys-panel-subtitle">
-                Manage platform configuration and preferences.
+                {activeTab === 'Site Settings'
+                  ? 'Manage site branding, logos, and platform metadata.'
+                  : 'Manage platform configuration and preferences.'}
               </p>
             </div>
-            <button type="button" className="btn-save-settings">
-              Save Changes
+            <button
+              type="button"
+              className="btn-save-settings"
+              onClick={handleSaveSiteSettings}
+              disabled={isSavingSite}
+            >
+              {isSavingSite ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
 
-          {/* Accordion Container */}
-          <div className="sys-accordions-group">
-            {/* Accordion 1: Site Configuration (Expanded) */}
-            <div className="sys-accordion-card">
-              <div
-                className="sys-accordion-header active"
-                onClick={() =>
-                  setExpandedSection(expandedSection === 'site' ? '' : 'site')
-                }
+          {siteToast && (
+            <div className={`site-toast-banner ${siteToast.type}`}>
+              <span>{siteToast.msg}</span>
+              <button
+                type="button"
+                onClick={() => setSiteToast(null)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px' }}
               >
-                <div className="sys-acc-title-wrap">
-                  <span className="acc-icon">⚙</span>
-                  <span className="acc-title">Site Configuration</span>
+                ✕
+              </button>
+            </div>
+          )}
+
+          {activeTab === 'Site Settings' ? (
+            /* Dedicated Site Settings Form (Directly integrated with api/admin/site-settings) */
+            <div className="site-settings-view">
+              <div className="sys-form-grid" style={{ gridTemplateColumns: '1fr' }}>
+                <div className="sys-form-group">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label>Site Name <span style={{ color: '#dc2626' }}>*</span></label>
+                    <span style={{ fontSize: '11px', color: '#9ca3af' }}>{siteName.length}/150</span>
+                  </div>
+                  <input
+                    type="text"
+                    maxLength={150}
+                    placeholder="Enter site name (e.g. Vyapari Darbar)"
+                    value={siteName}
+                    onChange={(e) => setSiteName(e.target.value)}
+                  />
                 </div>
-                <span className="acc-chevron">
-                  {expandedSection === 'site' ? '▲' : '▼'}
-                </span>
+
+                <div className="sys-form-group">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label>Site Title / Tagline</label>
+                    <span style={{ fontSize: '11px', color: '#9ca3af' }}>{siteTitle.length}/255</span>
+                  </div>
+                  <input
+                    type="text"
+                    maxLength={255}
+                    placeholder="Enter site title (e.g. Indian Commodities, Global Opportunities)"
+                    value={siteTitle}
+                    onChange={(e) => setSiteTitle(e.target.value)}
+                  />
+                </div>
+
+                <div className="sys-form-group">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label>Site Description</label>
+                    <span style={{ fontSize: '11px', color: '#9ca3af' }}>{siteDescription.length}/5000</span>
+                  </div>
+                  <textarea
+                    rows={3}
+                    maxLength={5000}
+                    placeholder="Provide a comprehensive description of the platform for search engines and traders..."
+                    value={siteDescription}
+                    onChange={(e) => setSiteDescription(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      fontSize: '13px',
+                      color: '#111827',
+                      fontFamily: 'inherit',
+                      resize: 'vertical',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
               </div>
 
-              {expandedSection === 'site' && (
-                <div className="sys-accordion-body">
-                  <div className="sys-form-grid">
-                    <div className="sys-form-group">
-                      <label>Platform Name</label>
-                      <input
-                        type="text"
-                        value={platformName}
-                        onChange={(e) => setPlatformName(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="sys-form-group">
-                      <label>Site URL</label>
-                      <input
-                        type="text"
-                        value={siteUrl}
-                        onChange={(e) => setSiteUrl(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="sys-form-group">
-                      <label>Admin Email</label>
-                      <input
-                        type="email"
-                        value={adminEmail}
-                        onChange={(e) => setAdminEmail(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="sys-form-group">
-                      <label>Timezone</label>
-                      <select
-                        value={timezone}
-                        onChange={(e) => setTimezone(e.target.value)}
-                      >
-                        <option>Asia/Kolkata (GMT +5:30)</option>
-                        <option>UTC (GMT +0:00)</option>
-                        <option>America/New_York (GMT -5:00)</option>
-                      </select>
-                    </div>
-
-                    <div className="sys-form-group">
-                      <label>Default Language</label>
-                      <select
-                        value={defaultLanguage}
-                        onChange={(e) => setDefaultLanguage(e.target.value)}
-                      >
-                        <option>English</option>
-                        <option>Hindi (हिन्दी)</option>
-                        <option>Gujarati (ગુજરાતી)</option>
-                        <option>Marathi (मराठी)</option>
-                      </select>
-                    </div>
-
-                    <div className="sys-form-group">
-                      <label>Currency</label>
-                      <select
-                        value={currency}
-                        onChange={(e) => setCurrency(e.target.value)}
-                      >
-                        <option>INR (₹)</option>
-                        <option>USD ($)</option>
-                        <option>EUR (€)</option>
-                      </select>
-                    </div>
+              {/* Logo Uploads Grid */}
+              <div className="site-logo-grid">
+                {/* Web Logo */}
+                <div className="site-logo-card">
+                  <div className="site-logo-header">
+                    <span className="site-logo-title">Web Logo</span>
+                    <span className="site-logo-badge">Navbar Brand</span>
                   </div>
+
+                  <div className="site-logo-preview-box">
+                    {webLogoPreview ? (
+                      <img src={webLogoPreview} alt="Web Logo Preview" className="site-logo-img" />
+                    ) : (
+                      <div className="site-logo-placeholder">
+                        <img src={sidebarLogoImg} alt="Default Logo" style={{ height: '36px', opacity: 0.6 }} />
+                        <span>No custom logo</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <input
+                    type="file"
+                    ref={webLogoInputRef}
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    style={{ display: 'none' }}
+                    onChange={handleWebLogoChange}
+                  />
+
+                  <div className="site-logo-actions">
+                    <button
+                      type="button"
+                      className="btn-upload-logo"
+                      onClick={() => webLogoInputRef.current?.click()}
+                    >
+                      {webLogoFile ? 'Change File' : webLogoPreview ? 'Replace Logo' : 'Upload Web Logo'}
+                    </button>
+                    {webLogoFile && (
+                      <button
+                        type="button"
+                        className="btn-clear-logo"
+                        onClick={handleClearWebLogo}
+                        title="Revert to stored logo"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  <span className="site-logo-hint">
+                    PNG, JPG, WEBP • Max 2MB {webLogoFile && `(${webLogoFile.name})`}
+                  </span>
+                </div>
+
+                {/* Mobile Logo */}
+                <div className="site-logo-card">
+                  <div className="site-logo-header">
+                    <span className="site-logo-title">Mobile Logo</span>
+                    <span className="site-logo-badge">App & Icon</span>
+                  </div>
+
+                  <div className="site-logo-preview-box">
+                    {mobileLogoPreview ? (
+                      <img src={mobileLogoPreview} alt="Mobile Logo Preview" className="site-logo-img" />
+                    ) : (
+                      <div className="site-logo-placeholder">
+                        <span style={{ fontSize: '24px' }}>📱</span>
+                        <span>No mobile logo</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <input
+                    type="file"
+                    ref={mobileLogoInputRef}
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    style={{ display: 'none' }}
+                    onChange={handleMobileLogoChange}
+                  />
+
+                  <div className="site-logo-actions">
+                    <button
+                      type="button"
+                      className="btn-upload-logo"
+                      onClick={() => mobileLogoInputRef.current?.click()}
+                    >
+                      {mobileLogoFile ? 'Change File' : mobileLogoPreview ? 'Replace Logo' : 'Upload Mobile Logo'}
+                    </button>
+                    {mobileLogoFile && (
+                      <button
+                        type="button"
+                        className="btn-clear-logo"
+                        onClick={handleClearMobileLogo}
+                        title="Revert to stored logo"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  <span className="site-logo-hint">
+                    Square ratio recommended • Max 2MB {mobileLogoFile && `(${mobileLogoFile.name})`}
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '10px', marginTop: '14px' }}>
+                <button
+                  type="button"
+                  className="btn-save-settings"
+                  onClick={handleSaveSiteSettings}
+                  disabled={isSavingSite}
+                  style={{ flex: 1 }}
+                >
+                  {isSavingSite ? 'Saving Settings...' : 'Save Site Settings'}
+                </button>
+                <button
+                  type="button"
+                  onClick={loadSiteSettings}
+                  disabled={isLoadingSite || isSavingSite}
+                  style={{
+                    padding: '7px 14px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    background: '#ffffff',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    color: '#374151',
+                  }}
+                >
+                  Reload
+                </button>
+              </div>
+
+              {/* Meta footer */}
+              <div className="site-meta-footer">
+                <span>Setting ID: #{siteMeta?.id || 1}</span>
+                <span>
+                  {siteMeta?.updated_at
+                    ? `Last updated: ${new Date(siteMeta.updated_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}`
+                    : 'Synced with live database'}
+                </span>
+              </div>
+            </div>
+          ) : (
+            /* Accordion Container for General/Other Settings */
+            <div className="sys-accordions-group">
+              {/* Accordion 1: Site Configuration (Connected to api/admin/site-settings) */}
+              <div className="sys-accordion-card">
+                <div
+                  className="sys-accordion-header active"
+                  onClick={() =>
+                    setExpandedSection(expandedSection === 'site' ? '' : 'site')
+                  }
+                >
+                  <div className="sys-acc-title-wrap">
+                    <span className="acc-icon">⚙</span>
+                    <span className="acc-title">Site Configuration (API Connected)</span>
+                  </div>
+                  <span className="acc-chevron">
+                    {expandedSection === 'site' ? '▲' : '▼'}
+                  </span>
+                </div>
+
+                {expandedSection === 'site' && (
+                  <div className="sys-accordion-body">
+                    <div className="sys-form-grid">
+                      <div className="sys-form-group">
+                        <label>Site Name</label>
+                        <input
+                          type="text"
+                          value={siteName}
+                          onChange={(e) => setSiteName(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="sys-form-group">
+                        <label>Site Title</label>
+                        <input
+                          type="text"
+                          value={siteTitle}
+                          onChange={(e) => setSiteTitle(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="sys-form-group">
+                        <label>Admin Email</label>
+                        <input
+                          type="email"
+                          value={adminEmail}
+                          onChange={(e) => setAdminEmail(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="sys-form-group">
+                        <label>Timezone</label>
+                        <select
+                          value={timezone}
+                          onChange={(e) => setTimezone(e.target.value)}
+                        >
+                          <option>Asia/Kolkata (GMT +5:30)</option>
+                          <option>UTC (GMT +0:00)</option>
+                          <option>America/New_York (GMT -5:00)</option>
+                        </select>
+                      </div>
+
+                      <div className="sys-form-group">
+                        <label>Default Language</label>
+                        <select
+                          value={defaultLanguage}
+                          onChange={(e) => setDefaultLanguage(e.target.value)}
+                        >
+                          <option>English</option>
+                          <option>Hindi (हिन्दी)</option>
+                          <option>Gujarati (ગુજરાતી)</option>
+                          <option>Marathi (मराठी)</option>
+                        </select>
+                      </div>
+
+                      <div className="sys-form-group">
+                        <label>Currency</label>
+                        <select
+                          value={currency}
+                          onChange={(e) => setCurrency(e.target.value)}
+                        >
+                          <option>INR (₹)</option>
+                          <option>USD ($)</option>
+                          <option>EUR (€)</option>
+                        </select>
+                      </div>
+                    </div>
 
                   {/* Platform Features Sub-section */}
                   <div className="sys-features-section">
@@ -612,19 +992,114 @@ export default function SystemSettingsAudit() {
               </div>
             </div>
           </div>
-        </div>
+        )}
+      </div>
 
         {/* ==================================================================
-            Right Panel: Audit Logs
+            Right Panel: Live Branding Preview (when Site Settings) or Audit Logs
             ================================================================== */}
-        <div className="sys-logs-panel">
-          <div className="sys-logs-header">
-            <div>
-              <h2 className="sys-panel-title">Audit Logs</h2>
-              <p className="sys-panel-subtitle">
-                Track all important system activities and changes.
-              </p>
+        {activeTab === 'Site Settings' ? (
+          <div className="sys-logs-panel">
+            <div className="sys-logs-header">
+              <div>
+                <h2 className="sys-panel-title">Live Branding & Search Preview</h2>
+                <p className="sys-panel-subtitle">
+                  Preview how your site name, tagline, and logo appear to users and search engines.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="btn-export-logs"
+                onClick={() => setActiveTab('Audit Logs')}
+                title="Switch to Audit Trail"
+              >
+                <span>View Audit Logs →</span>
+              </button>
             </div>
+
+            {/* Desktop Navbar Preview */}
+            <div className="site-preview-card">
+              <div className="site-preview-header">
+                <span>🖥 Desktop Navbar Preview</span>
+              </div>
+              <div className="simulated-navbar">
+                {webLogoPreview ? (
+                  <img src={webLogoPreview} alt="Logo" className="simulated-nav-logo" />
+                ) : (
+                  <img src={sidebarLogoImg} alt="Default" className="simulated-nav-logo" />
+                )}
+                <div className="simulated-nav-info">
+                  <span className="simulated-nav-name">{siteName || 'Vyapari Darbar'}</span>
+                  <span className="simulated-nav-title">
+                    {siteTitle || "India's Agricultural Commodity Marketplace"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Mobile Header Preview */}
+              <div className="site-preview-header" style={{ marginTop: '14px' }}>
+                <span>📱 Mobile Header Preview</span>
+              </div>
+              <div
+                style={{
+                  background: '#026544',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  color: '#ffffff',
+                }}
+              >
+                {mobileLogoPreview ? (
+                  <img
+                    src={mobileLogoPreview}
+                    alt="Mobile Icon"
+                    style={{ width: '24px', height: '24px', borderRadius: '4px', background: '#fff', objectFit: 'contain' }}
+                  />
+                ) : (
+                  <span style={{ fontSize: '18px' }}>🌾</span>
+                )}
+                <span style={{ fontSize: '13px', fontWeight: 600 }}>{siteName || 'Vyapari Darbar'}</span>
+              </div>
+
+              {/* Google SERP Snippet Preview */}
+              <div className="site-preview-header" style={{ marginTop: '16px' }}>
+                <span>🔍 Search Engine Preview (Google SERP)</span>
+              </div>
+              <div className="simulated-serp">
+                <div className="serp-url">https://www.vyaparidarbar.com</div>
+                <div className="serp-title">
+                  {siteTitle ? `${siteTitle} | ${siteName}` : `${siteName} - Leading Agri Commodity Marketplace`}
+                </div>
+                <div className="serp-desc">
+                  {siteDescription ||
+                    'Explore real-time mandi rates, commodity prices, and connect with trusted agricultural traders across India on Vyapari Darbaar.'}
+                </div>
+              </div>
+
+              {/* Endpoint Information card */}
+              <div style={{ marginTop: '16px', padding: '12px', background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '6px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                  ⚡ API Endpoint Specifications
+                </div>
+                <div style={{ fontSize: '11.5px', color: '#6b7280', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                  <div><strong>GET:</strong> <code>/api/admin/site-settings</code> (Requires Admin Bearer Token)</div>
+                  <div><strong>PATCH:</strong> <code>/api/admin/site-settings</code> (Multipart FormData or JSON)</div>
+                  <div><strong>PUBLIC:</strong> <code>/api/site-settings</code> (Public Cached Response, 1h TTL)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="sys-logs-panel">
+            <div className="sys-logs-header">
+              <div>
+                <h2 className="sys-panel-title">Audit Logs</h2>
+                <p className="sys-panel-subtitle">
+                  Track all important system activities and changes.
+                </p>
+              </div>
             <div className="sys-logs-top-actions">
               <button type="button" className="btn-export-logs">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -825,7 +1300,8 @@ export default function SystemSettingsAudit() {
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
+  </div>
   );
 }

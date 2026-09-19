@@ -181,6 +181,14 @@ export default function App() {
             }
           />
           <Route
+            path="/site-settings"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Site Settings" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/system-settings"
             element={
               <ProtectedRoute>
