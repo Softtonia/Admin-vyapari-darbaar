@@ -904,143 +904,32 @@ export default function AddCommodity({ onBack }) {
                   </div>
                 </div>
 
-                {/* Row 3: Subcategory & Variety (Cascading from API) */}
-                <div className="form-row-2">
-                  <div className="form-group">
-                    <label className="form-label">
-                      Subcategory
-                    </label>
-                    <div className="select-wrapper">
-                      <select
-                        className={`form-select ${!subCategory ? 'is-placeholder' : ''}`}
-                        value={subCategory}
-                        onChange={(e) => {
-                          setSubCategory(e.target.value);
-                          setVariety('');
-                        }}
-                      >
-                        <option value="">Select Subcategory</option>
-                        {subcategoriesList.length > 0 ? (
-                          subcategoriesList.map((sub) => (
-                            <option key={sub.id} value={sub.id}>
-                              {sub.name}
-                            </option>
-                          ))
-                        ) : (
-                          <option value="" disabled>No subcategories found</option>
-                        )}
-                      </select>
-                      <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
-                    </div>
-                    <span className="field-hint">Loaded from api/admin/commodity-subcategories/options</span>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">
-                      Variety
-                    </label>
-                    <div className="select-wrapper">
-                      <select
-                        className={`form-select ${!variety ? 'is-placeholder' : ''}`}
-                        value={variety}
-                        onChange={(e) => setVariety(e.target.value)}
-                      >
-                        <option value="">Select Variety</option>
-                        {varietiesList.length > 0 ? (
-                          varietiesList.map((v) => (
-                            <option key={v.id} value={v.name || v.id}>
-                              {v.name}
-                            </option>
-                          ))
-                        ) : (
-                          <option value="" disabled>No varieties found</option>
-                        )}
-                      </select>
-                      <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
-                    </div>
-                    <span className="field-hint">Loaded from api/admin/commodity-varieties/options</span>
-                  </div>
-                </div>
-
-                {/* Row 4: Quality Grade & Unit */}
-                <div className="form-row-2">
-                  <div className="form-group">
-                    <label className="form-label">Quality Grade</label>
-                    <div className="select-wrapper">
-                      <select
-                        className={`form-select ${!qualityGrade ? 'is-placeholder' : ''}`}
-                        value={qualityGrade}
-                        onChange={(e) => setQualityGrade(e.target.value)}
-                      >
-                        <option value="">Select Quality Grade</option>
-                        {gradesList.length > 0 ? (
-                          gradesList.map((g) => (
-                            <option key={g.id} value={g.name || g.id}>
-                              {g.name}
-                            </option>
-                          ))
-                        ) : (
-                          <>
-                            <option value="FAQ">FAQ (Fair Average Quality)</option>
-                            <option value="Grade A">Grade A</option>
-                            <option value="Premium">Premium</option>
-                            <option value="Super">Super</option>
-                          </>
-                        )}
-                      </select>
-                      <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
-                    </div>
-                    <span className="field-hint">Loaded from api/admin/commodity-grades/options</span>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">
-                      Unit <span className="req-star">*</span>
-                    </label>
-                    <div className="select-wrapper">
-                      <select
-                        className={`form-select ${!unit ? 'is-placeholder' : ''}`}
-                        value={unit}
-                        onChange={(e) => setUnit(e.target.value)}
-                        required
-                      >
-                        <option value="QUINTAL">QUINTAL (100 Kg)</option>
-                        <option value="KILOGRAM">KILOGRAM (Kg)</option>
-                        <option value="METRIC_TON">METRIC TON</option>
-                        <option value="BAG">BAG (50 Kg)</option>
-                        <option value="PIECE">PIECE</option>
-                      </select>
-                      <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
-                    </div>
-                    <span className="field-hint">e.g. QUINTAL, KILOGRAM, BAG</span>
-                  </div>
-                </div>
-
-                {/* Row 5: Sort Order */}
+                {/* Row 3: Unit */}
                 <div className="form-group">
                   <label className="form-label">
-                    Sort Order
+                    Unit <span className="req-star">*</span>
                   </label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    placeholder="1"
-                    value={sortOrder}
-                    onChange={(e) => setSortOrder(e.target.value)}
-                    min="0"
-                  />
-                  <span className="field-hint">Display order (default: 1)</span>
+                  <div className="select-wrapper">
+                    <select
+                      className={`form-select ${!unit ? 'is-placeholder' : ''}`}
+                      value={unit}
+                      onChange={(e) => setUnit(e.target.value)}
+                      required
+                    >
+                      <option value="QUINTAL">QUINTAL (100 Kg)</option>
+                      <option value="KILOGRAM">KILOGRAM (Kg)</option>
+                      <option value="METRIC_TON">METRIC TON</option>
+                      <option value="BAG">BAG (50 Kg)</option>
+                      <option value="PIECE">PIECE</option>
+                    </select>
+                    <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </div>
+                  <span className="field-hint">e.g. QUINTAL, KILOGRAM, BAG</span>
                 </div>
 
-                {/* Row 6: Description */}
+                {/* Row 4: Description */}
                 <div className="form-group full-width">
                   <label className="form-label">
                     Description <span className="req-star">*</span>
