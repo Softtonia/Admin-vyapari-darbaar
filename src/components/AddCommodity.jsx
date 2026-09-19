@@ -1,7 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import welcomeBgImg from '../assets/welcome_banner_sketch.png';
 import commMakhana from '../assets/comm_makhana.png';
 import brandCrest from '../assets/brand_crest.png';
+import {
+  getCommodityCategoryOptions,
+  getCommoditySubcategoryOptions,
+  createCommodity,
+} from '../api/commodityService';
 import './AddCommodity.css';
 
 export default function AddCommodity({ onBack }) {
@@ -214,6 +219,65 @@ export default function AddCommodity({ onBack }) {
     setKeywordInput('');
   };
 
+  // Category & Subcategory API State
+  const [categoriesList, setCategoriesList] = useState([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const [subcategoriesList, setSubcategoriesList] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Load Categories Options from /api/admin/commodity-categories/options
+  useEffect(() => {
+    let isMounted = true;
+    async function loadCategoryOptions() {
+      setIsLoadingCategories(true);
+      try {
+        const res = await getCommodityCategoryOptions();
+        if (isMounted && res) {
+          const list = Array.isArray(res?.data)
+            ? res.data
+            : Array.isArray(res)
+            ? res
+            : [];
+          if (list.length > 0) {
+            setCategoriesList(list);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load category options from API:', err);
+      } finally {
+        if (isMounted) setIsLoadingCategories(false);
+      }
+    }
+    loadCategoryOptions();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Load Subcategories when Category changes
+  useEffect(() => {
+    if (!category) {
+      setSubcategoriesList([]);
+      return;
+    }
+    let isMounted = true;
+    getCommoditySubcategoryOptions({ commodity_category_id: category })
+      .then((res) => {
+        if (isMounted && res) {
+          const list = Array.isArray(res?.data)
+            ? res.data
+            : Array.isArray(res)
+            ? res
+            : [];
+          setSubcategoriesList(list);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, [category]);
+
   // Notification / Feedback State
   const [notification, setNotification] = useState(null);
 
@@ -272,12 +336,16 @@ export default function AddCommodity({ onBack }) {
   };
 
   // Actions
-  const handleSaveDraft = () => {
-    showToast('Commodity saved as draft successfully!');
+  const handleSaveDraft = async () => {
+    if (!commodityName.trim()) {
+      showToast('Please enter at least a commodity name to save as draft.', 'error');
+      return;
+    }
+    await handlePublishInternal(false);
   };
 
-  const handlePublish = (e) => {
-    e.preventDefault();
+  const handlePublish = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (!commodityName.trim()) {
       showToast('Please enter commodity name', 'error');
       return;
@@ -294,7 +362,63 @@ export default function AddCommodity({ onBack }) {
       showToast('Please provide a description', 'error');
       return;
     }
-    showToast(`Commodity "${commodityName}" published successfully!`);
+    await handlePublishInternal(statusActive);
+  };
+
+  const handlePublishInternal = async (isActiveStatus = true) => {
+    setIsSubmitting(true);
+    try {
+      const selectedCatObj = categoriesList.find(
+        (c) => String(c.id) === String(category) || c.name === category
+      );
+      const catId = selectedCatObj ? selectedCatObj.id : category;
+
+      const autoSlug = commodityName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)+/g, '');
+      const autoCode = (hsnCode || commodityName.slice(0, 6))
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, '');
+
+      // Build FormData for multipart request to /api/admin/commodities
+      const formData = new FormData();
+      formData.append('commodity_category_id', catId);
+      formData.append('name', commodityName.trim());
+      formData.append('slug', autoSlug);
+      formData.append('code', autoCode || 'COMM');
+      formData.append('unit', unit ? unit.toUpperCase().replace(/\s+/g, '_') : 'QUINTAL');
+      formData.append('description', description.trim());
+      formData.append('sort_order', '1');
+      formData.append('status', isActiveStatus ? '1' : '0');
+
+      if (imageFile) {
+        formData.append('image', imageFile);
+      }
+
+      const response = await createCommodity(formData);
+      showToast(response?.message || `Commodity "${commodityName}" created successfully!`, 'success');
+
+      if (onBack) {
+        setTimeout(() => {
+          onBack();
+        }, 1200);
+      }
+    } catch (err) {
+      console.error('Failed to create commodity:', err);
+      let errMsg = err.data?.message || err.message || 'Failed to create commodity.';
+      if (err.data?.errors && typeof err.data.errors === 'object') {
+        const firstErr = Object.values(err.data.errors)[0];
+        if (Array.isArray(firstErr)) {
+          errMsg = firstErr[0];
+        } else if (typeof firstErr === 'string') {
+          errMsg = firstErr;
+        }
+      }
+      showToast(errMsg, 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -512,17 +636,35 @@ export default function AddCommodity({ onBack }) {
                       <select
                         className={`form-select ${!category ? 'is-placeholder' : ''}`}
                         value={category}
-                        onChange={(e) => setCategory(e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setCategory(val);
+                          const matched = categoriesList.find((c) => String(c.id) === String(val));
+                          if (matched) {
+                            setMainCategory(matched.name);
+                          }
+                        }}
                         required
+                        disabled={isLoadingCategories}
                       >
-                        <option value="">Select Category</option>
-                        <option value="Grains & Cereals">Grains & Cereals</option>
-                        <option value="Pulses">Pulses</option>
-                        <option value="Oilseeds">Oilseeds</option>
-                        <option value="Spices">Spices</option>
-                        <option value="Dry Fruits & Nuts">Dry Fruits & Nuts</option>
-                        <option value="Commercial Crops">Commercial Crops</option>
-                        <option value="Fruits & Vegetables">Fruits & Vegetables</option>
+                        <option value="">{isLoadingCategories ? 'Loading Categories...' : 'Select Category'}</option>
+                        {categoriesList.length > 0 ? (
+                          categoriesList.map((cat) => (
+                            <option key={cat.id} value={cat.id}>
+                              {cat.name}
+                            </option>
+                          ))
+                        ) : (
+                          <>
+                            <option value="1">Grains & Cereals</option>
+                            <option value="2">Pulses</option>
+                            <option value="3">Oilseeds</option>
+                            <option value="4">Spices</option>
+                            <option value="5">Dry Fruits & Nuts</option>
+                            <option value="6">Commercial Crops</option>
+                            <option value="7">Fruits & Vegetables</option>
+                          </>
+                        )}
                       </select>
                       <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="6 9 12 15 18 9" />
@@ -558,11 +700,11 @@ export default function AddCommodity({ onBack }) {
                         required
                       >
                         <option value="">Select Unit</option>
-                        <option value="Quintal">Quintal</option>
-                        <option value="Kilogram">Kilogram</option>
-                        <option value="Metric Ton">Metric Ton</option>
-                        <option value="Bag">Bag</option>
-                        <option value="Piece">Piece</option>
+                        <option value="QUINTAL">Quintal (100 Kg)</option>
+                        <option value="KILOGRAM">Kilogram (Kg)</option>
+                        <option value="METRIC_TON">Metric Ton</option>
+                        <option value="BAG">Bag (50 Kg)</option>
+                        <option value="PIECE">Piece</option>
                       </select>
                       <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="6 9 12 15 18 9" />
@@ -1084,12 +1226,19 @@ export default function AddCommodity({ onBack }) {
               <button
                 type="submit"
                 className="btn-publish-commodity"
+                disabled={isSubmitting}
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="22" y1="2" x2="11" y2="13" />
-                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                </svg>
-                <span>Publish Commodity</span>
+                {isSubmitting ? (
+                  <span>Publishing...</span>
+                ) : (
+                  <>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="22" y1="2" x2="11" y2="13" />
+                      <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                    <span>Publish Commodity</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -1851,16 +2000,32 @@ export default function AddCommodity({ onBack }) {
                       <span className="select-prefix-icon">🍃</span>
                       <select
                         className="form-select with-prefix"
-                        value={mainCategory}
-                        onChange={(e) => setMainCategory(e.target.value)}
+                        value={category || mainCategory}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setCategory(val);
+                          const matched = categoriesList.find((c) => String(c.id) === String(val));
+                          setMainCategory(matched ? matched.name : val);
+                        }}
                       >
-                        <option value="Cereals & Grains">Cereals & Grains</option>
-                        <option value="Pulses & Legumes">Pulses & Legumes</option>
-                        <option value="Oilseeds">Oilseeds</option>
-                        <option value="Spices">Spices</option>
-                        <option value="Fruits & Vegetables">Fruits & Vegetables</option>
-                        <option value="Cash Crops">Cash Crops</option>
-                        <option value="Others">Others</option>
+                        <option value="">Select Category</option>
+                        {categoriesList.length > 0 ? (
+                          categoriesList.map((cat) => (
+                            <option key={cat.id} value={cat.id}>
+                              {cat.name}
+                            </option>
+                          ))
+                        ) : (
+                          <>
+                            <option value="Cereals & Grains">Cereals & Grains</option>
+                            <option value="Pulses & Legumes">Pulses & Legumes</option>
+                            <option value="Oilseeds">Oilseeds</option>
+                            <option value="Spices">Spices</option>
+                            <option value="Fruits & Vegetables">Fruits & Vegetables</option>
+                            <option value="Cash Crops">Cash Crops</option>
+                            <option value="Others">Others</option>
+                          </>
+                        )}
                       </select>
                       <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="6 9 12 15 18 9" />
@@ -1881,10 +2046,21 @@ export default function AddCommodity({ onBack }) {
                         value={subCategory}
                         onChange={(e) => setSubCategory(e.target.value)}
                       >
-                        <option value="Millets & Alternative Grains">Millets & Alternative Grains</option>
-                        <option value="Wheat & Barley">Wheat & Barley</option>
-                        <option value="Rice & Paddy">Rice & Paddy</option>
-                        <option value="Maize & Corn">Maize & Corn</option>
+                        <option value="">Select Sub Category</option>
+                        {subcategoriesList.length > 0 ? (
+                          subcategoriesList.map((sub) => (
+                            <option key={sub.id} value={sub.id}>
+                              {sub.name}
+                            </option>
+                          ))
+                        ) : (
+                          <>
+                            <option value="Millets & Alternative Grains">Millets & Alternative Grains</option>
+                            <option value="Wheat & Barley">Wheat & Barley</option>
+                            <option value="Rice & Paddy">Rice & Paddy</option>
+                            <option value="Maize & Corn">Maize & Corn</option>
+                          </>
+                        )}
                       </select>
                       <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="6 9 12 15 18 9" />
@@ -3374,12 +3550,19 @@ export default function AddCommodity({ onBack }) {
                 type="button"
                 className="btn-publish-commodity"
                 onClick={handlePublish}
+                disabled={isSubmitting}
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="22" y1="2" x2="11" y2="13" />
-                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                </svg>
-                <span>Publish Commodity</span>
+                {isSubmitting ? (
+                  <span>Publishing...</span>
+                ) : (
+                  <>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="22" y1="2" x2="11" y2="13" />
+                      <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                    <span>Publish Commodity</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
