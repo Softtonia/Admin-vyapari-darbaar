@@ -14,6 +14,8 @@ import {
   IndiaFlagIcon,
   ChevronDownIcon,
   FiligreeDivider,
+  MailIcon,
+  PhoneIcon,
 } from './Icons';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import '../App.css';
@@ -39,6 +41,10 @@ export default function LoginPortal() {
 
   // OTP Mode State
   const [isOtpMode, setIsOtpMode] = useState(false);
+  const [otpStep, setOtpStep] = useState(1);
+  const [otpIdentifier, setOtpIdentifier] = useState('');
+  const [otpChannel, setOtpChannel] = useState('email');
+  const [isOtpSending, setIsOtpSending] = useState(false);
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
   const [otpTimer, setOtpTimer] = useState(30);
   const [canResend, setCanResend] = useState(false);
@@ -271,6 +277,87 @@ export default function LoginPortal() {
     }
   };
 
+  const handleOtpIdentifierChange = (val) => {
+    const trimmed = val.trim();
+    const hasLetters = /[a-zA-Z]/.test(trimmed);
+    const hasAt = trimmed.includes('@');
+    const digitsOnly = val.replace(/\D/g, '');
+
+    // If starts with a digit or contains digits without letters/@, auto-detect mobile
+    if (!hasLetters && !hasAt && (digitsOnly.length > 0 || /^\d/.test(trimmed))) {
+      setOtpChannel('mobile');
+      setOtpIdentifier(digitsOnly.slice(0, 10));
+    } else {
+      if (hasAt || hasLetters) {
+        setOtpChannel('email');
+      }
+      setOtpIdentifier(val);
+    }
+  };
+
+  const handleSelectChannel = (channel) => {
+    setOtpChannel(channel);
+    if (channel === 'mobile') {
+      const digits = otpIdentifier.replace(/\D/g, '').slice(0, 10);
+      setOtpIdentifier(digits);
+    }
+  };
+
+  const switchToOtpMode = () => {
+    setIsOtpMode(true);
+    setOtpStep(1);
+    if (identifier) {
+      const trimmed = identifier.trim();
+      if (/^\d/.test(trimmed)) {
+        setOtpChannel('mobile');
+        setOtpIdentifier(trimmed.replace(/\D/g, '').slice(0, 10));
+      } else {
+        setOtpChannel('email');
+        setOtpIdentifier(trimmed);
+      }
+    }
+  };
+
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+    const cleanId = otpIdentifier.trim();
+    if (!cleanId) {
+      showToast(otpChannel === 'mobile' ? 'Please enter your mobile number.' : 'Please enter your email address.');
+      return;
+    }
+
+    if (otpChannel === 'mobile') {
+      const digits = cleanId.replace(/\D/g, '');
+      if (digits.length !== 10) {
+        showToast('Please enter a valid 10-digit mobile number.');
+        return;
+      }
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(cleanId)) {
+        showToast('Please enter a valid email address.');
+        return;
+      }
+    }
+
+    setIsOtpSending(true);
+    try {
+      const targetDisplay = otpChannel === 'mobile' ? `+91 ${cleanId}` : cleanId;
+      showToast(`OTP dispatched successfully to ${targetDisplay}`);
+      setOtpStep(2);
+      setOtpDigits(['', '', '', '', '', '']);
+      setOtpTimer(30);
+      setCanResend(false);
+      setTimeout(() => {
+        otpInputRefs.current[0]?.focus();
+      }, 150);
+    } catch (err) {
+      showToast(err.message || 'Failed to dispatch OTP. Please try again.');
+    } finally {
+      setIsOtpSending(false);
+    }
+  };
+
   const handleOtpChange = (index, value) => {
     if (!/^\d*$/.test(value)) return;
     const newOtp = [...otpDigits];
@@ -309,18 +396,9 @@ export default function LoginPortal() {
     setOtpDigits(['', '', '', '', '', '']);
     setOtpTimer(30);
     setCanResend(false);
-    showToast('A new OTP has been sent to your registered mobile/email.');
+    const targetDisplay = otpChannel === 'mobile' ? `+91 ${otpIdentifier}` : otpIdentifier;
+    showToast(`A new OTP has been sent to ${targetDisplay}`);
     otpInputRefs.current[0]?.focus();
-  };
-
-  const switchToOtpMode = () => {
-    setIsOtpMode(true);
-    setOtpTimer(30);
-    setCanResend(false);
-    showToast('OTP has been dispatched.');
-    setTimeout(() => {
-      otpInputRefs.current[0]?.focus();
-    }, 150);
   };
 
   return (
@@ -504,11 +582,126 @@ export default function LoginPortal() {
                     <span>Login with OTP</span>
                   </button>
                 </form>
+              ) : otpStep === 1 ? (
+                /* OTP Step 1: Input Email or Mobile Number to send OTP */
+                <form onSubmit={handleSendOtp} className="login-form otp-container">
+                  {/* Channel Switch Tabs */}
+                  <div className="otp-mode-tabs" role="tablist">
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={otpChannel === 'email'}
+                      className={`otp-mode-tab ${otpChannel === 'email' ? 'active' : ''}`}
+                      onClick={() => handleSelectChannel('email')}
+                    >
+                      <MailIcon size={14} color={otpChannel === 'email' ? '#083e28' : 'currentColor'} />
+                      <span>Email OTP</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={otpChannel === 'mobile'}
+                      className={`otp-mode-tab ${otpChannel === 'mobile' ? 'active' : ''}`}
+                      onClick={() => handleSelectChannel('mobile')}
+                    >
+                      <PhoneIcon size={14} color={otpChannel === 'mobile' ? '#083e28' : 'currentColor'} />
+                      <span>Mobile OTP (+91)</span>
+                    </button>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="otp-identifier">
+                      {otpChannel === 'mobile' ? 'Admin Mobile Number' : 'Admin Email Address'}
+                      <span className="required-star">*</span>
+                    </label>
+
+                    <div className="input-container">
+                      {/* Left Icon */}
+                      <span className="input-icon-left">
+                        {otpChannel === 'mobile' ? (
+                          <PhoneIcon size={18} color="#083e28" />
+                        ) : (
+                          <MailIcon size={18} color="#6b7280" />
+                        )}
+                      </span>
+
+                      {/* +91 Country Code Prefix if Mobile */}
+                      {otpChannel === 'mobile' && (
+                        <div className="otp-country-prefix">
+                          <IndiaFlagIcon width={16} height={11} />
+                          <span>+91</span>
+                        </div>
+                      )}
+
+                      <input
+                        id="otp-identifier"
+                        type={otpChannel === 'mobile' ? 'tel' : 'email'}
+                        inputMode={otpChannel === 'mobile' ? 'numeric' : 'email'}
+                        maxLength={otpChannel === 'mobile' ? 10 : 100}
+                        className={`form-input ${otpChannel === 'mobile' ? 'has-prefix' : ''}`}
+                        placeholder={
+                          otpChannel === 'mobile'
+                            ? '98765 43210'
+                            : 'admin@vyaparidarbar.com'
+                        }
+                        value={otpIdentifier}
+                        onChange={(e) => handleOtpIdentifierChange(e.target.value)}
+                        required
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+
+                  <p className="otp-info-text" style={{ textAlign: 'left', marginBottom: '18px', fontSize: '12.5px' }}>
+                    {otpChannel === 'mobile'
+                      ? 'We will send a 6-digit verification code via SMS to your Indian mobile number (+91).'
+                      : 'We will send a 6-digit verification code to your registered admin email address.'}
+                  </p>
+
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    disabled={isOtpSending}
+                  >
+                    <span>{isOtpSending ? 'Sending OTP...' : 'Send OTP'}</span>
+                    <span className="btn-arrow">→</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn-back-link"
+                    onClick={() => {
+                      setIsOtpMode(false);
+                      setOtpStep(1);
+                    }}
+                  >
+                    ← Back to Password Login
+                  </button>
+                </form>
               ) : (
-                /* OTP Verification Mode Form */
+                /* OTP Step 2: Enter 6-digit OTP */
                 <form onSubmit={handleVerifyOtp} className="login-form otp-container">
+                  {/* Destination Info Card with Change link */}
+                  <div className="otp-target-card">
+                    <div>
+                      <div style={{ fontSize: '11px', color: '#15803d', fontWeight: 600, letterSpacing: '0.04em' }}>
+                        OTP DISPATCHED TO
+                      </div>
+                      <div style={{ fontWeight: 600, fontSize: '13.5px', color: '#14532d' }}>
+                        {otpChannel === 'mobile' ? `+91 ${otpIdentifier}` : otpIdentifier}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="otp-change-btn"
+                      onClick={() => setOtpStep(1)}
+                    >
+                      Change
+                    </button>
+                  </div>
+
                   <p className="otp-info-text">
-                    Enter 6-digit OTP sent to your registered mobile number / email.
+                    Enter the 6-digit OTP received to verify your identity.
                   </p>
 
                   <div className="otp-inputs-grid">
@@ -554,9 +747,9 @@ export default function LoginPortal() {
                   <button
                     type="button"
                     className="btn-back-link"
-                    onClick={() => setIsOtpMode(false)}
+                    onClick={() => setOtpStep(1)}
                   >
-                    ← Back to Password Login
+                    ← Change {otpChannel === 'mobile' ? 'Mobile Number' : 'Email Address'}
                   </button>
                 </form>
               )}

@@ -573,6 +573,91 @@
   animation: fadeIn 0.2s ease-out;
 }
 
+.otp-mode-tabs {
+  display: flex;
+  background-color: #f1f5f9;
+  border-radius: 8px;
+  padding: 3px;
+  margin-bottom: 16px;
+  gap: 4px;
+}
+
+.otp-mode-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #64748b;
+  background: transparent;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.otp-mode-tab:hover {
+  color: #1e293b;
+}
+
+.otp-mode-tab.active {
+  background-color: #ffffff;
+  color: #083e28;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.otp-country-prefix {
+  position: absolute;
+  left: 40px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #374151;
+  padding-right: 8px;
+  border-right: 1.5px solid #d1d5db;
+  height: 22px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.form-input.has-prefix {
+  padding-left: 96px;
+}
+
+.otp-target-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 18px;
+  font-size: 13px;
+  color: #166534;
+}
+
+.otp-change-btn {
+  color: #083e28;
+  font-weight: 600;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.otp-change-btn:hover {
+  color: #042417;
+}
+
 .otp-info-text {
   font-size: 13px;
   color: var(--color-text-muted);
