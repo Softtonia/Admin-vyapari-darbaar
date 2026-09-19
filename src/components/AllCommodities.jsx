@@ -23,6 +23,7 @@ import {
   deleteCommodity,
   updateCommodityStatus,
 } from '../api/commodityService';
+import { API_BASE_URL } from '../api/config';
 import './AllCommodities.css';
 
 export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
@@ -283,11 +284,45 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
 
   // API Data States
   const [liveCommodities, setLiveCommodities] = useState([]);
+  const [hasLoadedApi, setHasLoadedApi] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [categoriesOptions, setCategoriesOptions] = useState([]);
   const [statesOptions, setStatesOptions] = useState([]);
   const [mandisOptions, setMandisOptions] = useState([]);
-  const [totalCount, setTotalCount] = useState(15);
+  const [totalCount, setTotalCount] = useState(0);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (msg, type = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const refetchCommodities = () => {
+    setRefreshTrigger((prev) => prev + 1);
+  };
+
+  // Helper to extract list from any API structure (paginated or plain array)
+  function extractCommoditiesList(res) {
+    if (!res) return [];
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res.data)) return res.data;
+    if (res.data && Array.isArray(res.data.data)) return res.data.data;
+    if (res.data && Array.isArray(res.data.commodities)) return res.data.commodities;
+    if (Array.isArray(res.commodities)) return res.commodities;
+    return [];
+  }
+
+  // Helper to get image URL with full storage domain if needed
+  function getCommodityImageUrl(img) {
+    if (!img) return commWheat;
+    if (typeof img !== 'string') return commWheat;
+    if (img.startsWith('http://') || img.startsWith('https://') || img.startsWith('data:')) {
+      return img;
+    }
+    const cleanPath = img.replace(/^\/?storage\//, '').replace(/^\//, '');
+    return `${API_BASE_URL}/storage/${cleanPath}`;
+  }
 
   // Load Categories, States, and Mandis Options on mount
   useEffect(() => {
@@ -313,31 +348,36 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
       .catch(() => {});
   }, []);
 
-  // Fetch Live Commodities from API
+  // Fetch Stored Commodities from API
   useEffect(() => {
     let isMounted = true;
     setIsLoading(true);
 
+    const parsedPageSize = parseInt(pageSize, 10) || 15;
     const params = {
       page: currentPage,
+      per_page: parsedPageSize,
       search: searchCommodity.trim() || undefined,
     };
     if (categoryFilter && categoryFilter !== 'All Categories') {
-      const matched = categoriesOptions.find((c) => c.name === categoryFilter);
+      const matched = categoriesOptions.find((c) => c.name === categoryFilter || String(c.id) === String(categoryFilter));
       if (matched) params.commodity_category_id = matched.id;
     }
 
     getCommodities(params)
       .then((res) => {
         if (isMounted && res) {
-          const list = Array.isArray(res?.data) ? res.data : [];
-          if (list.length > 0) {
-            setLiveCommodities(list);
-            if (res?.meta?.total) setTotalCount(res.meta.total);
-          }
+          const list = extractCommoditiesList(res);
+          setLiveCommodities(list);
+          const total = res?.meta?.total ?? res?.data?.total ?? res?.total ?? list.length;
+          setTotalCount(total);
+          setHasLoadedApi(true);
         }
       })
-      .catch((err) => console.warn('Failed to load commodities from API:', err))
+      .catch((err) => {
+        console.warn('Failed to load commodities from API:', err);
+        if (isMounted) setHasLoadedApi(true);
+      })
       .finally(() => {
         if (isMounted) setIsLoading(false);
       });
@@ -345,38 +385,94 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
     return () => {
       isMounted = false;
     };
-  }, [currentPage, searchCommodity, categoryFilter, categoriesOptions]);
+  }, [currentPage, pageSize, searchCommodity, categoryFilter, categoriesOptions, refreshTrigger]);
 
-  // Combine live data with fallback commodities
-  const displayCommodities =
-    liveCommodities.length > 0
-      ? liveCommodities.map((c, idx) => ({
-          id: c.id || idx + 1,
-          name: c.name,
-          image: c.image_url || c.image || commWheat,
-          category: c.category?.name || c.category_name || c.commodity_category?.name || 'Grains',
-          variety: c.variety?.name || c.variety || 'Standard',
-          unit: c.unit || 'Quintal',
-          price: c.price ? `₹${c.price}` : '₹2,100',
-          change: c.price_change || '+1.2%',
-          trend: c.trend === 'down' ? 'down' : 'up',
-          mandi: c.mandi?.name || c.mandi_name || 'Indore',
-          state: c.state?.name || c.state_name || 'Madhya Pradesh',
-          updatedDate: c.updated_at
-            ? new Date(c.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-            : 'Today',
-          updatedTime: c.updated_at
-            ? new Date(c.updated_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-            : '10:00 AM',
-          sparklinePoints: c.sparkline || '0,14 10,11 20,8 30,9 40,6 50,7 60,4',
-          status: c.status,
-        }))
-      : commoditiesList;
+  // Action: Delete Commodity
+  const handleDeleteCommodity = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to delete commodity "${name}"?`)) {
+      return;
+    }
+    try {
+      await deleteCommodity(id);
+      showToast(`Commodity "${name}" deleted successfully!`, 'success');
+      refetchCommodities();
+    } catch (err) {
+      showToast(err.message || 'Failed to delete commodity', 'error');
+    }
+  };
+
+  // Action: Toggle Status
+  const handleToggleStatus = async (id, currentStatus) => {
+    try {
+      const nextStatus = !currentStatus;
+      await updateCommodityStatus(id, nextStatus ? 1 : 0);
+      showToast(`Status updated to ${nextStatus ? 'Active' : 'Inactive'}`, 'success');
+      refetchCommodities();
+    } catch (err) {
+      showToast(err.message || 'Failed to update status', 'error');
+    }
+  };
+
+  // Map display data: When API has loaded, prioritize stored commodities
+  const displayCommodities = hasLoadedApi
+    ? liveCommodities.map((c, idx) => ({
+        id: c.id || idx + 1,
+        name: c.name || 'Unnamed Commodity',
+        code: c.code || '',
+        slug: c.slug || '',
+        image: getCommodityImageUrl(c.image_url || c.image),
+        category:
+          c.commodity_category?.name ||
+          c.category?.name ||
+          c.category_name ||
+          (typeof c.category === 'string' ? c.category : '') ||
+          categoriesOptions.find((cat) => String(cat.id) === String(c.commodity_category_id))?.name ||
+          'General',
+        variety:
+          c.commodity_variety?.name ||
+          c.variety?.name ||
+          (typeof c.variety === 'string' ? c.variety : '') ||
+          'Standard',
+        unit: c.unit || 'QUINTAL',
+        price:
+          c.price || c.current_price || c.modal_price
+            ? `₹${Number(c.price || c.current_price || c.modal_price).toLocaleString('en-IN')}`
+            : '₹—',
+        change: c.price_change || c.change || '0.0%',
+        trend: c.trend === 'down' ? 'down' : 'up',
+        mandi: c.mandi?.name || c.mandi_name || '—',
+        state: c.state?.name || c.state_name || '—',
+        updatedDate: c.updated_at
+          ? new Date(c.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+          : 'Today',
+        updatedTime: c.updated_at
+          ? new Date(c.updated_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+          : '',
+        sparklinePoints: c.sparkline || '0,14 10,11 20,8 30,9 40,6 50,7 60,4',
+        status: c.status === 1 || c.status === true || c.status === '1',
+        raw: c,
+      }))
+    : commoditiesList;
+
+  // Filter and sort commodities
+  const filteredCommodities = displayCommodities.filter((c) => {
+    if (stateFilter && stateFilter !== 'All States' && c.state !== stateFilter) {
+      return false;
+    }
+    if (mandiFilter && mandiFilter !== 'All Mandis' && c.mandi !== mandiFilter) {
+      return false;
+    }
+    if (priceTrendFilter && priceTrendFilter !== 'All') {
+      if (priceTrendFilter === 'Rising (↑)' && c.trend !== 'up') return false;
+      if (priceTrendFilter === 'Falling (↓)' && c.trend !== 'down') return false;
+    }
+    return true;
+  });
 
   // Selection handlers
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedIds(displayCommodities.map((c) => c.id));
+      setSelectedIds(filteredCommodities.map((c) => c.id));
     } else {
       setSelectedIds([]);
     }
@@ -402,6 +498,14 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
 
   return (
     <div className="comm-all-page">
+      {/* Toast Notification Banner */}
+      {toast && (
+        <div className={`comm-toast-banner ${toast.type}`}>
+          <span>{toast.msg}</span>
+          <button type="button" onClick={() => setToast(null)}>✕</button>
+        </div>
+      )}
+
       {/* ====================================================================
           1. Header Section: Title & Quote Banner
           ==================================================================== */}
@@ -456,7 +560,7 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
             </div>
             <div className="comm-kpi-data">
               <span className="comm-kpi-label">Total Commodities</span>
-              <span className="comm-kpi-val">120</span>
+              <span className="comm-kpi-val">{totalCount || (hasLoadedApi ? liveCommodities.length : 120)}</span>
               <span className="comm-kpi-trend green">↑ 8% <small>vs last month</small></span>
             </div>
           </div>
@@ -723,7 +827,9 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
       <div className="comm-table-card">
         {/* Table Top Header */}
         <div className="comm-table-header-row">
-          <h2 className="comm-table-title">Commodities (120)</h2>
+          <h2 className="comm-table-title">
+            Commodities ({totalCount || (hasLoadedApi ? liveCommodities.length : filteredCommodities.length)})
+          </h2>
           <div className="comm-table-actions-right">
             <button type="button" className="btn-table-action" title="Export">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -763,7 +869,7 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
                   <input
                     type="checkbox"
                     className="comm-checkbox"
-                    checked={selectedIds.length > 0 && selectedIds.length === displayCommodities.length}
+                    checked={selectedIds.length > 0 && selectedIds.length === filteredCommodities.length}
                     onChange={handleSelectAll}
                   />
                 </th>
@@ -772,6 +878,7 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
                 <th>Category</th>
                 <th>Variety</th>
                 <th>Unit</th>
+                <th style={{ width: '80px' }}>Status</th>
                 <th>Latest Price (₹)</th>
                 <th>Change</th>
                 <th>Mandi ▾</th>
@@ -779,83 +886,141 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
                 <th>Last Updated</th>
                 <th style={{ width: '70px' }}>Trend (7D)</th>
                 <th style={{ width: '40px' }}>Trend</th>
-                <th style={{ width: '80px', textAlign: 'center' }}>Action</th>
+                <th style={{ width: '90px', textAlign: 'center' }}>Action</th>
               </tr>
             </thead>
             <tbody>
-              {displayCommodities.map((c) => (
-                <tr key={c.id} className={selectedIds.includes(c.id) ? 'row-selected' : ''}>
-                  <td>
-                    <input
-                      type="checkbox"
-                      className="comm-checkbox"
-                      checked={selectedIds.includes(c.id)}
-                      onChange={() => handleSelectRow(c.id)}
-                    />
-                  </td>
-                  <td className="cell-id">{c.id}</td>
-                  <td className="cell-commodity">
-                    <img src={c.image} alt={c.name} className="comm-product-thumb" />
-                    <span className="comm-product-name">{c.name}</span>
-                  </td>
-                  <td className="cell-category">{c.category}</td>
-                  <td className="cell-variety">{c.variety}</td>
-                  <td className="cell-unit">{c.unit}</td>
-                  <td className="cell-price">{c.price}</td>
-                  <td className="cell-change">
-                    <span className={`change-badge ${c.trend}`}>
-                      {c.change}
-                    </span>
-                  </td>
-                  <td className="cell-mandi">{c.mandi}</td>
-                  <td className="cell-state">{c.state}</td>
-                  <td className="cell-updated">
-                    <div className="updated-meta">
-                      <span className="updated-date">{c.updatedDate}</span>
-                      <span className="updated-time">{c.updatedTime}</span>
+              {isLoading ? (
+                <tr>
+                  <td colSpan="15" style={{ textAlign: 'center', padding: '48px 16px', color: '#64748b' }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+                      <svg className="comm-spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5">
+                        <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="12" strokeLinecap="round" />
+                      </svg>
+                      <span style={{ fontSize: '14px', fontWeight: 500 }}>Loading commodities from database...</span>
                     </div>
                   </td>
-                  <td className="cell-sparkline">
-                    <svg width="60" height="18" className="sparkline-svg">
-                      <polyline
-                        fill="none"
-                        stroke={c.trend === 'up' ? '#10b981' : '#ef4444'}
-                        strokeWidth="1.75"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        points={c.sparklinePoints}
-                      />
-                    </svg>
-                  </td>
-                  <td className="cell-trend-icon">
-                    {c.trend === 'up' ? (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-                        <polyline points="17 6 23 6 23 12" />
-                      </svg>
-                    ) : (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
-                        <polyline points="17 18 23 18 23 12" />
-                      </svg>
-                    )}
-                  </td>
-                  <td className="cell-action">
-                    <div className="action-buttons-group">
-                      <button type="button" className="btn-action-view" title="View details">
-                        View
-                      </button>
-                      <button type="button" className="btn-action-more" title="More options">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="#64748b">
-                          <circle cx="12" cy="5" r="2" />
-                          <circle cx="12" cy="12" r="2" />
-                          <circle cx="12" cy="19" r="2" />
+                </tr>
+              ) : filteredCommodities.length === 0 ? (
+                <tr>
+                  <td colSpan="15" style={{ textAlign: 'center', padding: '52px 16px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="8" y1="12" x2="16" y2="12" />
                         </svg>
+                      </div>
+                      <span style={{ fontSize: '15px', fontWeight: 600, color: '#1e293b' }}>No Stored Commodities Found</span>
+                      <span style={{ fontSize: '13px', color: '#64748b', maxWidth: '420px' }}>
+                        No commodities match your filter criteria or none have been added to the database yet.
+                      </span>
+                      <button
+                        type="button"
+                        className="btn-add-comm-cta"
+                        onClick={onNavigateToAdd}
+                        style={{ marginTop: '8px' }}
+                      >
+                        + Add First Commodity
                       </button>
                     </div>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredCommodities.map((c) => (
+                  <tr key={c.id} className={selectedIds.includes(c.id) ? 'row-selected' : ''}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        className="comm-checkbox"
+                        checked={selectedIds.includes(c.id)}
+                        onChange={() => handleSelectRow(c.id)}
+                      />
+                    </td>
+                    <td className="cell-id">{c.id}</td>
+                    <td className="cell-commodity">
+                      <img src={c.image} alt={c.name} className="comm-product-thumb" />
+                      <span className="comm-product-name">{c.name}</span>
+                    </td>
+                    <td className="cell-category">{c.category}</td>
+                    <td className="cell-variety">{c.variety}</td>
+                    <td className="cell-unit">{c.unit}</td>
+                    <td className="cell-status">
+                      <button
+                        type="button"
+                        className={`comm-status-badge ${c.status ? 'active' : 'inactive'}`}
+                        onClick={() => handleToggleStatus(c.id, c.status)}
+                        title="Click to toggle status"
+                      >
+                        <span className="status-dot" />
+                        {c.status ? 'Active' : 'Inactive'}
+                      </button>
+                    </td>
+                    <td className="cell-price">{c.price}</td>
+                    <td className="cell-change">
+                      <span className={`change-badge ${c.trend}`}>
+                        {c.change}
+                      </span>
+                    </td>
+                    <td className="cell-mandi">{c.mandi}</td>
+                    <td className="cell-state">{c.state}</td>
+                    <td className="cell-updated">
+                      <div className="updated-meta">
+                        <span className="updated-date">{c.updatedDate}</span>
+                        <span className="updated-time">{c.updatedTime}</span>
+                      </div>
+                    </td>
+                    <td className="cell-sparkline">
+                      <svg width="60" height="18" className="sparkline-svg">
+                        <polyline
+                          fill="none"
+                          stroke={c.trend === 'up' ? '#10b981' : '#ef4444'}
+                          strokeWidth="1.75"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          points={c.sparklinePoints}
+                        />
+                      </svg>
+                    </td>
+                    <td className="cell-trend-icon">
+                      {c.trend === 'up' ? (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                          <polyline points="17 6 23 6 23 12" />
+                        </svg>
+                      ) : (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
+                          <polyline points="17 18 23 18 23 12" />
+                        </svg>
+                      )}
+                    </td>
+                    <td className="cell-action">
+                      <div className="action-buttons-group">
+                        <button
+                          type="button"
+                          className="btn-action-view"
+                          title="View details"
+                          onClick={() => showToast(`Commodity: ${c.name} (Code: ${c.code || 'N/A'}, Unit: ${c.unit})`, 'info')}
+                        >
+                          View
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-action-delete"
+                          title={`Delete ${c.name}`}
+                          onClick={() => handleDeleteCommodity(c.id, c.name)}
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -863,33 +1028,29 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
         {/* Table Pagination Row */}
         <div className="comm-table-pagination">
           <div className="pagination-info">
-            Showing 1 to 15 of 120 commodities
+            Showing {filteredCommodities.length > 0 ? (currentPage - 1) * (parseInt(pageSize, 10) || 15) + 1 : 0} to{' '}
+            {Math.min(currentPage * (parseInt(pageSize, 10) || 15), totalCount || filteredCommodities.length)} of{' '}
+            {totalCount || filteredCommodities.length} commodities
           </div>
 
           <div className="pagination-controls">
-            <button type="button" className="page-nav-btn prev" disabled>
+            <button
+              type="button"
+              className="page-nav-btn prev"
+              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            >
               ‹
             </button>
-            <button type="button" className={`page-number-btn ${currentPage === 1 ? 'active' : ''}`} onClick={() => setCurrentPage(1)}>
-              1
+            <button type="button" className="page-number-btn active">
+              {currentPage}
             </button>
-            <button type="button" className={`page-number-btn ${currentPage === 2 ? 'active' : ''}`} onClick={() => setCurrentPage(2)}>
-              2
-            </button>
-            <button type="button" className={`page-number-btn ${currentPage === 3 ? 'active' : ''}`} onClick={() => setCurrentPage(3)}>
-              3
-            </button>
-            <button type="button" className={`page-number-btn ${currentPage === 4 ? 'active' : ''}`} onClick={() => setCurrentPage(4)}>
-              4
-            </button>
-            <button type="button" className={`page-number-btn ${currentPage === 5 ? 'active' : ''}`} onClick={() => setCurrentPage(5)}>
-              5
-            </button>
-            <span className="pagination-ellipsis">...</span>
-            <button type="button" className={`page-number-btn ${currentPage === 8 ? 'active' : ''}`} onClick={() => setCurrentPage(8)}>
-              8
-            </button>
-            <button type="button" className="page-nav-btn next">
+            <button
+              type="button"
+              className="page-nav-btn next"
+              disabled={currentPage >= Math.max(1, Math.ceil((totalCount || filteredCommodities.length) / (parseInt(pageSize, 10) || 15)))}
+              onClick={() => setCurrentPage((p) => p + 1)}
+            >
               ›
             </button>
 
@@ -898,7 +1059,10 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
               <select
                 className="page-size-select"
                 value={pageSize}
-                onChange={(e) => setPageSize(e.target.value)}
+                onChange={(e) => {
+                  setPageSize(e.target.value);
+                  setCurrentPage(1);
+                }}
               >
                 <option value="15 / page">15 / page</option>
                 <option value="30 / page">30 / page</option>
