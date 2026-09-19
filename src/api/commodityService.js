@@ -275,7 +275,10 @@ export async function getCommoditySubcategories(params = {}) {
  * @param {number|string} [params.commodity_id]
  */
 export async function getCommoditySubcategoryOptions(params = {}) {
-  const url = buildUrl('/api/admin/commodity-subcategories/options', params);
+  const queryParams = (typeof params === 'number' || typeof params === 'string')
+    ? { commodity_id: params }
+    : params;
+  const url = buildUrl('/api/admin/commodity-subcategories/options', queryParams);
   return await apiFetch(url, { method: 'GET' });
 }
 
@@ -389,8 +392,15 @@ export async function getCommodityVarieties(params = {}) {
  * @param {number|string} [params.commodity_id]
  * @param {number|string} [params.commodity_subcategory_id]
  */
-export async function getCommodityVarietyOptions(params = {}) {
-  const url = buildUrl('/api/admin/commodity-varieties/options', params);
+export async function getCommodityVarietyOptions(params = {}, subcategoryId) {
+  let queryParams = params;
+  if (typeof params === 'number' || typeof params === 'string') {
+    queryParams = { commodity_id: params };
+    if (subcategoryId !== undefined && subcategoryId !== null) {
+      queryParams.commodity_subcategory_id = subcategoryId;
+    }
+  }
+  const url = buildUrl('/api/admin/commodity-varieties/options', queryParams);
   return await apiFetch(url, { method: 'GET' });
 }
 
@@ -501,7 +511,10 @@ export async function getCommodityGrades(params = {}) {
  * @param {number|string} [params.commodity_id]
  */
 export async function getCommodityGradeOptions(params = {}) {
-  const url = buildUrl('/api/admin/commodity-grades/options', params);
+  const queryParams = (typeof params === 'number' || typeof params === 'string')
+    ? { commodity_id: params }
+    : params;
+  const url = buildUrl('/api/admin/commodity-grades/options', queryParams);
   return await apiFetch(url, { method: 'GET' });
 }
 

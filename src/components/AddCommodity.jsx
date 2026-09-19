@@ -4,6 +4,7 @@ import commMakhana from '../assets/comm_makhana.png';
 import brandCrest from '../assets/brand_crest.png';
 import {
   getCommodityCategoryOptions,
+  getCommodityOptions,
   getCommoditySubcategoryOptions,
   getCommodityVarietyOptions,
   getCommodityGradeOptions,
@@ -21,12 +22,22 @@ export default function AddCommodity({ onBack }) {
   // Navigation Tabs
   const [activeTab, setActiveTab] = useState('Basic Information');
 
-  // Form State - Commodity Information
+  // Form State - Commodity Information matching Postman form-data
+  // Fields: commodity_category_id, name, slug, code, unit, image, description, sort_order, status
   const [commodityName, setCommodityName] = useState('');
+  const [slug, setSlug] = useState('');
+  const [slugEdited, setSlugEdited] = useState(false);
+  const [code, setCode] = useState('');
+  const [codeEdited, setCodeEdited] = useState(false);
   const [category, setCategory] = useState('');
   const [variety, setVariety] = useState('');
-  const [unit, setUnit] = useState('');
+  const [unit, setUnit] = useState('QUINTAL');
   const [description, setDescription] = useState('');
+  const [sortOrder, setSortOrder] = useState('1');
+
+  // Dependent Options Chaining (commodity_id, commodity_subcategory_id)
+  const [commodityId, setCommodityId] = useState('1');
+  const [commoditiesList, setCommoditiesList] = useState([]);
 
   // Form State - Commodity Specifications
   const [qualityGrade, setQualityGrade] = useState('');
@@ -94,7 +105,7 @@ export default function AddCommodity({ onBack }) {
 
   // Form State - Categorisation Tab
   const [mainCategory, setMainCategory] = useState('Cereals & Grains');
-  const [subCategory, setSubCategory] = useState('Millets & Alternative Grains');
+  const [subCategory, setSubCategory] = useState('');
   const [commodityGroup, setCommodityGroup] = useState('');
   const [tags, setTags] = useState(['nutritious', 'high-demand', 'export', 'rabi-crop']);
   const [tagInput, setTagInput] = useState('');
@@ -257,15 +268,20 @@ export default function AddCommodity({ onBack }) {
         if (isMounted) setIsLoadingCategories(false);
       });
 
-    // 2. Commodity Grades
-    getCommodityGradeOptions()
+    // 2. Initial Commodities list for options
+    getCommodityOptions()
       .then((res) => {
         if (isMounted && res) {
           const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
-          if (list.length > 0) setGradesList(list);
+          if (list.length > 0) {
+            setCommoditiesList(list);
+            if (list[0]?.id) {
+              setCommodityId(String(list[0].id));
+            }
+          }
         }
       })
-      .catch((err) => console.warn('Grades load error:', err));
+      .catch((err) => console.warn('Commodities load error:', err));
 
     // 3. States
     getStateOptions()
@@ -297,42 +313,23 @@ export default function AddCommodity({ onBack }) {
       })
       .catch((err) => console.warn('Exchanges load error:', err));
 
-    // 6. Varieties
-    getCommodityVarietyOptions()
-      .then((res) => {
-        if (isMounted && res) {
-          const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
-          if (list.length > 0) setVarietiesList(list);
-        }
-      })
-      .catch((err) => console.warn('Varieties load error:', err));
-
     return () => {
       isMounted = false;
     };
   }, []);
 
-  // Load Subcategories and Varieties when Category changes
+  // When Category changes, fetch commodity options for that category
   useEffect(() => {
-    if (!category) {
-      setSubcategoriesList([]);
-      return;
-    }
+    if (!category) return;
     let isMounted = true;
-    getCommoditySubcategoryOptions({ commodity_category_id: category })
+    getCommodityOptions({ commodity_category_id: category })
       .then((res) => {
         if (isMounted && res) {
           const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
-          setSubcategoriesList(list);
-        }
-      })
-      .catch(() => {});
-
-    getCommodityVarietyOptions({ commodity_category_id: category })
-      .then((res) => {
-        if (isMounted && res) {
-          const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
-          if (list.length > 0) setVarietiesList(list);
+          if (list.length > 0) {
+            setCommoditiesList(list);
+            setCommodityId(String(list[0].id));
+          }
         }
       })
       .catch(() => {});
@@ -341,6 +338,76 @@ export default function AddCommodity({ onBack }) {
       isMounted = false;
     };
   }, [category]);
+
+  // Load Subcategories and Grades when commodityId changes
+  // api/admin/commodity-subcategories/options?commodity_id={{commodity_id}}
+  // api/admin/commodity-grades/options?commodity_id={{commodity_id}}
+  useEffect(() => {
+    const activeCommId = commodityId || 1;
+    let isMounted = true;
+
+    // Subcategories by commodity_id
+    getCommoditySubcategoryOptions({ commodity_id: activeCommId })
+      .then((res) => {
+        if (isMounted && res) {
+          const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+          setSubcategoriesList(list);
+        }
+      })
+      .catch((err) => console.warn('Subcategories load error:', err));
+
+    // Grades by commodity_id
+    getCommodityGradeOptions({ commodity_id: activeCommId })
+      .then((res) => {
+        if (isMounted && res) {
+          const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+          setGradesList(list);
+        }
+      })
+      .catch((err) => console.warn('Grades load error:', err));
+
+    // Varieties by commodity_id and current subCategory
+    getCommodityVarietyOptions({
+      commodity_id: activeCommId,
+      commodity_subcategory_id: subCategory || undefined,
+    })
+      .then((res) => {
+        if (isMounted && res) {
+          const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+          setVarietiesList(list);
+        }
+      })
+      .catch((err) => console.warn('Varieties load error:', err));
+
+    return () => {
+      isMounted = false;
+    };
+  }, [commodityId]);
+
+  // Load Varieties when subCategory changes
+  // api/admin/commodity-varieties/options?commodity_id={{commodity_id}}&commodity_subcategory_id={{commodity_subcategory_id}}
+  useEffect(() => {
+    const activeCommId = commodityId || 1;
+    let isMounted = true;
+
+    const params = { commodity_id: activeCommId };
+    if (subCategory) {
+      params.commodity_subcategory_id = subCategory;
+    }
+
+    getCommodityVarietyOptions(params)
+      .then((res) => {
+        if (isMounted && res) {
+          const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+          setVarietiesList(list);
+        }
+      })
+      .catch((err) => console.warn('Varieties for subcategory load error:', err));
+
+    return () => {
+      isMounted = false;
+    };
+  }, [commodityId, subCategory]);
 
   // Load Mandis when Origin State changes
   useEffect(() => {
@@ -479,23 +546,33 @@ export default function AddCommodity({ onBack }) {
       );
       const catId = selectedCatObj ? selectedCatObj.id : category;
 
-      const autoSlug = commodityName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)+/g, '');
-      const autoCode = (hsnCode || commodityName.slice(0, 6))
+      const finalSlug = (
+        slug ||
+        commodityName
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)+/g, '')
+      ).trim();
+
+      const finalCode = (
+        code ||
+        hsnCode ||
+        commodityName.slice(0, 6)
+      )
+        .trim()
         .toUpperCase()
         .replace(/[^A-Z0-9]/g, '');
 
-      // Build FormData for multipart request to /api/admin/commodities
+      // Build FormData for multipart request to /api/admin/commodities strictly matching Postman
+      // Keys: commodity_category_id, name, slug, code, unit, image, description, sort_order, status
       const formData = new FormData();
       formData.append('commodity_category_id', catId);
       formData.append('name', commodityName.trim());
-      formData.append('slug', autoSlug);
-      formData.append('code', autoCode || 'COMM');
+      formData.append('slug', finalSlug);
+      formData.append('code', finalCode || 'COMM');
       formData.append('unit', unit ? unit.toUpperCase().replace(/\s+/g, '_') : 'QUINTAL');
       formData.append('description', description.trim());
-      formData.append('sort_order', '1');
+      formData.append('sort_order', String(sortOrder || '1'));
       formData.append('status', isActiveStatus ? '1' : '0');
 
       if (imageFile) {
@@ -727,9 +804,18 @@ export default function AddCommodity({ onBack }) {
                     <input
                       type="text"
                       className="form-input"
-                      placeholder="e.g. Makhana"
+                      placeholder="e.g. Wheat"
                       value={commodityName}
-                      onChange={(e) => setCommodityName(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCommodityName(val);
+                        if (!slugEdited) {
+                          setSlug(val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''));
+                        }
+                        if (!codeEdited && val) {
+                          setCode(val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10));
+                        }
+                      }}
                       required
                     />
                   </div>
@@ -779,27 +865,109 @@ export default function AddCommodity({ onBack }) {
                   </div>
                 </div>
 
-                {/* Row 2: Variety & Unit */}
+                {/* Row 2: Commodity Code & Slug (from Postman) */}
                 <div className="form-row-2">
                   <div className="form-group">
                     <label className="form-label">
-                      Variety (Optional)
+                      Commodity Code <span className="req-star">*</span>
                     </label>
                     <input
                       type="text"
-                      list="comm-varieties-datalist"
                       className="form-input"
-                      placeholder="e.g. Premium, Desi, Hybrid"
-                      value={variety}
-                      onChange={(e) => setVariety(e.target.value)}
+                      placeholder="e.g. WHEAT"
+                      value={code}
+                      onChange={(e) => {
+                        setCode(e.target.value.toUpperCase());
+                        setCodeEdited(true);
+                      }}
+                      required
                     />
-                    <datalist id="comm-varieties-datalist">
-                      {varietiesList.map((v) => (
-                        <option key={v.id} value={v.name} />
-                      ))}
-                    </datalist>
+                    <span className="field-hint">e.g. WHEAT, RICE, MAIZE</span>
                   </div>
 
+                  <div className="form-group">
+                    <label className="form-label">
+                      Slug <span className="req-star">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. wheat"
+                      value={slug}
+                      onChange={(e) => {
+                        setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''));
+                        setSlugEdited(true);
+                      }}
+                      required
+                    />
+                    <span className="field-hint">e.g. wheat, basmati-rice</span>
+                  </div>
+                </div>
+
+                {/* Row 3: Subcategory & Variety (Cascading from API) */}
+                <div className="form-row-2">
+                  <div className="form-group">
+                    <label className="form-label">
+                      Subcategory
+                    </label>
+                    <div className="select-wrapper">
+                      <select
+                        className={`form-select ${!subCategory ? 'is-placeholder' : ''}`}
+                        value={subCategory}
+                        onChange={(e) => {
+                          setSubCategory(e.target.value);
+                          setVariety('');
+                        }}
+                      >
+                        <option value="">Select Subcategory</option>
+                        {subcategoriesList.length > 0 ? (
+                          subcategoriesList.map((sub) => (
+                            <option key={sub.id} value={sub.id}>
+                              {sub.name}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="" disabled>No subcategories found</option>
+                        )}
+                      </select>
+                      <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </div>
+                    <span className="field-hint">Loaded from api/admin/commodity-subcategories/options</span>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">
+                      Variety
+                    </label>
+                    <div className="select-wrapper">
+                      <select
+                        className={`form-select ${!variety ? 'is-placeholder' : ''}`}
+                        value={variety}
+                        onChange={(e) => setVariety(e.target.value)}
+                      >
+                        <option value="">Select Variety</option>
+                        {varietiesList.length > 0 ? (
+                          varietiesList.map((v) => (
+                            <option key={v.id} value={v.name || v.id}>
+                              {v.name}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="" disabled>No varieties found</option>
+                        )}
+                      </select>
+                      <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </div>
+                    <span className="field-hint">Loaded from api/admin/commodity-varieties/options</span>
+                  </div>
+                </div>
+
+                {/* Row 4: Unit & Sort Order */}
+                <div className="form-row-2">
                   <div className="form-group">
                     <label className="form-label">
                       Unit <span className="req-star">*</span>
@@ -811,22 +979,36 @@ export default function AddCommodity({ onBack }) {
                         onChange={(e) => setUnit(e.target.value)}
                         required
                       >
-                        <option value="">Select Unit</option>
-                        <option value="QUINTAL">Quintal (100 Kg)</option>
-                        <option value="KILOGRAM">Kilogram (Kg)</option>
-                        <option value="METRIC_TON">Metric Ton</option>
-                        <option value="BAG">Bag (50 Kg)</option>
-                        <option value="PIECE">Piece</option>
+                        <option value="QUINTAL">QUINTAL (100 Kg)</option>
+                        <option value="KILOGRAM">KILOGRAM (Kg)</option>
+                        <option value="METRIC_TON">METRIC TON</option>
+                        <option value="BAG">BAG (50 Kg)</option>
+                        <option value="PIECE">PIECE</option>
                       </select>
                       <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="6 9 12 15 18 9" />
                       </svg>
                     </div>
-                    <span className="field-hint">e.g. Quintal, Kilogram, Ton, Piece</span>
+                    <span className="field-hint">e.g. QUINTAL, KILOGRAM, BAG</span>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">
+                      Sort Order
+                    </label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      placeholder="1"
+                      value={sortOrder}
+                      onChange={(e) => setSortOrder(e.target.value)}
+                      min="0"
+                    />
+                    <span className="field-hint">Display order (default: 1)</span>
                   </div>
                 </div>
 
-                {/* Row 3: Description */}
+                {/* Row 5: Description */}
                 <div className="form-group full-width">
                   <label className="form-label">
                     Description <span className="req-star">*</span>
@@ -866,19 +1048,33 @@ export default function AddCommodity({ onBack }) {
                 <div className="form-row-3">
                   <div className="form-group">
                     <label className="form-label">Quality Grade</label>
-                    <input
-                      type="text"
-                      list="comm-grades-datalist"
-                      className="form-input"
-                      placeholder="e.g. FAQ, Premium, Super Grade A"
-                      value={qualityGrade}
-                      onChange={(e) => setQualityGrade(e.target.value)}
-                    />
-                    <datalist id="comm-grades-datalist">
-                      {gradesList.map((g) => (
-                        <option key={g.id} value={g.name} />
-                      ))}
-                    </datalist>
+                    <div className="select-wrapper">
+                      <select
+                        className={`form-select ${!qualityGrade ? 'is-placeholder' : ''}`}
+                        value={qualityGrade}
+                        onChange={(e) => setQualityGrade(e.target.value)}
+                      >
+                        <option value="">Select Quality Grade</option>
+                        {gradesList.length > 0 ? (
+                          gradesList.map((g) => (
+                            <option key={g.id} value={g.name || g.id}>
+                              {g.name}
+                            </option>
+                          ))
+                        ) : (
+                          <>
+                            <option value="FAQ">FAQ (Fair Average Quality)</option>
+                            <option value="Grade A">Grade A</option>
+                            <option value="Premium">Premium</option>
+                            <option value="Super">Super</option>
+                          </>
+                        )}
+                      </select>
+                      <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </div>
+                    <span className="field-hint">Loaded from api/admin/commodity-grades/options</span>
                   </div>
 
                   <div className="form-group">
