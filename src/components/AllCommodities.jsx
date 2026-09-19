@@ -17,6 +17,7 @@ import commCoriander from '../assets/comm_coriander.jpg';
 import welcomeBgImg from '../assets/welcome_banner_sketch.png';
 import {
   getCommodities,
+  getCommodity,
   getCommodityCategoryOptions,
   getStateOptions,
   getMandiOptions,
@@ -440,27 +441,97 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
   const [bulkStatusValue, setBulkStatusValue] = useState(1);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
+  // Action: Open View Modal
+  const handleOpenView = (c) => {
+    setViewModalItem(c);
+    if (c.id) {
+      getCommodity(c.id)
+        .then((res) => {
+          const item = res?.data || res?.commodity || res;
+          if (item) {
+            setViewModalItem((prev) => ({
+              ...prev,
+              description: item.description ?? item.desc ?? item.details ?? prev.description,
+              raw: { ...(prev?.raw || {}), ...item },
+            }));
+          }
+        })
+        .catch(() => {});
+    }
+  };
+
   // Action: Open Edit Modal
   const handleOpenEdit = (c) => {
-    const raw = c.raw || {};
+    const raw = c.raw || c || {};
     const catId =
       raw.commodity_category_id ||
+      c.commodity_category_id ||
       raw.category?.id ||
-      categoriesOptions.find((cat) => cat.name === c.category)?.id ||
+      c.category?.id ||
+      categoriesOptions.find((cat) => cat.name === c.category || String(cat.id) === String(c.category))?.id ||
       '';
+    const initialDesc =
+      c.description ??
+      raw.description ??
+      raw.desc ??
+      raw.details ??
+      raw.commodity_description ??
+      '';
+
     setEditModalItem(c);
     setEditForm({
-      name: c.name || '',
+      name: c.name || raw.name || '',
       commodity_category_id: catId,
-      code: c.code || '',
-      slug: c.slug || '',
-      unit: c.unit || 'QUINTAL',
-      description: raw.description || '',
-      sort_order: String(raw.sort_order || '1'),
-      status: c.status,
+      code: c.code || raw.code || '',
+      slug: c.slug || raw.slug || '',
+      unit: c.unit || raw.unit || 'QUINTAL',
+      description: initialDesc,
+      sort_order: String(raw.sort_order ?? c.sort_order ?? '1'),
+      status: c.status !== undefined ? c.status : true,
     });
     setEditImageFile(null);
     setEditImagePreview(c.image || null);
+
+    // Fetch single commodity detail from API to guarantee full description is loaded
+    if (c.id) {
+      getCommodity(c.id)
+        .then((res) => {
+          const item = res?.data || res?.commodity || res;
+          if (item) {
+            const fetchedDesc =
+              item.description ??
+              item.desc ??
+              item.details ??
+              item.commodity_description;
+            setEditForm((prev) => ({
+              ...prev,
+              description:
+                fetchedDesc !== undefined && fetchedDesc !== null
+                  ? fetchedDesc
+                  : prev.description,
+              name: item.name || prev.name,
+              commodity_category_id:
+                item.commodity_category_id ||
+                item.category?.id ||
+                prev.commodity_category_id,
+              code: item.code || prev.code,
+              slug: item.slug || prev.slug,
+              unit: item.unit || prev.unit,
+              sort_order: String(item.sort_order ?? prev.sort_order),
+              status:
+                item.status !== undefined
+                  ? item.status === 1 || item.status === true || item.status === '1'
+                  : prev.status,
+            }));
+            if (item.image_url || item.image) {
+              setEditImagePreview(getCommodityImageUrl(item.image_url || item.image));
+            }
+          }
+        })
+        .catch((err) => {
+          console.warn('Could not fetch single commodity detail:', err);
+        });
+    }
   };
 
   // Action: Submit Edit Modal
@@ -569,6 +640,9 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
         name: c.name || 'Unnamed Commodity',
         code: c.code || '',
         slug: c.slug || '',
+        description: c.description ?? c.desc ?? c.details ?? '',
+        sort_order: c.sort_order ?? 1,
+        commodity_category_id: c.commodity_category_id || c.category?.id || '',
         image: getCommodityImageUrl(c.image_url || c.image),
         category:
           c.commodity_category?.name ||
@@ -1176,7 +1250,7 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
                           type="button"
                           className="btn-action-view"
                           title="View full details"
-                          onClick={() => setViewModalItem(c)}
+                          onClick={() => handleOpenView(c)}
                         >
                           View
                         </button>
@@ -1411,10 +1485,12 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
                   </span>
                 </div>
 
-                {viewModalItem.raw?.description && (
+                {(viewModalItem.description || viewModalItem.raw?.description || viewModalItem.raw?.desc) && (
                   <div className="view-detail-item view-detail-desc">
                     <span className="view-detail-label">Description</span>
-                    <span className="view-detail-value">{viewModalItem.raw.description}</span>
+                    <span className="view-detail-value">
+                      {viewModalItem.description || viewModalItem.raw?.description || viewModalItem.raw?.desc}
+                    </span>
                   </div>
                 )}
               </div>
