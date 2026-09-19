@@ -81,7 +81,7 @@ export async function adminResetPassword({ token, email, password, password_conf
     method: 'POST',
     body: {
       token,
-      email: email.trim(),
+      email: (email || '').trim(),
       password,
       password_confirmation,
     },
