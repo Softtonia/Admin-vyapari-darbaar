@@ -589,6 +589,69 @@ export async function bulkDeleteCommodityGrades(ids) {
   });
 }
 
+/* =========================================================================
+ * 6. LOCATION & MANDI MASTERS API (OPTIONS)
+ * ========================================================================= */
+
+/**
+ * Get State dropdown options
+ */
+export async function getStateOptions() {
+  return await apiFetch('/api/admin/states/options', { method: 'GET' });
+}
+
+/**
+ * Get District dropdown options
+ * @param {Object} [params]
+ * @param {number|string} [params.state_id]
+ */
+export async function getDistrictOptions(params = {}) {
+  const url = buildUrl('/api/admin/districts/options', params);
+  return await apiFetch(url, { method: 'GET' });
+}
+
+/**
+ * Get Mandi dropdown options (district / state scoped)
+ * @param {Object} [params]
+ * @param {number|string} [params.district_id]
+ * @param {number|string} [params.state_id]
+ */
+export async function getMandiOptions(params = {}) {
+  const url = buildUrl('/api/admin/mandis/options', params);
+  return await apiFetch(url, { method: 'GET' });
+}
+
+/* =========================================================================
+ * 7. EXCHANGE & INSTRUMENT MASTERS API (OPTIONS)
+ * ========================================================================= */
+
+/**
+ * Get Exchange dropdown options (MCX, NCDEX, etc.)
+ */
+export async function getExchangeOptions() {
+  return await apiFetch('/api/admin/exchanges/options', { method: 'GET' });
+}
+
+/**
+ * Get Commodity Mapping Options under an exchange
+ * @param {Object} [params]
+ * @param {number|string} [params.exchange_id]
+ */
+export async function getExchangeCommodityMappingOptions(params = {}) {
+  const url = buildUrl('/api/admin/exchange-commodity-mappings/options', params);
+  return await apiFetch(url, { method: 'GET' });
+}
+
+/**
+ * Get Exchange Instrument Options under a mapping
+ * @param {Object} [params]
+ * @param {number|string} [params.exchange_commodity_mapping_id]
+ */
+export async function getExchangeInstrumentOptions(params = {}) {
+  const url = buildUrl('/api/admin/exchange-instruments/options', params);
+  return await apiFetch(url, { method: 'GET' });
+}
+
 export default {
   // Categories
   getCategories: getCommodityCategories,
@@ -644,4 +707,14 @@ export default {
   bulkUpdateGradeStatus: bulkUpdateCommodityGradeStatus,
   deleteGrade: deleteCommodityGrade,
   bulkDeleteGrades: bulkDeleteCommodityGrades,
+
+  // Locations & Mandis
+  getStateOptions,
+  getDistrictOptions,
+  getMandiOptions,
+
+  // Exchanges & Instruments
+  getExchangeOptions,
+  getExchangeCommodityMappingOptions,
+  getExchangeInstrumentOptions,
 };

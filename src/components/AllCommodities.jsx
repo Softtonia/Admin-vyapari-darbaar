@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import commWheat from '../assets/comm_wheat.png';
 import commMaize from '../assets/comm_maize.png';
 import commMakhana from '../assets/comm_makhana.png';
@@ -15,6 +15,14 @@ import commTomato from '../assets/comm_tomato.jpg';
 import commRedChilli from '../assets/comm_red_chilli.jpg';
 import commCoriander from '../assets/comm_coriander.jpg';
 import welcomeBgImg from '../assets/welcome_banner_sketch.png';
+import {
+  getCommodities,
+  getCommodityCategoryOptions,
+  getStateOptions,
+  getMandiOptions,
+  deleteCommodity,
+  updateCommodityStatus,
+} from '../api/commodityService';
 import './AllCommodities.css';
 
 export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
@@ -273,10 +281,102 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
     },
   ];
 
+  // API Data States
+  const [liveCommodities, setLiveCommodities] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [categoriesOptions, setCategoriesOptions] = useState([]);
+  const [statesOptions, setStatesOptions] = useState([]);
+  const [mandisOptions, setMandisOptions] = useState([]);
+  const [totalCount, setTotalCount] = useState(15);
+
+  // Load Categories, States, and Mandis Options on mount
+  useEffect(() => {
+    getCommodityCategoryOptions()
+      .then((res) => {
+        const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+        if (list.length > 0) setCategoriesOptions(list);
+      })
+      .catch(() => {});
+
+    getStateOptions()
+      .then((res) => {
+        const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+        if (list.length > 0) setStatesOptions(list);
+      })
+      .catch(() => {});
+
+    getMandiOptions()
+      .then((res) => {
+        const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+        if (list.length > 0) setMandisOptions(list);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Fetch Live Commodities from API
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoading(true);
+
+    const params = {
+      page: currentPage,
+      search: searchCommodity.trim() || undefined,
+    };
+    if (categoryFilter && categoryFilter !== 'All Categories') {
+      const matched = categoriesOptions.find((c) => c.name === categoryFilter);
+      if (matched) params.commodity_category_id = matched.id;
+    }
+
+    getCommodities(params)
+      .then((res) => {
+        if (isMounted && res) {
+          const list = Array.isArray(res?.data) ? res.data : [];
+          if (list.length > 0) {
+            setLiveCommodities(list);
+            if (res?.meta?.total) setTotalCount(res.meta.total);
+          }
+        }
+      })
+      .catch((err) => console.warn('Failed to load commodities from API:', err))
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentPage, searchCommodity, categoryFilter, categoriesOptions]);
+
+  // Combine live data with fallback commodities
+  const displayCommodities =
+    liveCommodities.length > 0
+      ? liveCommodities.map((c, idx) => ({
+          id: c.id || idx + 1,
+          name: c.name,
+          image: c.image_url || c.image || commWheat,
+          category: c.category?.name || c.category_name || c.commodity_category?.name || 'Grains',
+          variety: c.variety?.name || c.variety || 'Standard',
+          unit: c.unit || 'Quintal',
+          price: c.price ? `₹${c.price}` : '₹2,100',
+          change: c.price_change || '+1.2%',
+          trend: c.trend === 'down' ? 'down' : 'up',
+          mandi: c.mandi?.name || c.mandi_name || 'Indore',
+          state: c.state?.name || c.state_name || 'Madhya Pradesh',
+          updatedDate: c.updated_at
+            ? new Date(c.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+            : 'Today',
+          updatedTime: c.updated_at
+            ? new Date(c.updated_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+            : '10:00 AM',
+          sparklinePoints: c.sparkline || '0,14 10,11 20,8 30,9 40,6 50,7 60,4',
+          status: c.status,
+        }))
+      : commoditiesList;
+
   // Selection handlers
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedIds(commoditiesList.map((c) => c.id));
+      setSelectedIds(displayCommodities.map((c) => c.id));
     } else {
       setSelectedIds([]);
     }
@@ -457,15 +557,25 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
             >
-              <option>All Categories</option>
-              <option>Dry Fruits</option>
-              <option>Cereals</option>
-              <option>Oilseeds</option>
-              <option>Pulses</option>
-              <option>Spices</option>
-              <option>Fibers</option>
-              <option>Sugars</option>
-              <option>Vegetables</option>
+              <option value="All Categories">All Categories</option>
+              {categoriesOptions.length > 0 ? (
+                categoriesOptions.map((cat) => (
+                  <option key={cat.id} value={cat.name}>
+                    {cat.name}
+                  </option>
+                ))
+              ) : (
+                <>
+                  <option>Dry Fruits</option>
+                  <option>Cereals</option>
+                  <option>Oilseeds</option>
+                  <option>Pulses</option>
+                  <option>Spices</option>
+                  <option>Fibers</option>
+                  <option>Sugars</option>
+                  <option>Vegetables</option>
+                </>
+              )}
             </select>
             <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5">
               <polyline points="6 9 12 15 18 9" />
@@ -482,17 +592,27 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
               value={stateFilter}
               onChange={(e) => setStateFilter(e.target.value)}
             >
-              <option>All States</option>
-              <option>Bihar</option>
-              <option>Madhya Pradesh</option>
-              <option>Haryana</option>
-              <option>Rajasthan</option>
-              <option>Maharashtra</option>
-              <option>Gujarat</option>
-              <option>Tamil Nadu</option>
-              <option>Uttar Pradesh</option>
-              <option>Karnataka</option>
-              <option>Andhra Pradesh</option>
+              <option value="All States">All States</option>
+              {statesOptions.length > 0 ? (
+                statesOptions.map((st) => (
+                  <option key={st.id} value={st.name}>
+                    {st.name}
+                  </option>
+                ))
+              ) : (
+                <>
+                  <option>Bihar</option>
+                  <option>Madhya Pradesh</option>
+                  <option>Haryana</option>
+                  <option>Rajasthan</option>
+                  <option>Maharashtra</option>
+                  <option>Gujarat</option>
+                  <option>Tamil Nadu</option>
+                  <option>Uttar Pradesh</option>
+                  <option>Karnataka</option>
+                  <option>Andhra Pradesh</option>
+                </>
+              )}
             </select>
             <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5">
               <polyline points="6 9 12 15 18 9" />
@@ -509,22 +629,32 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
               value={mandiFilter}
               onChange={(e) => setMandiFilter(e.target.value)}
             >
-              <option>All Mandis</option>
-              <option>Darbhanga</option>
-              <option>Indore</option>
-              <option>Karnal</option>
-              <option>Ratlam</option>
-              <option>Jaipur</option>
-              <option>Latur</option>
-              <option>Ujjain</option>
-              <option>Rajkot</option>
-              <option>Erode</option>
-              <option>Muzaffarnagar</option>
-              <option>Lasalgaon</option>
-              <option>Agra</option>
-              <option>Kolar</option>
-              <option>Guntur</option>
-              <option>Kota</option>
+              <option value="All Mandis">All Mandis</option>
+              {mandisOptions.length > 0 ? (
+                mandisOptions.map((m) => (
+                  <option key={m.id} value={m.name}>
+                    {m.name}
+                  </option>
+                ))
+              ) : (
+                <>
+                  <option>Darbhanga</option>
+                  <option>Indore</option>
+                  <option>Karnal</option>
+                  <option>Ratlam</option>
+                  <option>Jaipur</option>
+                  <option>Latur</option>
+                  <option>Ujjain</option>
+                  <option>Rajkot</option>
+                  <option>Erode</option>
+                  <option>Muzaffarnagar</option>
+                  <option>Lasalgaon</option>
+                  <option>Agra</option>
+                  <option>Kolar</option>
+                  <option>Guntur</option>
+                  <option>Kota</option>
+                </>
+              )}
             </select>
             <svg className="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5">
               <polyline points="6 9 12 15 18 9" />
@@ -633,7 +763,7 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
                   <input
                     type="checkbox"
                     className="comm-checkbox"
-                    checked={selectedIds.length === commoditiesList.length}
+                    checked={selectedIds.length > 0 && selectedIds.length === displayCommodities.length}
                     onChange={handleSelectAll}
                   />
                 </th>
@@ -653,7 +783,7 @@ export default function AllCommodities({ onNavigateToAdd, onBackToPrices }) {
               </tr>
             </thead>
             <tbody>
-              {commoditiesList.map((c) => (
+              {displayCommodities.map((c) => (
                 <tr key={c.id} className={selectedIds.includes(c.id) ? 'row-selected' : ''}>
                   <td>
                     <input
