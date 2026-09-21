@@ -18,6 +18,7 @@ import {
   PhoneIcon,
 } from './Icons';
 import { useAdminAuth } from '../context/AdminAuthContext';
+import { useSiteSettings } from '../context/SiteSettingsContext';
 import '../App.css';
 
 const LANGUAGES = [
@@ -39,6 +40,7 @@ export default function LoginPortal() {
     sendLoginOtp,
     loginWithOtp,
   } = useAdminAuth();
+  const { siteSettings, webLogoUrl } = useSiteSettings();
 
   // Form State
   const [identifier, setIdentifier] = useState('');
@@ -526,13 +528,22 @@ export default function LoginPortal() {
             <div className="login-card">
               {/* Card Header */}
               <div className="card-header">
+                {webLogoUrl && (
+                  <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'center' }}>
+                    <img
+                      src={webLogoUrl}
+                      alt={siteSettings?.site_name || 'Vyapari Darbaar'}
+                      style={{ maxHeight: '44px', maxWidth: '200px', objectFit: 'contain' }}
+                    />
+                  </div>
+                )}
                 <span className="welcome-label">WELCOME TO</span>
-                <h1 className="brand-heading">Vyapari Darbaar</h1>
+                <h1 className="brand-heading">{siteSettings?.site_name || 'Vyapari Darbaar'}</h1>
                 <span className="portal-subtitle">ADMINISTRATION PORTAL</span>
                 <div className="filigree-wrap">
                   <FiligreeDivider />
                 </div>
-                <p className="tagline-text">Manage. Monitor. Empower Trade.</p>
+                <p className="tagline-text">{siteSettings?.site_title || 'Manage. Monitor. Empower Trade.'}</p>
               </div>
 
               {/* Standard Password Login Form */}
@@ -867,7 +878,7 @@ export default function LoginPortal() {
           {/* Right Footer */}
           <footer className="right-footer">
             <p className="footer-copyright">
-              © 2026 Vyapari Darbaar. All rights reserved.
+              {siteSettings?.copyright_text || `© ${new Date().getFullYear()} ${siteSettings?.site_name || 'Vyapari Darbaar'}. All rights reserved.`}
             </p>
             <div className="footer-links-group">
               <a

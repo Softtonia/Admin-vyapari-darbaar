@@ -48,6 +48,7 @@ import CommodityPrices from './CommodityPrices';
 import AllCommodities from './AllCommodities';
 import AddCommodity from './AddCommodity';
 import { useAdminAuth } from '../context/AdminAuthContext';
+import { useSiteSettings } from '../context/SiteSettingsContext';
 import './AdminDashboard.css';
 
 // Routes implemented strictly for the modules worked on so far
@@ -112,6 +113,7 @@ export default function AdminDashboard({
 
   // Admin Auth Context
   const { admin, logout } = useAdminAuth();
+  const { siteSettings, webLogoUrl } = useSiteSettings();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
 
@@ -257,8 +259,22 @@ export default function AdminDashboard({
           ==================================================================== */}
       <aside className="dash-sidebar">
         {/* Logo block */}
-        <div className="dash-sidebar-header">
-          <img src={sidebarLogoImg} alt="Vyapari Darbaar" className="dash-sidebar-logo" />
+        <div
+          className="dash-sidebar-header"
+          onClick={() => handleNavClick('Dashboard')}
+          style={{ cursor: 'pointer' }}
+          title={siteSettings?.site_name || 'Vyapari Darbaar'}
+        >
+          <img
+            src={webLogoUrl || sidebarLogoImg}
+            alt={siteSettings?.site_name || 'Vyapari Darbaar'}
+            className="dash-sidebar-logo"
+            onError={(e) => {
+              if (e.currentTarget.src !== sidebarLogoImg) {
+                e.currentTarget.src = sidebarLogoImg;
+              }
+            }}
+          />
         </div>
 
         {/* Scrollable navigation menu */}
@@ -383,7 +399,7 @@ export default function AdminDashboard({
         {/* Sidebar bottom branding */}
         <div className="dash-sidebar-footer">
           <span className="dash-sb-crown">👑</span>
-          <span className="dash-sb-brand">VYAPARI DARBAAR</span>
+          <span className="dash-sb-brand">{siteSettings?.site_name?.toUpperCase() || 'VYAPARI DARBAAR'}</span>
         </div>
       </aside>
 
@@ -1452,23 +1468,17 @@ export default function AdminDashboard({
         <footer className="dash-global-footer">
           <div className="dash-footer-left">
             <span className="dash-footer-crown">👑</span>
-            <span className="dash-footer-brand">VYAPARI DARBAAR</span>
+            <span className="dash-footer-brand">{siteSettings?.site_name?.toUpperCase() || 'VYAPARI DARBAAR'}</span>
             <span className="dash-footer-pipe">|</span>
             <span className="dash-footer-version">Admin Panel | Version 1.0.0</span>
           </div>
 
           <div className="dash-footer-center">
-            <span>Indian Commodities</span>
-            <span className="dash-footer-pipe">|</span>
-            <span>Global Opportunities</span>
-            <span className="dash-footer-pipe">|</span>
-            <span>Stronger Traders</span>
-            <span className="dash-footer-pipe">|</span>
-            <span className="dash-footer-highlight">Brighter Bharat</span>
+            <span>{siteSettings?.site_title || 'Indian Commodities | Global Opportunities'}</span>
           </div>
 
           <div className="dash-footer-right">
-            <span>© 2026 Vyapari Darbaar. All rights reserved.</span>
+            <span>{siteSettings?.copyright_text || `© ${new Date().getFullYear()} ${siteSettings?.site_name || 'Vyapari Darbaar'}. All rights reserved.`}</span>
           </div>
         </footer>
       </div>

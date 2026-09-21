@@ -5,6 +5,7 @@ import {
   updateAdminSiteSettings,
   getSiteLogoUrl,
 } from '../api/siteSettingService';
+import { useSiteSettings } from '../context/SiteSettingsContext';
 import sidebarLogoImg from '../assets/sidebar_logo.png';
 
 export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
@@ -17,23 +18,67 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
     }
   }, [defaultTab]);
 
+  // Global Site Settings Context
+  const {
+    siteSettings: globalSiteSettings,
+    refreshSiteSettings,
+    updateLocalSettings,
+  } = useSiteSettings();
+
+  // Sub-navigation within Site Settings
+  const [siteSubTab, setSiteSubTab] = useState('branding'); // 'branding' | 'contact' | 'social' | 'seo'
+
   // Site Settings API State (/api/admin/site-settings)
-  const [siteName, setSiteName] = useState('Vyapari Darbar');
-  const [siteTitle, setSiteTitle] = useState('');
-  const [siteDescription, setSiteDescription] = useState('');
-  const [webLogoUrl, setWebLogoUrl] = useState(null);
-  const [mobileLogoUrl, setMobileLogoUrl] = useState(null);
+  const [siteName, setSiteName] = useState(globalSiteSettings?.site_name || 'Vyapari Darbar');
+  const [siteTitle, setSiteTitle] = useState(globalSiteSettings?.site_title || '');
+  const [siteDescription, setSiteDescription] = useState(globalSiteSettings?.site_description || '');
+  const [webLogoUrl, setWebLogoUrl] = useState(globalSiteSettings?.web_logo || null);
+  const [mobileLogoUrl, setMobileLogoUrl] = useState(globalSiteSettings?.mobile_logo || null);
   const [webLogoFile, setWebLogoFile] = useState(null);
-  const [webLogoPreview, setWebLogoPreview] = useState(null);
+  const [webLogoPreview, setWebLogoPreview] = useState(globalSiteSettings?.web_logo ? getSiteLogoUrl(globalSiteSettings.web_logo) : null);
   const [mobileLogoFile, setMobileLogoFile] = useState(null);
-  const [mobileLogoPreview, setMobileLogoPreview] = useState(null);
+  const [mobileLogoPreview, setMobileLogoPreview] = useState(globalSiteSettings?.mobile_logo ? getSiteLogoUrl(globalSiteSettings.mobile_logo) : null);
   const [siteMeta, setSiteMeta] = useState(null);
   const [isLoadingSite, setIsLoadingSite] = useState(false);
   const [isSavingSite, setIsSavingSite] = useState(false);
   const [siteToast, setSiteToast] = useState(null);
 
+  // Additional Site Settings ("And Another")
+  const [supportEmail, setSupportEmail] = useState(globalSiteSettings?.support_email || 'support@vyaparidarbar.com');
+  const [supportPhone, setSupportPhone] = useState(globalSiteSettings?.support_phone || '+91 98765 43210');
+  const [whatsappNumber, setWhatsappNumber] = useState(globalSiteSettings?.whatsapp_number || '+91 98765 43210');
+  const [officeAddress, setOfficeAddress] = useState(globalSiteSettings?.office_address || 'Mandi Gate No. 4, APMC Market Yard, New Delhi - 110001, India');
+
+  const [socialWhatsapp, setSocialWhatsapp] = useState(globalSiteSettings?.social_whatsapp || 'https://chat.whatsapp.com/vyaparidarbar');
+  const [socialYoutube, setSocialYoutube] = useState(globalSiteSettings?.social_youtube || 'https://youtube.com/@vyaparidarbar');
+  const [socialFacebook, setSocialFacebook] = useState(globalSiteSettings?.social_facebook || 'https://facebook.com/vyaparidarbar');
+  const [socialTwitter, setSocialTwitter] = useState(globalSiteSettings?.social_twitter || 'https://twitter.com/vyaparidarbar');
+  const [socialInstagram, setSocialInstagram] = useState(globalSiteSettings?.social_instagram || 'https://instagram.com/vyaparidarbar');
+  const [socialLinkedin, setSocialLinkedin] = useState(globalSiteSettings?.social_linkedin || 'https://linkedin.com/company/vyaparidarbar');
+
+  const [metaKeywords, setMetaKeywords] = useState(globalSiteSettings?.meta_keywords || 'mandi rates, agri commodity, vyapari darbar, wheat price');
+  const [copyrightText, setCopyrightText] = useState(globalSiteSettings?.copyright_text || '© 2026 Vyapari Darbaar. All rights reserved.');
+  const [mandiCurrency, setMandiCurrency] = useState(globalSiteSettings?.mandi_currency || 'INR (₹)');
+  const [timezoneSetting, setTimezoneSetting] = useState(globalSiteSettings?.timezone || 'Asia/Kolkata (GMT +5:30)');
+
   const webLogoInputRef = useRef(null);
   const mobileLogoInputRef = useRef(null);
+
+  const handleCopyLogoUrl = (url, label) => {
+    if (!url) {
+      showSiteToast(`No ${label} URL available to copy`, 'error');
+      return;
+    }
+    navigator.clipboard.writeText(url)
+      .then(() => showSiteToast(`${label} URL copied to clipboard!`, 'success'))
+      .catch(() => showSiteToast('Failed to copy to clipboard', 'error'));
+  };
+
+  const handleOpenLogo = (url) => {
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
 
   const showSiteToast = (msg, type = 'success') => {
     setSiteToast({ msg, type });
@@ -126,18 +171,23 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
         payload.mobile_logo = mobileLogoFile;
       }
       const res = await updateAdminSiteSettings(payload);
-      showSiteToast('Site settings updated successfully!', 'success');
+
       const updated = res?.data || res;
+      let newWebLogo = webLogoUrl;
+      let newMobileLogo = mobileLogoUrl;
+
       if (updated) {
         if (updated.site_name) setSiteName(updated.site_name);
         if (updated.site_title !== undefined) setSiteTitle(updated.site_title || '');
         if (updated.site_description !== undefined) setSiteDescription(updated.site_description || '');
         if (updated.web_logo) {
+          newWebLogo = updated.web_logo;
           setWebLogoUrl(updated.web_logo);
           setWebLogoPreview(getSiteLogoUrl(updated.web_logo));
           setWebLogoFile(null);
         }
         if (updated.mobile_logo) {
+          newMobileLogo = updated.mobile_logo;
           setMobileLogoUrl(updated.mobile_logo);
           setMobileLogoPreview(getSiteLogoUrl(updated.mobile_logo));
           setMobileLogoFile(null);
@@ -147,6 +197,32 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
           updated_at: updated.updated_at || new Date().toISOString(),
         }));
       }
+
+      // Sync with global SiteSettingsContext (updates AdminDashboard, LoginPortal, document.title immediately)
+      updateLocalSettings({
+        site_name: siteName.trim(),
+        site_title: siteTitle.trim(),
+        site_description: siteDescription.trim(),
+        web_logo: newWebLogo,
+        mobile_logo: newMobileLogo,
+        support_email: supportEmail.trim(),
+        support_phone: supportPhone.trim(),
+        whatsapp_number: whatsappNumber.trim(),
+        office_address: officeAddress.trim(),
+        social_whatsapp: socialWhatsapp.trim(),
+        social_youtube: socialYoutube.trim(),
+        social_facebook: socialFacebook.trim(),
+        social_twitter: socialTwitter.trim(),
+        social_instagram: socialInstagram.trim(),
+        social_linkedin: socialLinkedin.trim(),
+        meta_keywords: metaKeywords.trim(),
+        copyright_text: copyrightText.trim(),
+        mandi_currency: mandiCurrency,
+        timezone: timezoneSetting,
+      });
+
+      refreshSiteSettings();
+      showSiteToast('Site settings & logos updated successfully! Admin dashboard branding synchronized.', 'success');
     } catch (err) {
       showSiteToast(err.message || 'Failed to update site settings', 'error');
     } finally {
@@ -473,168 +549,453 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
           {activeTab === 'Site Settings' ? (
             /* Dedicated Site Settings Form (Directly integrated with api/admin/site-settings) */
             <div className="site-settings-view">
-              <div className="sys-form-grid" style={{ gridTemplateColumns: '1fr' }}>
-                <div className="sys-form-group">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <label>Site Name <span style={{ color: '#dc2626' }}>*</span></label>
-                    <span style={{ fontSize: '11px', color: '#9ca3af' }}>{siteName.length}/150</span>
-                  </div>
-                  <input
-                    type="text"
-                    maxLength={150}
-                    placeholder="Enter site name (e.g. Vyapari Darbar)"
-                    value={siteName}
-                    onChange={(e) => setSiteName(e.target.value)}
-                  />
-                </div>
-
-                <div className="sys-form-group">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <label>Site Title / Tagline</label>
-                    <span style={{ fontSize: '11px', color: '#9ca3af' }}>{siteTitle.length}/255</span>
-                  </div>
-                  <input
-                    type="text"
-                    maxLength={255}
-                    placeholder="Enter site title (e.g. Indian Commodities, Global Opportunities)"
-                    value={siteTitle}
-                    onChange={(e) => setSiteTitle(e.target.value)}
-                  />
-                </div>
-
-                <div className="sys-form-group">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <label>Site Description</label>
-                    <span style={{ fontSize: '11px', color: '#9ca3af' }}>{siteDescription.length}/5000</span>
-                  </div>
-                  <textarea
-                    rows={3}
-                    maxLength={5000}
-                    placeholder="Provide a comprehensive description of the platform for search engines and traders..."
-                    value={siteDescription}
-                    onChange={(e) => setSiteDescription(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '6px',
-                      fontSize: '13px',
-                      color: '#111827',
-                      fontFamily: 'inherit',
-                      resize: 'vertical',
-                      outline: 'none',
-                    }}
-                  />
-                </div>
+              {/* Sub-navigation tabs within Site Settings */}
+              <div className="site-subnav-bar">
+                <button
+                  type="button"
+                  className={`site-subnav-btn ${siteSubTab === 'branding' ? 'active' : ''}`}
+                  onClick={() => setSiteSubTab('branding')}
+                >
+                  <span>🎨 Branding & Logos</span>
+                  <span className="site-subnav-badge">Primary</span>
+                </button>
+                <button
+                  type="button"
+                  className={`site-subnav-btn ${siteSubTab === 'contact' ? 'active' : ''}`}
+                  onClick={() => setSiteSubTab('contact')}
+                >
+                  <span>📞 Contact & Support</span>
+                </button>
+                <button
+                  type="button"
+                  className={`site-subnav-btn ${siteSubTab === 'social' ? 'active' : ''}`}
+                  onClick={() => setSiteSubTab('social')}
+                >
+                  <span>🌐 Social Channels</span>
+                </button>
+                <button
+                  type="button"
+                  className={`site-subnav-btn ${siteSubTab === 'seo' ? 'active' : ''}`}
+                  onClick={() => setSiteSubTab('seo')}
+                >
+                  <span>⚡ SEO & Regional</span>
+                </button>
               </div>
 
-              {/* Logo Uploads Grid */}
-              <div className="site-logo-grid">
-                {/* Web Logo */}
-                <div className="site-logo-card">
-                  <div className="site-logo-header">
-                    <span className="site-logo-title">Web Logo</span>
-                    <span className="site-logo-badge">Navbar Brand</span>
-                  </div>
-
-                  <div className="site-logo-preview-box">
-                    {webLogoPreview ? (
-                      <img src={webLogoPreview} alt="Web Logo Preview" className="site-logo-img" />
-                    ) : (
-                      <div className="site-logo-placeholder">
-                        <img src={sidebarLogoImg} alt="Default Logo" style={{ height: '36px', opacity: 0.6 }} />
-                        <span>No custom logo</span>
+              {/* TAB 1: BRANDING & LOGOS */}
+              {siteSubTab === 'branding' && (
+                <>
+                  <div className="sys-form-grid" style={{ gridTemplateColumns: '1fr' }}>
+                    <div className="sys-form-group">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <label>Site Name <span style={{ color: '#dc2626' }}>*</span></label>
+                        <span style={{ fontSize: '11px', color: '#9ca3af' }}>{siteName.length}/150</span>
                       </div>
-                    )}
-                  </div>
+                      <input
+                        type="text"
+                        maxLength={150}
+                        placeholder="Enter site name (e.g. Vyapari Darbar)"
+                        value={siteName}
+                        onChange={(e) => setSiteName(e.target.value)}
+                      />
+                    </div>
 
-                  <input
-                    type="file"
-                    ref={webLogoInputRef}
-                    accept="image/png,image/jpeg,image/jpg,image/webp"
-                    style={{ display: 'none' }}
-                    onChange={handleWebLogoChange}
-                  />
-
-                  <div className="site-logo-actions">
-                    <button
-                      type="button"
-                      className="btn-upload-logo"
-                      onClick={() => webLogoInputRef.current?.click()}
-                    >
-                      {webLogoFile ? 'Change File' : webLogoPreview ? 'Replace Logo' : 'Upload Web Logo'}
-                    </button>
-                    {webLogoFile && (
-                      <button
-                        type="button"
-                        className="btn-clear-logo"
-                        onClick={handleClearWebLogo}
-                        title="Revert to stored logo"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-
-                  <span className="site-logo-hint">
-                    PNG, JPG, WEBP • Max 2MB {webLogoFile && `(${webLogoFile.name})`}
-                  </span>
-                </div>
-
-                {/* Mobile Logo */}
-                <div className="site-logo-card">
-                  <div className="site-logo-header">
-                    <span className="site-logo-title">Mobile Logo</span>
-                    <span className="site-logo-badge">App & Icon</span>
-                  </div>
-
-                  <div className="site-logo-preview-box">
-                    {mobileLogoPreview ? (
-                      <img src={mobileLogoPreview} alt="Mobile Logo Preview" className="site-logo-img" />
-                    ) : (
-                      <div className="site-logo-placeholder">
-                        <span style={{ fontSize: '24px' }}>📱</span>
-                        <span>No mobile logo</span>
+                    <div className="sys-form-group">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <label>Site Title / Tagline</label>
+                        <span style={{ fontSize: '11px', color: '#9ca3af' }}>{siteTitle.length}/255</span>
                       </div>
-                    )}
+                      <input
+                        type="text"
+                        maxLength={255}
+                        placeholder="Enter site title (e.g. Indian Commodities, Global Opportunities)"
+                        value={siteTitle}
+                        onChange={(e) => setSiteTitle(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="sys-form-group">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <label>Site Description (Meta Description)</label>
+                        <span style={{ fontSize: '11px', color: '#9ca3af' }}>{siteDescription.length}/5000</span>
+                      </div>
+                      <textarea
+                        rows={3}
+                        maxLength={5000}
+                        placeholder="Provide a comprehensive description of the platform for search engines and traders..."
+                        value={siteDescription}
+                        onChange={(e) => setSiteDescription(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '6px',
+                          fontSize: '13px',
+                          color: '#111827',
+                          fontFamily: 'inherit',
+                          resize: 'vertical',
+                          outline: 'none',
+                        }}
+                      />
+                    </div>
                   </div>
 
-                  <input
-                    type="file"
-                    ref={mobileLogoInputRef}
-                    accept="image/png,image/jpeg,image/jpg,image/webp"
-                    style={{ display: 'none' }}
-                    onChange={handleMobileLogoChange}
-                  />
+                  {/* Logo Uploads Grid */}
+                  <div className="site-logo-grid">
+                    {/* Web Logo */}
+                    <div className="site-logo-card">
+                      <div className="site-logo-header">
+                        <span className="site-logo-title">Web Logo (Navbar & Sidebar)</span>
+                        <span className={`site-logo-status-tag ${webLogoUrl ? '' : 'fallback'}`}>
+                          {webLogoUrl ? '● Live on Server' : 'Default Asset'}
+                        </span>
+                      </div>
 
-                  <div className="site-logo-actions">
-                    <button
-                      type="button"
-                      className="btn-upload-logo"
-                      onClick={() => mobileLogoInputRef.current?.click()}
-                    >
-                      {mobileLogoFile ? 'Change File' : mobileLogoPreview ? 'Replace Logo' : 'Upload Mobile Logo'}
-                    </button>
-                    {mobileLogoFile && (
-                      <button
-                        type="button"
-                        className="btn-clear-logo"
-                        onClick={handleClearMobileLogo}
-                        title="Revert to stored logo"
-                      >
-                        ✕
-                      </button>
-                    )}
+                      <div className="site-logo-preview-box">
+                        {webLogoPreview ? (
+                          <img src={webLogoPreview} alt="Web Logo Preview" className="site-logo-img" />
+                        ) : (
+                          <div className="site-logo-placeholder">
+                            <img src={sidebarLogoImg} alt="Default Logo" style={{ height: '36px', opacity: 0.6 }} />
+                            <span>Default branding in use</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {webLogoUrl && (
+                        <div className="site-logo-url-row">
+                          <span style={{ fontWeight: 600 }}>URL:</span>
+                          <span className="site-logo-url-text" title={getSiteLogoUrl(webLogoUrl)}>
+                            {getSiteLogoUrl(webLogoUrl)}
+                          </span>
+                          <button
+                            type="button"
+                            className="btn-logo-secondary"
+                            onClick={() => handleCopyLogoUrl(getSiteLogoUrl(webLogoUrl), 'Web Logo')}
+                            title="Copy image URL"
+                          >
+                            📋 Copy
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-logo-secondary"
+                            onClick={() => handleOpenLogo(getSiteLogoUrl(webLogoUrl))}
+                            title="Open full image in new tab"
+                          >
+                            ↗ View
+                          </button>
+                        </div>
+                      )}
+
+                      <input
+                        type="file"
+                        ref={webLogoInputRef}
+                        accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+                        style={{ display: 'none' }}
+                        onChange={handleWebLogoChange}
+                      />
+
+                      <div className="site-logo-actions">
+                        <button
+                          type="button"
+                          className="btn-upload-logo"
+                          onClick={() => webLogoInputRef.current?.click()}
+                        >
+                          {webLogoFile ? 'Choose Different File' : webLogoPreview ? 'Replace Web Logo' : 'Upload Web Logo'}
+                        </button>
+                        {webLogoFile && (
+                          <button
+                            type="button"
+                            className="btn-clear-logo"
+                            onClick={handleClearWebLogo}
+                            title="Cancel selected file"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+
+                      <span className="site-logo-hint">
+                        PNG, SVG, WEBP, JPG • Recommended 240×60px • Max 2MB {webLogoFile && `(${webLogoFile.name})`}
+                      </span>
+                    </div>
+
+                    {/* Mobile Logo */}
+                    <div className="site-logo-card">
+                      <div className="site-logo-header">
+                        <span className="site-logo-title">Mobile Logo (App Header & Icon)</span>
+                        <span className={`site-logo-status-tag ${mobileLogoUrl ? '' : 'fallback'}`}>
+                          {mobileLogoUrl ? '● Live on Server' : 'Default Icon'}
+                        </span>
+                      </div>
+
+                      <div className="site-logo-preview-box">
+                        {mobileLogoPreview ? (
+                          <img src={mobileLogoPreview} alt="Mobile Logo Preview" className="site-logo-img" />
+                        ) : (
+                          <div className="site-logo-placeholder">
+                            <span style={{ fontSize: '26px' }}>📱</span>
+                            <span>No custom mobile logo</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {mobileLogoUrl && (
+                        <div className="site-logo-url-row">
+                          <span style={{ fontWeight: 600 }}>URL:</span>
+                          <span className="site-logo-url-text" title={getSiteLogoUrl(mobileLogoUrl)}>
+                            {getSiteLogoUrl(mobileLogoUrl)}
+                          </span>
+                          <button
+                            type="button"
+                            className="btn-logo-secondary"
+                            onClick={() => handleCopyLogoUrl(getSiteLogoUrl(mobileLogoUrl), 'Mobile Logo')}
+                            title="Copy mobile image URL"
+                          >
+                            📋 Copy
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-logo-secondary"
+                            onClick={() => handleOpenLogo(getSiteLogoUrl(mobileLogoUrl))}
+                            title="Open full image in new tab"
+                          >
+                            ↗ View
+                          </button>
+                        </div>
+                      )}
+
+                      <input
+                        type="file"
+                        ref={mobileLogoInputRef}
+                        accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+                        style={{ display: 'none' }}
+                        onChange={handleMobileLogoChange}
+                      />
+
+                      <div className="site-logo-actions">
+                        <button
+                          type="button"
+                          className="btn-upload-logo"
+                          onClick={() => mobileLogoInputRef.current?.click()}
+                        >
+                          {mobileLogoFile ? 'Choose Different File' : mobileLogoPreview ? 'Replace Mobile Logo' : 'Upload Mobile Logo'}
+                        </button>
+                        {mobileLogoFile && (
+                          <button
+                            type="button"
+                            className="btn-clear-logo"
+                            onClick={handleClearMobileLogo}
+                            title="Cancel selected file"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+
+                      <span className="site-logo-hint">
+                        Square 1:1 ratio recommended • 120×120px • Max 2MB {mobileLogoFile && `(${mobileLogoFile.name})`}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* TAB 2: CONTACT & SUPPORT */}
+              {siteSubTab === 'contact' && (
+                <div className="sys-form-grid">
+                  <div className="sys-form-group">
+                    <label>Official Support Email</label>
+                    <div className="site-input-addon-group">
+                      <span className="site-input-addon">✉</span>
+                      <input
+                        type="email"
+                        placeholder="e.g. support@vyaparidarbar.com"
+                        value={supportEmail}
+                        onChange={(e) => setSupportEmail(e.target.value)}
+                      />
+                    </div>
+                    <span style={{ fontSize: '11px', color: '#6b7280' }}>Displayed in trader helpdesk & invoices</span>
                   </div>
 
-                  <span className="site-logo-hint">
-                    Square ratio recommended • Max 2MB {mobileLogoFile && `(${mobileLogoFile.name})`}
-                  </span>
+                  <div className="sys-form-group">
+                    <label>Helpline Phone Number</label>
+                    <div className="site-input-addon-group">
+                      <span className="site-input-addon">📞</span>
+                      <input
+                        type="text"
+                        placeholder="e.g. +91 98765 43210"
+                        value={supportPhone}
+                        onChange={(e) => setSupportPhone(e.target.value)}
+                      />
+                    </div>
+                    <span style={{ fontSize: '11px', color: '#6b7280' }}>Toll-free or customer service phone</span>
+                  </div>
+
+                  <div className="sys-form-group">
+                    <label>WhatsApp Support Helpline</label>
+                    <div className="site-input-addon-group">
+                      <span className="site-input-addon">💬</span>
+                      <input
+                        type="text"
+                        placeholder="e.g. +91 98765 43210"
+                        value={whatsappNumber}
+                        onChange={(e) => setWhatsappNumber(e.target.value)}
+                      />
+                    </div>
+                    <span style={{ fontSize: '11px', color: '#6b7280' }}>Direct WhatsApp number for mandi buyers</span>
+                  </div>
+
+                  <div className="sys-form-group" style={{ gridColumn: '1 / -1' }}>
+                    <label>Headquarters & Mandi Office Address</label>
+                    <div className="site-input-addon-group">
+                      <span className="site-input-addon">🏢</span>
+                      <input
+                        type="text"
+                        placeholder="e.g. Mandi Gate No. 4, APMC Market Yard, New Delhi - 110001"
+                        value={officeAddress}
+                        onChange={(e) => setOfficeAddress(e.target.value)}
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* TAB 3: SOCIAL MEDIA */}
+              {siteSubTab === 'social' && (
+                <div className="sys-form-grid">
+                  <div className="sys-form-group">
+                    <label>WhatsApp Channel / Community Link</label>
+                    <div className="site-input-addon-group">
+                      <span className="site-input-addon" style={{ color: '#16a34a' }}>WA</span>
+                      <input
+                        type="url"
+                        placeholder="https://chat.whatsapp.com/..."
+                        value={socialWhatsapp}
+                        onChange={(e) => setSocialWhatsapp(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="sys-form-group">
+                    <label>YouTube Channel URL</label>
+                    <div className="site-input-addon-group">
+                      <span className="site-input-addon" style={{ color: '#dc2626' }}>YT</span>
+                      <input
+                        type="url"
+                        placeholder="https://youtube.com/@vyaparidarbar"
+                        value={socialYoutube}
+                        onChange={(e) => setSocialYoutube(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="sys-form-group">
+                    <label>Facebook Page Link</label>
+                    <div className="site-input-addon-group">
+                      <span className="site-input-addon" style={{ color: '#2563eb' }}>FB</span>
+                      <input
+                        type="url"
+                        placeholder="https://facebook.com/vyaparidarbar"
+                        value={socialFacebook}
+                        onChange={(e) => setSocialFacebook(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="sys-form-group">
+                    <label>Twitter / X Profile Link</label>
+                    <div className="site-input-addon-group">
+                      <span className="site-input-addon" style={{ color: '#0f172a' }}>𝕏</span>
+                      <input
+                        type="url"
+                        placeholder="https://x.com/vyaparidarbar"
+                        value={socialTwitter}
+                        onChange={(e) => setSocialTwitter(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="sys-form-group">
+                    <label>Instagram Handle Link</label>
+                    <div className="site-input-addon-group">
+                      <span className="site-input-addon" style={{ color: '#db2777' }}>IG</span>
+                      <input
+                        type="url"
+                        placeholder="https://instagram.com/vyaparidarbar"
+                        value={socialInstagram}
+                        onChange={(e) => setSocialInstagram(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="sys-form-group">
+                    <label>LinkedIn Company Link</label>
+                    <div className="site-input-addon-group">
+                      <span className="site-input-addon" style={{ color: '#0284c7' }}>IN</span>
+                      <input
+                        type="url"
+                        placeholder="https://linkedin.com/company/vyaparidarbar"
+                        value={socialLinkedin}
+                        onChange={(e) => setSocialLinkedin(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: SEO & REGIONAL */}
+              {siteSubTab === 'seo' && (
+                <div className="sys-form-grid">
+                  <div className="sys-form-group" style={{ gridColumn: '1 / -1' }}>
+                    <label>SEO Meta Keywords (Comma-separated)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. mandi rates, wheat price, agri trade, soyabean mandi, chana bhav"
+                      value={metaKeywords}
+                      onChange={(e) => setMetaKeywords(e.target.value)}
+                    />
+                    <span style={{ fontSize: '11px', color: '#6b7280' }}>Helps search engines index agricultural commodity pages</span>
+                  </div>
+
+                  <div className="sys-form-group" style={{ gridColumn: '1 / -1' }}>
+                    <label>Copyright Footer Notice</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. © 2026 Vyapari Darbaar. All rights reserved."
+                      value={copyrightText}
+                      onChange={(e) => setCopyrightText(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="sys-form-group">
+                    <label>Primary Mandi Currency</label>
+                    <select
+                      value={mandiCurrency}
+                      onChange={(e) => setMandiCurrency(e.target.value)}
+                    >
+                      <option>INR (₹)</option>
+                      <option>USD ($)</option>
+                      <option>EUR (€)</option>
+                    </select>
+                  </div>
+
+                  <div className="sys-form-group">
+                    <label>Platform Timezone</label>
+                    <select
+                      value={timezoneSetting}
+                      onChange={(e) => setTimezoneSetting(e.target.value)}
+                    >
+                      <option>Asia/Kolkata (GMT +5:30)</option>
+                      <option>UTC (GMT +0:00)</option>
+                      <option>America/New_York (GMT -5:00)</option>
+                    </select>
+                  </div>
+                </div>
+              )}
 
               {/* Action Buttons */}
-              <div style={{ display: 'flex', gap: '10px', marginTop: '14px' }}>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
                 <button
                   type="button"
                   className="btn-save-settings"
@@ -642,14 +1003,14 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                   disabled={isSavingSite}
                   style={{ flex: 1 }}
                 >
-                  {isSavingSite ? 'Saving Settings...' : 'Save Site Settings'}
+                  {isSavingSite ? 'Saving Settings & Updating Logos...' : 'Save Site Settings'}
                 </button>
                 <button
                   type="button"
                   onClick={loadSiteSettings}
                   disabled={isLoadingSite || isSavingSite}
                   style={{
-                    padding: '7px 14px',
+                    padding: '7px 16px',
                     border: '1px solid #d1d5db',
                     borderRadius: '6px',
                     background: '#ffffff',
@@ -659,13 +1020,16 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                     color: '#374151',
                   }}
                 >
-                  Reload
+                  {isLoadingSite ? 'Reloading...' : 'Reload from Server'}
                 </button>
               </div>
 
               {/* Meta footer */}
               <div className="site-meta-footer">
-                <span>Setting ID: #{siteMeta?.id || 1}</span>
+                <span className="api-connection-pill">
+                  <span className="api-pulsing-dot" />
+                  API Endpoint: /api/admin/site-settings
+                </span>
                 <span>
                   {siteMeta?.updated_at
                     ? `Last updated: ${new Date(siteMeta.updated_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}`
@@ -1072,6 +1436,44 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                 <div className="serp-desc">
                   {siteDescription ||
                     'Explore real-time mandi rates, commodity prices, and connect with trusted agricultural traders across India on Vyapari Darbaar.'}
+                </div>
+              </div>
+
+              {/* Trader Support & Contact Card Preview */}
+              <div className="site-preview-header" style={{ marginTop: '16px' }}>
+                <span>🏢 Public Support & Contact Card Preview</span>
+              </div>
+              <div className="simulated-contact-card">
+                <div className="simulated-contact-item">
+                  <span className="icon">✉</span>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '11px', color: '#64748b' }}>SUPPORT EMAIL</div>
+                    <div>{supportEmail || 'support@vyaparidarbar.com'}</div>
+                  </div>
+                </div>
+                <div className="simulated-contact-item">
+                  <span className="icon">📞</span>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '11px', color: '#64748b' }}>HELPLINE / WHATSAPP</div>
+                    <div>{supportPhone || '+91 98765 43210'} {whatsappNumber && `(WA: ${whatsappNumber})`}</div>
+                  </div>
+                </div>
+                <div className="simulated-contact-item">
+                  <span className="icon">📍</span>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '11px', color: '#64748b' }}>OFFICE ADDRESS</div>
+                    <div>{officeAddress || 'Mandi Gate No. 4, APMC Market Yard, New Delhi'}</div>
+                  </div>
+                </div>
+
+                {/* Social links pills */}
+                <div className="simulated-social-row">
+                  {socialWhatsapp && <span className="simulated-social-badge active">WhatsApp Group</span>}
+                  {socialYoutube && <span className="simulated-social-badge active">YouTube</span>}
+                  {socialFacebook && <span className="simulated-social-badge active">Facebook</span>}
+                  {socialTwitter && <span className="simulated-social-badge active">Twitter/X</span>}
+                  {socialInstagram && <span className="simulated-social-badge active">Instagram</span>}
+                  {socialLinkedin && <span className="simulated-social-badge active">LinkedIn</span>}
                 </div>
               </div>
             </div>
