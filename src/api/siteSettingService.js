@@ -23,7 +23,7 @@ export function getSiteLogoUrl(url) {
 /**
  * Fetch Admin Site Settings
  * Endpoint: GET /api/admin/site-settings
- * @returns {Promise<{ status: boolean, message: string, data: { id: number, site_name: string, site_title: string|null, site_description: string|null, web_logo: string|null, mobile_logo: string|null, created_at: string, updated_at: string } }>}
+ * @returns {Promise<{ status: boolean, message: string, data: { id: number, site_name: string, site_title: string|null, site_description: string|null, web_logo: string|null, mobile_logo: string|null, favicon: string|null, created_at: string, updated_at: string } }>}
  */
 export async function getAdminSiteSettings() {
   return await apiFetch('/api/admin/site-settings', {
@@ -45,35 +45,20 @@ export async function getPublicSiteSettings() {
 
 /**
  * Update Admin Site Settings
- * Endpoint: PATCH /api/admin/site-settings
- * Supports multipart FormData (for web_logo, mobile_logo) and JSON
+ * Endpoint: POST /api/admin/site-settings
+ * Uses multipart FormData with _method: 'PATCH' (matching Laravel method spoofing & Postman spec)
  *
- * @param {FormData|{ site_name?: string, site_title?: string, site_description?: string, web_logo?: File, mobile_logo?: File }} payload
+ * @param {FormData|{ site_name?: string, site_title?: string, site_description?: string, web_logo?: File|Blob, mobile_logo?: File|Blob, favicon?: File|Blob }} payload
  * @returns {Promise<{ status: boolean, message: string, data: any }>}
  */
 export async function updateAdminSiteSettings(payload) {
-  // If payload is already FormData
+  let formData;
+
   if (payload instanceof FormData) {
-    if (!payload.has('_method')) {
-      payload.append('_method', 'PATCH');
-    }
-    return await apiFetch('/api/admin/site-settings', {
-      method: 'POST',
-      body: payload,
-      headers: {
-        'X-HTTP-Method-Override': 'PATCH',
-      },
-    });
-  }
+    formData = payload;
+  } else {
+    formData = new FormData();
 
-  // Check if any File object is present in payload
-  const hasFiles =
-    (payload.web_logo && payload.web_logo instanceof File) ||
-    (payload.mobile_logo && payload.mobile_logo instanceof File);
-
-  if (hasFiles) {
-    const formData = new FormData();
-    formData.append('_method', 'PATCH');
     if (payload.site_name !== undefined && payload.site_name !== null) {
       formData.append('site_name', String(payload.site_name).trim());
     }
@@ -83,36 +68,27 @@ export async function updateAdminSiteSettings(payload) {
     if (payload.site_description !== undefined && payload.site_description !== null) {
       formData.append('site_description', String(payload.site_description).trim());
     }
-    if (payload.web_logo instanceof File) {
+
+    if (payload.web_logo && (payload.web_logo instanceof File || payload.web_logo instanceof Blob)) {
       formData.append('web_logo', payload.web_logo);
     }
-    if (payload.mobile_logo instanceof File) {
+    if (payload.mobile_logo && (payload.mobile_logo instanceof File || payload.mobile_logo instanceof Blob)) {
       formData.append('mobile_logo', payload.mobile_logo);
     }
-
-    return await apiFetch('/api/admin/site-settings', {
-      method: 'POST',
-      body: formData,
-      headers: {
-        'X-HTTP-Method-Override': 'PATCH',
-      },
-    });
+    if (payload.favicon && (payload.favicon instanceof File || payload.favicon instanceof Blob)) {
+      formData.append('favicon', payload.favicon);
+    }
   }
 
-  // Pure JSON update (when no new files are uploaded)
-  const jsonBody = {};
-  if (payload.site_name !== undefined && payload.site_name !== null) {
-    jsonBody.site_name = String(payload.site_name).trim();
-  }
-  if (payload.site_title !== undefined && payload.site_title !== null) {
-    jsonBody.site_title = String(payload.site_title).trim();
-  }
-  if (payload.site_description !== undefined && payload.site_description !== null) {
-    jsonBody.site_description = String(payload.site_description).trim();
+  // Ensure Laravel method spoofing field is present in FormData
+  if (!formData.has('_method')) {
+    formData.append('_method', 'PATCH');
   }
 
+  // Always POST with FormData containing _method='PATCH'
   return await apiFetch('/api/admin/site-settings', {
-    method: 'PATCH',
-    body: jsonBody,
+    method: 'POST',
+    body: formData,
   });
 }
+

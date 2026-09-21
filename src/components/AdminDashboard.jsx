@@ -32,6 +32,8 @@ import {
 } from './Icons';
 import MarketOverview from './MarketOverview';
 import MandiRates from './MandiRates';
+import AddMandiRate from './AddMandiRate';
+import ImportMandiRates from './ImportMandiRates';
 import TradeRequirements from './TradeRequirements';
 import TraderDirectory from './TraderDirectory';
 import ContactUnlocks from './ContactUnlocks';
@@ -48,7 +50,6 @@ import CommodityPrices from './CommodityPrices';
 import AllCommodities from './AllCommodities';
 import AddCommodity from './AddCommodity';
 import { useAdminAuth } from '../context/AdminAuthContext';
-import { useSiteSettings } from '../context/SiteSettingsContext';
 import './AdminDashboard.css';
 
 // Routes implemented strictly for the modules worked on so far
@@ -59,6 +60,8 @@ export const ROUTE_MAP = {
   'All Commodities': '/all-commodities',
   'Add Commodity': '/add-commodity',
   'Mandi Rates': '/mandi-rates',
+  'Add Mandi Rate': '/add-mandi-rate',
+  'Import Mandi Rates': '/import-mandi-rates',
   'Buy Requirements': '/buy-requirements',
   'Trader Directory': '/trader-directory',
   'Contact Unlocks': '/contact-unlocks',
@@ -70,7 +73,6 @@ export const ROUTE_MAP = {
   'Platform Analytics': '/platform-analytics',
   'Notifications': '/notifications',
   'Homepage': '/homepage',
-  'Site Settings': '/site-settings',
   'System Settings': '/system-settings',
   'Audit Logs': '/audit-logs',
 };
@@ -83,6 +85,10 @@ export const PATH_TO_NAV = {
   '/all-commodities': 'All Commodities',
   '/add-commodity': 'Add Commodity',
   '/mandi-rates': 'Mandi Rates',
+  '/add-mandi-rate': 'Add Mandi Rate',
+  '/mandi-rates/add': 'Add Mandi Rate',
+  '/import-mandi-rates': 'Import Mandi Rates',
+  '/mandi-rates/import': 'Import Mandi Rates',
   '/buy-requirements': 'Buy Requirements',
   '/trader-directory': 'Trader Directory',
   '/contact-unlocks': 'Contact Unlocks',
@@ -94,7 +100,7 @@ export const PATH_TO_NAV = {
   '/platform-analytics': 'Platform Analytics',
   '/notifications': 'Notifications',
   '/homepage': 'Homepage',
-  '/site-settings': 'Site Settings',
+  '/site-settings': 'System Settings',
   '/system-settings': 'System Settings',
   '/audit-logs': 'Audit Logs',
 };
@@ -113,7 +119,6 @@ export default function AdminDashboard({
 
   // Admin Auth Context
   const { admin, logout } = useAdminAuth();
-  const { siteSettings, webLogoUrl } = useSiteSettings();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
 
@@ -245,7 +250,6 @@ export default function AdminDashboard({
     {
       title: 'SYSTEM',
       items: [
-        { name: 'Site Settings', icon: 'settings' },
         { name: 'System Settings', icon: 'settings' },
         { name: 'Audit Logs', icon: 'logs' },
       ],
@@ -259,22 +263,8 @@ export default function AdminDashboard({
           ==================================================================== */}
       <aside className="dash-sidebar">
         {/* Logo block */}
-        <div
-          className="dash-sidebar-header"
-          onClick={() => handleNavClick('Dashboard')}
-          style={{ cursor: 'pointer' }}
-          title={siteSettings?.site_name || 'Vyapari Darbaar'}
-        >
-          <img
-            src={webLogoUrl || sidebarLogoImg}
-            alt={siteSettings?.site_name || 'Vyapari Darbaar'}
-            className="dash-sidebar-logo"
-            onError={(e) => {
-              if (e.currentTarget.src !== sidebarLogoImg) {
-                e.currentTarget.src = sidebarLogoImg;
-              }
-            }}
-          />
+        <div className="dash-sidebar-header">
+          <img src={sidebarLogoImg} alt="Vyapari Darbaar" className="dash-sidebar-logo" />
         </div>
 
         {/* Scrollable navigation menu */}
@@ -288,7 +278,9 @@ export default function AdminDashboard({
                 const isActive =
                   activeNav === item.name ||
                   (item.name === 'Commodity Prices' &&
-                    (activeNav === 'All Commodities' || activeNav === 'Add Commodity'));
+                    (activeNav === 'All Commodities' || activeNav === 'Add Commodity')) ||
+                  (item.name === 'Mandi Rates' &&
+                    (activeNav === 'Add Mandi Rate' || activeNav === 'Import Mandi Rates'));
                 return (
                   <button
                     key={iIdx}
@@ -399,7 +391,7 @@ export default function AdminDashboard({
         {/* Sidebar bottom branding */}
         <div className="dash-sidebar-footer">
           <span className="dash-sb-crown">👑</span>
-          <span className="dash-sb-brand">{siteSettings?.site_name?.toUpperCase() || 'VYAPARI DARBAAR'}</span>
+          <span className="dash-sb-brand">VYAPARI DARBAAR</span>
         </div>
       </aside>
 
@@ -416,7 +408,7 @@ export default function AdminDashboard({
               type="text"
               className="dash-search-input"
               placeholder={
-                activeNav === 'Site Settings' || activeNav === 'System Settings' || activeNav === 'Audit Logs'
+                activeNav === 'System Settings' || activeNav === 'Audit Logs'
                   ? 'Search settings, logs, users, modules...'
                   : activeNav === 'Roles & Permissions'
                   ? 'Search users, roles, permissions, modules...'
@@ -520,14 +512,14 @@ export default function AdminDashboard({
         </header>
 
         {/* Welcome Banner */}
-        {activeNav !== 'Add Commodity' && activeNav !== 'All Commodities' && (
+        {activeNav !== 'Add Commodity' && activeNav !== 'All Commodities' && activeNav !== 'Add Mandi Rate' && activeNav !== 'Import Mandi Rates' && (
           <div className="dash-welcome-banner">
             <div className="dash-welcome-left">
               <h1 className="dash-welcome-title">
-                {activeNav === 'Site Settings'
-                  ? 'Site Settings'
-                  : activeNav === 'System Settings' || activeNav === 'Audit Logs'
-                  ? 'System Settings / Audit Logs'
+                {activeNav === 'System Settings'
+                  ? 'System Settings'
+                  : activeNav === 'Audit Logs'
+                  ? 'Audit Logs'
                   : activeNav === 'Roles & Permissions'
                   ? 'Roles & Permissions'
                   : activeNav === 'Homepage'
@@ -559,9 +551,9 @@ export default function AdminDashboard({
                       : 'Welcome Back, Admin 👋'}
               </h1>
               <p className="dash-welcome-subtitle">
-                {activeNav === 'Site Settings'
-                  ? 'Configure site name, title, description, and web/mobile logos via api/admin/site-settings.'
-                  : activeNav === 'System Settings' || activeNav === 'Audit Logs'
+                {activeNav === 'System Settings'
+                  ? 'Configure platform settings, site branding, logos, and preferences.'
+                  : activeNav === 'Audit Logs'
                   ? 'Configure platform settings and monitor all system activities for complete transparency and security.'
                   : activeNav === 'Roles & Permissions'
                   ? 'Manage user roles, permissions and access control for the entire platform.'
@@ -597,9 +589,7 @@ export default function AdminDashboard({
 
             <div className="dash-welcome-center">
               <span className="dash-welcome-quote">
-                {activeNav === 'Site Settings' ? (
-                  <>“A Strong Brand<br />Builds Lasting Trust.”</>
-                ) : activeNav === 'System Settings' || activeNav === 'Audit Logs' ? (
+                {activeNav === 'System Settings' || activeNav === 'Audit Logs' ? (
                   <>“Transparent Systems<br />Build Greater Trust.”</>
                 ) : activeNav === 'Roles & Permissions' ? (
                   <>“Right People<br />Right Access<br />A Stronger Platform.”</>
@@ -642,11 +632,9 @@ export default function AdminDashboard({
         {/* ==================================================================
             Dashboard Content Container (Notifications vs Platform Analytics vs Payments vs Advertisements vs Subscription Plans vs News & Articles vs Contact Unlocks vs Trader Directory vs Trade Requirements vs Mandi vs Overview vs Dashboard)
             ================================================================== */}
-        <div className={`dash-content-container ${activeNav === 'Add Commodity' || activeNav === 'All Commodities' ? 'flush-content' : ''}`}>
-          {activeNav === 'Site Settings' ? (
-            <SystemSettingsAudit defaultTab="Site Settings" />
-          ) : activeNav === 'System Settings' || activeNav === 'Audit Logs' ? (
-            <SystemSettingsAudit defaultTab={activeNav === 'Audit Logs' ? 'Audit Logs' : 'General Settings'} />
+        <div className={`dash-content-container ${activeNav === 'Add Commodity' || activeNav === 'All Commodities' || activeNav === 'Add Mandi Rate' || activeNav === 'Import Mandi Rates' ? 'flush-content' : ''}`}>
+          {activeNav === 'System Settings' || activeNav === 'Audit Logs' ? (
+            <SystemSettingsAudit defaultTab={activeNav === 'Audit Logs' ? 'Audit Logs' : 'Site Settings'} />
           ) : activeNav === 'Roles & Permissions' ? (
             <RolesPermissions />
           ) : activeNav === 'Homepage' ? (
@@ -678,8 +666,15 @@ export default function AdminDashboard({
             />
           ) : activeNav === 'Commodity Prices' ? (
             <CommodityPrices onNavigateToAllCommodities={() => handleNavClick('All Commodities')} />
+          ) : activeNav === 'Import Mandi Rates' ? (
+            <ImportMandiRates onBack={() => handleNavClick('Mandi Rates')} />
+          ) : activeNav === 'Add Mandi Rate' ? (
+            <AddMandiRate onBack={() => handleNavClick('Mandi Rates')} />
           ) : activeNav === 'Mandi Rates' ? (
-            <MandiRates />
+            <MandiRates
+              onNavigateToAdd={() => handleNavClick('Add Mandi Rate')}
+              onNavigateToImport={() => handleNavClick('Import Mandi Rates')}
+            />
           ) : activeNav === 'Market Overview' ? (
             <MarketOverview />
           ) : (
@@ -1468,17 +1463,23 @@ export default function AdminDashboard({
         <footer className="dash-global-footer">
           <div className="dash-footer-left">
             <span className="dash-footer-crown">👑</span>
-            <span className="dash-footer-brand">{siteSettings?.site_name?.toUpperCase() || 'VYAPARI DARBAAR'}</span>
+            <span className="dash-footer-brand">VYAPARI DARBAAR</span>
             <span className="dash-footer-pipe">|</span>
             <span className="dash-footer-version">Admin Panel | Version 1.0.0</span>
           </div>
 
           <div className="dash-footer-center">
-            <span>{siteSettings?.site_title || 'Indian Commodities | Global Opportunities'}</span>
+            <span>Indian Commodities</span>
+            <span className="dash-footer-pipe">|</span>
+            <span>Global Opportunities</span>
+            <span className="dash-footer-pipe">|</span>
+            <span>Stronger Traders</span>
+            <span className="dash-footer-pipe">|</span>
+            <span className="dash-footer-highlight">Brighter Bharat</span>
           </div>
 
           <div className="dash-footer-right">
-            <span>{siteSettings?.copyright_text || `© ${new Date().getFullYear()} ${siteSettings?.site_name || 'Vyapari Darbaar'}. All rights reserved.`}</span>
+            <span>© 2026 Vyapari Darbaar. All rights reserved.</span>
           </div>
         </footer>
       </div>

@@ -1,18 +1,16 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AdminDashboard from './components/AdminDashboard';
 import LoginPortal from './components/LoginPortal';
 import DesignSystem from './components/DesignSystem';
 import { AdminAuthProvider } from './context/AdminAuthContext';
-import { SiteSettingsProvider } from './context/SiteSettingsContext';
 import { ProtectedRoute, PublicRoute, RootRedirect } from './components/ProtectedRoute';
 
 export default function App() {
   return (
     <BrowserRouter>
-      <SiteSettingsProvider>
-        <AdminAuthProvider>
-          <Routes>
+      <AdminAuthProvider>
+        <Routes>
           {/* Root: Opens Login if not logged in; Opens Dashboard if logged in */}
           <Route path="/" element={<RootRedirect />} />
 
@@ -91,6 +89,38 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <AdminDashboard initialNav="Mandi Rates" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/add-mandi-rate"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Add Mandi Rate" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/mandi-rates/add"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Add Mandi Rate" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/import-mandi-rates"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Import Mandi Rates" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/mandi-rates/import"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Import Mandi Rates" />
               </ProtectedRoute>
             }
           />
@@ -184,11 +214,7 @@ export default function App() {
           />
           <Route
             path="/site-settings"
-            element={
-              <ProtectedRoute>
-                <AdminDashboard initialNav="Site Settings" />
-              </ProtectedRoute>
-            }
+            element={<Navigate to="/system-settings" replace />}
           />
           <Route
             path="/system-settings"
@@ -211,7 +237,6 @@ export default function App() {
           <Route path="*" element={<RootRedirect />} />
         </Routes>
       </AdminAuthProvider>
-    </SiteSettingsProvider>
-  </BrowserRouter>
-);
+    </BrowserRouter>
+  );
 }

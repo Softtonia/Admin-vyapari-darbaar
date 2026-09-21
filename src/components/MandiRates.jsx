@@ -7,7 +7,7 @@ import {
 } from './Icons';
 import './MandiRates.css';
 
-export default function MandiRates() {
+export default function MandiRates({ onNavigateToAdd, onNavigateToImport }) {
   const [selectedCommodity, setSelectedCommodity] = useState('Makhana');
   const [selectedState, setSelectedState] = useState('Bihar');
   const [selectedMandi, setSelectedMandi] = useState('All Mandis');
@@ -115,7 +115,7 @@ export default function MandiRates() {
         </div>
 
         {/* Card 5: Bulk Data Management */}
-        <div className="mandi-bulk-card">
+        <div className="mandi-bulk-card" onClick={onNavigateToImport} style={{ cursor: 'pointer' }} role="button" tabIndex={0}>
           <div className="mandi-icon-box green-tint">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#026544" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <ellipse cx="12" cy="5" rx="9" ry="3" />
@@ -198,7 +198,7 @@ export default function MandiRates() {
             <span>Export</span>
           </button>
 
-          <button type="button" className="btn-tool-outline">
+          <button type="button" className="btn-tool-outline" onClick={onNavigateToImport}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="17 8 12 3 7 8" />
@@ -207,7 +207,7 @@ export default function MandiRates() {
             <span>Import Data</span>
           </button>
 
-          <button type="button" className="btn-tool-gold">
+          <button type="button" className="btn-tool-gold" onClick={onNavigateToAdd}>
             <span>+ Add / Update Rates</span>
           </button>
         </div>
