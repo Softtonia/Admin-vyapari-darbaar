@@ -5,9 +5,11 @@ import {
   updateAdminSiteSettings,
   getSiteLogoUrl,
 } from '../api/siteSettingService';
+import { useSiteSettings } from '../context/SiteSettingsContext';
 import sidebarLogoImg from '../assets/sidebar_logo.png';
 
 export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
+  const { updateSiteSettingsState } = useSiteSettings();
   const [activeTab, setActiveTab] = useState(defaultTab || 'Site Settings');
   const [expandedSection, setExpandedSection] = useState('site'); // 'site' expanded by default
 
@@ -69,6 +71,7 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
             created_at: item.created_at,
             updated_at: item.updated_at,
           });
+          updateSiteSettingsState(item);
         }
       })
       .catch((err) => {
@@ -190,6 +193,7 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
           ...prev,
           updated_at: updated.updated_at || new Date().toISOString(),
         }));
+        updateSiteSettingsState(updated);
       }
     } catch (err) {
       showSiteToast(err.message || 'Failed to update site settings', 'error');

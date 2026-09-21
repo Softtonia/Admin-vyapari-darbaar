@@ -50,6 +50,7 @@ import CommodityPrices from './CommodityPrices';
 import AllCommodities from './AllCommodities';
 import AddCommodity from './AddCommodity';
 import { useAdminAuth } from '../context/AdminAuthContext';
+import { useSiteSettings } from '../context/SiteSettingsContext';
 import './AdminDashboard.css';
 
 // Routes implemented strictly for the modules worked on so far
@@ -119,6 +120,8 @@ export default function AdminDashboard({
 
   // Admin Auth Context
   const { admin, logout } = useAdminAuth();
+  // Global Site Settings Context (Dynamic uploaded logo & branding)
+  const { siteSettings, webLogoUrl, mobileLogoUrl } = useSiteSettings();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
 
@@ -264,7 +267,16 @@ export default function AdminDashboard({
       <aside className="dash-sidebar">
         {/* Logo block */}
         <div className="dash-sidebar-header">
-          <img src={sidebarLogoImg} alt="Vyapari Darbaar" className="dash-sidebar-logo" />
+          <img
+            src={webLogoUrl || mobileLogoUrl || sidebarLogoImg}
+            alt={siteSettings?.site_name || 'Vyapari Darbaar'}
+            className="dash-sidebar-logo"
+            onError={(e) => {
+              if (e.target.src !== sidebarLogoImg) {
+                e.target.src = sidebarLogoImg;
+              }
+            }}
+          />
         </div>
 
         {/* Scrollable navigation menu */}

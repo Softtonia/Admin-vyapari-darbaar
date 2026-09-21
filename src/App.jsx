@@ -4,13 +4,15 @@ import AdminDashboard from './components/AdminDashboard';
 import LoginPortal from './components/LoginPortal';
 import DesignSystem from './components/DesignSystem';
 import { AdminAuthProvider } from './context/AdminAuthContext';
+import { SiteSettingsProvider } from './context/SiteSettingsContext';
 import { ProtectedRoute, PublicRoute, RootRedirect } from './components/ProtectedRoute';
 
 export default function App() {
   return (
     <BrowserRouter>
       <AdminAuthProvider>
-        <Routes>
+        <SiteSettingsProvider>
+          <Routes>
           {/* Root: Opens Login if not logged in; Opens Dashboard if logged in */}
           <Route path="/" element={<RootRedirect />} />
 
@@ -236,6 +238,7 @@ export default function App() {
           {/* Fallback for undefined routes */}
           <Route path="*" element={<RootRedirect />} />
         </Routes>
+        </SiteSettingsProvider>
       </AdminAuthProvider>
     </BrowserRouter>
   );
