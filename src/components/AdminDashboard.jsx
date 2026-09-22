@@ -254,7 +254,6 @@ export default function AdminDashboard({
       title: 'SYSTEM',
       items: [
         { name: 'System Settings', icon: 'settings' },
-        { name: 'Social Links', icon: 'global' },
       ],
     },
   ];

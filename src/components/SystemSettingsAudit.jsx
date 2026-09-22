@@ -874,7 +874,7 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
       </div>
 
       {/* 3. Main Split Layout: Left Settings vs Right Audit Logs */}
-      <div className={`sys-main-split ${activeTab === 'Audit Logs' ? 'full-width' : ''}`}>
+      <div className={`sys-main-split ${activeTab === 'Audit Logs' || activeTab === 'Social Links' || activeTab === 'Social Media' ? 'full-width' : ''}`}>
         {/* ==================================================================
             Left Panel: Settings (Site Settings vs System Settings)
             Hidden on Audit Logs tab so Audit Logs displays 100% full width
@@ -886,14 +886,14 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
               <h2 className="sys-panel-title">
                 {activeTab === 'Site Settings'
                   ? 'Site Settings'
-                  : activeTab === 'Social Media'
-                  ? 'Social Media Management'
+                  : activeTab === 'Social Links' || activeTab === 'Social Media'
+                  ? 'Social Links Management'
                   : 'System Settings'}
               </h2>
               <p className="sys-panel-subtitle">
                 {activeTab === 'Site Settings'
                   ? 'Manage site branding, logos, and platform metadata.'
-                  : activeTab === 'Social Media'
+                  : activeTab === 'Social Links' || activeTab === 'Social Media'
                   ? 'Configure official social profiles, trader community channels, and external links.'
                   : 'Manage platform configuration and preferences.'}
               </p>
@@ -1857,8 +1857,9 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
 
         {/* ==================================================================
             Right Panel: Live Branding Preview (when Site Settings) or Audit Logs
+            Hidden on Social Links and Audit Logs
             ================================================================== */}
-        {activeTab === 'Site Settings' ? (
+        {activeTab === 'Social Links' || activeTab === 'Social Media' ? null : activeTab === 'Site Settings' ? (
           <div className="sys-logs-panel">
             <div className="sys-logs-header">
               <div>
@@ -1953,184 +1954,7 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
               </div>
             </div>
           </div>
-                  ) : activeTab === 'Social Media' ? (
-            <div className="sys-logs-panel">
-              <div className="sys-logs-header">
-                <div>
-                  <h2 className="sys-panel-title">Live Social Channels & Public Preview</h2>
-                  <p className="sys-panel-subtitle">
-                    Real-time preview of how official profiles appear on website headers, footers, and trader apps.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="btn-export-logs"
-                  onClick={() => setActiveTab('Site Settings')}
-                  title="Switch to Site Settings"
-                >
-                  <span>Site Settings ⚙</span>
-                </button>
-              </div>
-
-              {/* Status Summary Banner */}
-              <div className="social-preview-summary-card">
-                <div className="social-summary-item">
-                  <span className="summary-num">
-                    {Object.values(socialLinks).filter((u) => u && u.trim()).length} / 7
-                  </span>
-                  <span className="summary-label">Channels Connected</span>
-                </div>
-                <div className="social-summary-badges">
-                  {socialLinks.facebook && <span className="preview-badge fb">Facebook</span>}
-                  {socialLinks.twitter && <span className="preview-badge x">X / Twitter</span>}
-                  {socialLinks.instagram && <span className="preview-badge insta">Instagram</span>}
-                  {socialLinks.linkedin && <span className="preview-badge in">LinkedIn</span>}
-                  {socialLinks.youtube && <span className="preview-badge yt">YouTube</span>}
-                  {socialLinks.whatsapp && <span className="preview-badge wa">WhatsApp</span>}
-                  {socialLinks.telegram && <span className="preview-badge tg">Telegram</span>}
-                  {Object.values(socialLinks).every((u) => !u || !u.trim()) && (
-                    <span style={{ fontSize: '12px', color: '#9ca3af' }}>No channels configured yet</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Header Navbar Preview */}
-              <div className="site-preview-header" style={{ marginTop: '14px' }}>
-                <span>🌐 Website Header Utility Bar Preview</span>
-              </div>
-              <div className="simulated-social-header-bar">
-                <div className="social-header-left">
-                  <span>📞 {phoneNumber || '+91 98765 43210'}</span>
-                  <span>✉ {siteEmail || 'contact@vyaparidarbar.com'}</span>
-                </div>
-                <div className="social-header-icons">
-                  <span className="social-follow-text">Follow Us:</span>
-                  {socialLinks.facebook && (
-                    <a href={socialLinks.facebook} target="_blank" rel="noreferrer" className="preview-social-icon fb" title="Facebook">f</a>
-                  )}
-                  {socialLinks.twitter && (
-                    <a href={socialLinks.twitter} target="_blank" rel="noreferrer" className="preview-social-icon x" title="Twitter / X">𝕏</a>
-                  )}
-                  {socialLinks.instagram && (
-                    <a href={socialLinks.instagram} target="_blank" rel="noreferrer" className="preview-social-icon insta" title="Instagram">📸</a>
-                  )}
-                  {socialLinks.linkedin && (
-                    <a href={socialLinks.linkedin} target="_blank" rel="noreferrer" className="preview-social-icon in" title="LinkedIn">in</a>
-                  )}
-                  {socialLinks.youtube && (
-                    <a href={socialLinks.youtube} target="_blank" rel="noreferrer" className="preview-social-icon yt" title="YouTube">▶</a>
-                  )}
-                  {socialLinks.whatsapp && (
-                    <a href={socialLinks.whatsapp} target="_blank" rel="noreferrer" className="preview-social-icon wa" title="WhatsApp">💬</a>
-                  )}
-                  {socialLinks.telegram && (
-                    <a href={socialLinks.telegram} target="_blank" rel="noreferrer" className="preview-social-icon tg" title="Telegram">✈</a>
-                  )}
-                  {Object.values(socialLinks).every((u) => !u || !u.trim()) && (
-                    <span style={{ fontSize: '11px', color: '#9ca3af', fontStyle: 'italic' }}>Links will appear here</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Website Footer Preview */}
-              <div className="site-preview-header" style={{ marginTop: '16px' }}>
-                <span>🏛 Public Website Footer Preview</span>
-              </div>
-              <div className="simulated-footer-card">
-                <div className="footer-brand-info">
-                  <span className="footer-brand-name">{siteName || 'Vyapari Darbar'}</span>
-                  <p className="footer-brand-desc">
-                    {siteDescription || 'Connecting verified agricultural commodity traders, mandi brokers, and farmers.'}
-                  </p>
-                </div>
-
-                <div className="footer-social-showcase">
-                  <span className="footer-social-label">Connect With Our Trading Community</span>
-                  <div className="footer-social-icons-row">
-                    {socialLinks.facebook && (
-                      <a href={socialLinks.facebook} target="_blank" rel="noreferrer" className="footer-social-btn fb-btn">
-                        <span>f</span> Facebook
-                      </a>
-                    )}
-                    {socialLinks.twitter && (
-                      <a href={socialLinks.twitter} target="_blank" rel="noreferrer" className="footer-social-btn x-btn">
-                        <span>𝕏</span> Twitter
-                      </a>
-                    )}
-                    {socialLinks.instagram && (
-                      <a href={socialLinks.instagram} target="_blank" rel="noreferrer" className="footer-social-btn insta-btn">
-                        <span>📸</span> Instagram
-                      </a>
-                    )}
-                    {socialLinks.linkedin && (
-                      <a href={socialLinks.linkedin} target="_blank" rel="noreferrer" className="footer-social-btn in-btn">
-                        <span>in</span> LinkedIn
-                      </a>
-                    )}
-                    {socialLinks.youtube && (
-                      <a href={socialLinks.youtube} target="_blank" rel="noreferrer" className="footer-social-btn yt-btn">
-                        <span>▶</span> YouTube
-                      </a>
-                    )}
-                    {socialLinks.whatsapp && (
-                      <a href={socialLinks.whatsapp} target="_blank" rel="noreferrer" className="footer-social-btn wa-btn">
-                        <span>💬</span> WhatsApp
-                      </a>
-                    )}
-                    {socialLinks.telegram && (
-                      <a href={socialLinks.telegram} target="_blank" rel="noreferrer" className="footer-social-btn tg-btn">
-                        <span>✈</span> Telegram
-                      </a>
-                    )}
-                  </div>
-                </div>
-
-                <div className="footer-copyright-row">
-                  <span>© 2026 {siteName || 'Vyapari Darbar'}. All rights reserved.</span>
-                  <span>Helpline: {phoneNumber || '+91 98765 43210'}</span>
-                </div>
-              </div>
-
-              {/* Direct Verification Checklist */}
-              <div className="site-preview-header" style={{ marginTop: '16px' }}>
-                <span>✓ Profile Verification Checklist</span>
-              </div>
-              <div className="social-checklist-card">
-                {[
-                  { key: 'facebook', label: 'Facebook', icon: 'f', color: '#1877f2' },
-                  { key: 'twitter', label: 'Twitter / X', icon: '𝕏', color: '#111827' },
-                  { key: 'instagram', label: 'Instagram', icon: '📸', color: '#e1306c' },
-                  { key: 'linkedin', label: 'LinkedIn', icon: 'in', color: '#0a66c2' },
-                  { key: 'youtube', label: 'YouTube', icon: '▶', color: '#ff0000' },
-                  { key: 'whatsapp', label: 'WhatsApp Channel', icon: '💬', color: '#25d366' },
-                  { key: 'telegram', label: 'Telegram Group', icon: '✈', color: '#0088cc' },
-                ].map((item) => {
-                  const url = socialLinks[item.key];
-                  const hasUrl = Boolean(url && url.trim());
-                  return (
-                    <div key={item.key} className="checklist-row">
-                      <div className="checklist-left">
-                        <span className="checklist-icon" style={{ color: item.color, fontWeight: 700 }}>{item.icon}</span>
-                        <span className="checklist-name">{item.label}</span>
-                      </div>
-                      <div className="checklist-right">
-                        {hasUrl ? (
-                          <>
-                            <span className="checklist-status active">Connected</span>
-                            <a href={url} target="_blank" rel="noreferrer" className="checklist-visit-btn">
-                              Visit Profile ↗
-                            </a>
-                          </>
-                        ) : (
-                          <span className="checklist-status inactive">Not Configured</span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-) : (
+        ) : (
           <div className="sys-logs-panel">
             <div className="sys-logs-header">
               <div>
