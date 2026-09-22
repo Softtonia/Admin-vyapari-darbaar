@@ -33,6 +33,13 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
   const [siteDescription, setSiteDescription] = useState(siteSettings?.site_description || 'Connecting mandi traders across India.');
   const [siteEmail, setSiteEmail] = useState(siteSettings?.email || siteSettings?.site_email || siteSettings?.admin_email || 'contact@vyaparidarbar.com');
   const [phoneNumber, setPhoneNumber] = useState(siteSettings?.phone_number || siteSettings?.phone || '+919876543210');
+  const [socialLinks, setSocialLinks] = useState(siteSettings?.social_links || {
+    facebook: 'https://facebook.com/vyaparidarbar',
+    twitter: 'https://x.com/vyaparidarbar',
+    instagram: 'https://instagram.com/vyaparidarbar',
+    linkedin: 'https://linkedin.com/company/vyaparidarbar',
+    youtube: 'https://youtube.com/@vyaparidarbar',
+  });
   const [timezone, setTimezone] = useState(siteSettings?.timezone || 'Asia/Kolkata');
   const [defaultLanguage, setDefaultLanguage] = useState(siteSettings?.default_language || 'en');
   const [currency, setCurrency] = useState(siteSettings?.currency || 'INR');
@@ -75,6 +82,23 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
         setSiteDescription(item.site_description !== undefined ? (item.site_description ?? '') : '');
         setSiteEmail(item.email || item.site_email || item.admin_email || 'contact@vyaparidarbar.com');
         setPhoneNumber(item.phone_number || item.phone || '');
+        let parsedSocial = {};
+        if (typeof item.social_links === 'string') {
+          try {
+            parsedSocial = JSON.parse(item.social_links);
+          } catch {
+            parsedSocial = {};
+          }
+        } else if (item.social_links && typeof item.social_links === 'object') {
+          parsedSocial = item.social_links;
+        }
+        setSocialLinks({
+          facebook: parsedSocial.facebook || '',
+          twitter: parsedSocial.twitter || parsedSocial.x || '',
+          instagram: parsedSocial.instagram || '',
+          linkedin: parsedSocial.linkedin || '',
+          youtube: parsedSocial.youtube || '',
+        });
         setTimezone(item.timezone || 'Asia/Kolkata');
         setDefaultLanguage(item.default_language || 'en');
         setCurrency(item.currency || 'INR');
@@ -114,6 +138,25 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
       }
       if (siteSettings.phone_number !== undefined || siteSettings.phone !== undefined) {
         setPhoneNumber(siteSettings.phone_number || siteSettings.phone || '');
+      }
+      if (siteSettings.social_links) {
+        let sLinks = {};
+        if (typeof siteSettings.social_links === 'string') {
+          try {
+            sLinks = JSON.parse(siteSettings.social_links);
+          } catch {
+            sLinks = {};
+          }
+        } else if (typeof siteSettings.social_links === 'object') {
+          sLinks = siteSettings.social_links;
+        }
+        setSocialLinks({
+          facebook: sLinks.facebook || '',
+          twitter: sLinks.twitter || sLinks.x || '',
+          instagram: sLinks.instagram || '',
+          linkedin: sLinks.linkedin || '',
+          youtube: sLinks.youtube || '',
+        });
       }
       if (siteSettings.timezone) setTimezone(siteSettings.timezone);
       if (siteSettings.default_language) setDefaultLanguage(siteSettings.default_language);
@@ -204,6 +247,13 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
         site_email: siteEmail.trim(),
         admin_email: siteEmail.trim(),
         phone_number: phoneNumber.trim(),
+        social_links: {
+          facebook: (socialLinks.facebook || '').trim(),
+          twitter: (socialLinks.twitter || '').trim(),
+          instagram: (socialLinks.instagram || '').trim(),
+          linkedin: (socialLinks.linkedin || '').trim(),
+          youtube: (socialLinks.youtube || '').trim(),
+        },
         timezone: timezone.trim(),
         default_language: defaultLanguage.trim(),
         currency: currency.trim(),
@@ -229,6 +279,25 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
         }
         if (updated.phone_number !== undefined || updated.phone !== undefined) {
           setPhoneNumber(updated.phone_number || updated.phone || '');
+        }
+        if (updated.social_links) {
+          let sLinks = {};
+          if (typeof updated.social_links === 'string') {
+            try {
+              sLinks = JSON.parse(updated.social_links);
+            } catch {
+              sLinks = {};
+            }
+          } else if (typeof updated.social_links === 'object') {
+            sLinks = updated.social_links;
+          }
+          setSocialLinks({
+            facebook: sLinks.facebook || '',
+            twitter: sLinks.twitter || sLinks.x || '',
+            instagram: sLinks.instagram || '',
+            linkedin: sLinks.linkedin || '',
+            youtube: sLinks.youtube || '',
+          });
         }
         if (updated.timezone) setTimezone(updated.timezone);
         if (updated.default_language) setDefaultLanguage(updated.default_language);
@@ -821,6 +890,107 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                       <option value="AED">AED (د.إ)</option>
                       <option value="GBP">GBP (£)</option>
                     </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Social Media Profiles Section (as per Postman collection spec) */}
+              <div className="site-social-card">
+                <div className="site-social-header">
+                  <div>
+                    <span className="site-social-title">
+                      <span>🌐</span> Social Media Links
+                    </span>
+                    <p className="site-social-subtitle">
+                      Connect official platform channels for header/footer links, marketing, and trader trust.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="site-social-grid">
+                  {/* Facebook */}
+                  <div className="sys-form-group">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ color: '#1877f2', fontWeight: 800 }}>f</span> Facebook
+                    </label>
+                    <div className="site-social-input-wrapper">
+                      <span className="site-social-icon" style={{ color: '#1877f2' }}>🔗</span>
+                      <input
+                        type="url"
+                        className="site-social-input"
+                        placeholder="https://facebook.com/vyaparidarbar"
+                        value={socialLinks.facebook || ''}
+                        onChange={(e) => setSocialLinks({ ...socialLinks, facebook: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Twitter / X */}
+                  <div className="sys-form-group">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ color: '#111827', fontWeight: 800 }}>𝕏</span> Twitter / X
+                    </label>
+                    <div className="site-social-input-wrapper">
+                      <span className="site-social-icon" style={{ color: '#111827' }}>🔗</span>
+                      <input
+                        type="url"
+                        className="site-social-input"
+                        placeholder="https://x.com/vyaparidarbar"
+                        value={socialLinks.twitter || ''}
+                        onChange={(e) => setSocialLinks({ ...socialLinks, twitter: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Instagram */}
+                  <div className="sys-form-group">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ color: '#e1306c', fontWeight: 800 }}>📷</span> Instagram
+                    </label>
+                    <div className="site-social-input-wrapper">
+                      <span className="site-social-icon" style={{ color: '#e1306c' }}>🔗</span>
+                      <input
+                        type="url"
+                        className="site-social-input"
+                        placeholder="https://instagram.com/vyaparidarbar"
+                        value={socialLinks.instagram || ''}
+                        onChange={(e) => setSocialLinks({ ...socialLinks, instagram: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  {/* LinkedIn */}
+                  <div className="sys-form-group">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ color: '#0a66c2', fontWeight: 800 }}>in</span> LinkedIn
+                    </label>
+                    <div className="site-social-input-wrapper">
+                      <span className="site-social-icon" style={{ color: '#0a66c2' }}>🔗</span>
+                      <input
+                        type="url"
+                        className="site-social-input"
+                        placeholder="https://linkedin.com/company/vyaparidarbar"
+                        value={socialLinks.linkedin || ''}
+                        onChange={(e) => setSocialLinks({ ...socialLinks, linkedin: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  {/* YouTube */}
+                  <div className="sys-form-group">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ color: '#ff0000', fontWeight: 800 }}>▶</span> YouTube
+                    </label>
+                    <div className="site-social-input-wrapper">
+                      <span className="site-social-icon" style={{ color: '#ff0000' }}>🔗</span>
+                      <input
+                        type="url"
+                        className="site-social-input"
+                        placeholder="https://youtube.com/@vyaparidarbar"
+                        value={socialLinks.youtube || ''}
+                        onChange={(e) => setSocialLinks({ ...socialLinks, youtube: e.target.value })}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

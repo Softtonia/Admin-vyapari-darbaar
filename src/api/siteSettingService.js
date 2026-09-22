@@ -78,6 +78,14 @@ export async function updateAdminSiteSettings(payload) {
     if (phoneVal !== undefined && phoneVal !== null) {
       formData.append('phone_number', String(phoneVal).trim());
     }
+    if (payload.social_links !== undefined && payload.social_links !== null) {
+      formData.append(
+        'social_links',
+        typeof payload.social_links === 'string'
+          ? payload.social_links
+          : JSON.stringify(payload.social_links)
+      );
+    }
     if (payload.timezone !== undefined && payload.timezone !== null) {
       formData.append('timezone', String(payload.timezone).trim());
     }

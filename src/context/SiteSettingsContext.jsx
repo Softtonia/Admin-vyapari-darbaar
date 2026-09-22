@@ -16,6 +16,13 @@ const DEFAULT_SETTINGS = {
   site_email: 'contact@vyaparidarbar.com',
   admin_email: 'contact@vyaparidarbar.com',
   phone_number: '+919876543210',
+  social_links: {
+    facebook: 'https://facebook.com/vyaparidarbar',
+    twitter: 'https://x.com/vyaparidarbar',
+    instagram: 'https://instagram.com/vyaparidarbar',
+    linkedin: 'https://linkedin.com/company/vyaparidarbar',
+    youtube: 'https://youtube.com/@vyaparidarbar',
+  },
   timezone: 'Asia/Kolkata',
   default_language: 'en',
   currency: 'INR',
@@ -80,6 +87,17 @@ export function SiteSettingsProvider({ children }) {
 
       const item = res?.data || res;
       if (item && typeof item === 'object') {
+        let parsedSocial = {};
+        if (typeof item.social_links === 'string') {
+          try {
+            parsedSocial = JSON.parse(item.social_links);
+          } catch {
+            parsedSocial = {};
+          }
+        } else if (item.social_links && typeof item.social_links === 'object') {
+          parsedSocial = item.social_links;
+        }
+
         const merged = {
           id: item.id || 1,
           site_name: item.site_name || 'Vyapari Darbar',
@@ -89,6 +107,7 @@ export function SiteSettingsProvider({ children }) {
           site_email: item.email || item.site_email || item.admin_email || '',
           admin_email: item.email || item.site_email || item.admin_email || '',
           phone_number: item.phone_number || item.phone || '',
+          social_links: parsedSocial,
           timezone: item.timezone || 'Asia/Kolkata',
           default_language: item.default_language || 'en',
           currency: item.currency || 'INR',
