@@ -68,6 +68,21 @@ export async function updateAdminSiteSettings(payload) {
     if (payload.site_description !== undefined && payload.site_description !== null) {
       formData.append('site_description', String(payload.site_description).trim());
     }
+    const emailVal = payload.email ?? payload.site_email ?? payload.admin_email;
+    if (emailVal !== undefined && emailVal !== null) {
+      formData.append('email', String(emailVal).trim());
+      formData.append('site_email', String(emailVal).trim());
+      formData.append('admin_email', String(emailVal).trim());
+    }
+    if (payload.timezone !== undefined && payload.timezone !== null) {
+      formData.append('timezone', String(payload.timezone).trim());
+    }
+    if (payload.default_language !== undefined && payload.default_language !== null) {
+      formData.append('default_language', String(payload.default_language).trim());
+    }
+    if (payload.currency !== undefined && payload.currency !== null) {
+      formData.append('currency', String(payload.currency).trim());
+    }
 
     if (payload.web_logo && (payload.web_logo instanceof File || payload.web_logo instanceof Blob)) {
       formData.append('web_logo', payload.web_logo);

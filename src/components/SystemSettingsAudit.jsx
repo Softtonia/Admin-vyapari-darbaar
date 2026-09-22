@@ -1,15 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './SystemSettingsAudit.css';
 import {
   getAdminSiteSettings,
+  getPublicSiteSettings,
   updateAdminSiteSettings,
   getSiteLogoUrl,
 } from '../api/siteSettingService';
+import {
+  getActivityLogs,
+  getActivityLogModules,
+  getActivityLogActions,
+  deleteActivityLog,
+  bulkDeleteActivityLogs,
+} from '../api/activityLogService';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import sidebarLogoImg from '../assets/sidebar_logo.png';
 
 export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
-  const { updateSiteSettingsState } = useSiteSettings();
+  const { siteSettings, updateSiteSettingsState } = useSiteSettings();
   const [activeTab, setActiveTab] = useState(defaultTab || 'Site Settings');
   const [expandedSection, setExpandedSection] = useState('site'); // 'site' expanded by default
 
@@ -20,18 +28,22 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
   }, [defaultTab]);
 
   // Site Settings API State (/api/admin/site-settings)
-  const [siteName, setSiteName] = useState('Vyapari Darbar');
-  const [siteTitle, setSiteTitle] = useState('');
-  const [siteDescription, setSiteDescription] = useState('');
-  const [webLogoUrl, setWebLogoUrl] = useState(null);
-  const [mobileLogoUrl, setMobileLogoUrl] = useState(null);
-  const [faviconUrl, setFaviconUrl] = useState(null);
+  const [siteName, setSiteName] = useState(siteSettings?.site_name || 'Vyapari Darbar');
+  const [siteTitle, setSiteTitle] = useState(siteSettings?.site_title || 'India Premier Mandi Platform');
+  const [siteDescription, setSiteDescription] = useState(siteSettings?.site_description || 'Connecting mandi traders across India.');
+  const [siteEmail, setSiteEmail] = useState(siteSettings?.email || siteSettings?.site_email || siteSettings?.admin_email || 'contact@vyaparidarbar.com');
+  const [timezone, setTimezone] = useState(siteSettings?.timezone || 'Asia/Kolkata');
+  const [defaultLanguage, setDefaultLanguage] = useState(siteSettings?.default_language || 'en');
+  const [currency, setCurrency] = useState(siteSettings?.currency || 'INR');
+  const [webLogoUrl, setWebLogoUrl] = useState(siteSettings?.web_logo || null);
+  const [mobileLogoUrl, setMobileLogoUrl] = useState(siteSettings?.mobile_logo || null);
+  const [faviconUrl, setFaviconUrl] = useState(siteSettings?.favicon || null);
   const [webLogoFile, setWebLogoFile] = useState(null);
-  const [webLogoPreview, setWebLogoPreview] = useState(null);
+  const [webLogoPreview, setWebLogoPreview] = useState(siteSettings?.web_logo ? getSiteLogoUrl(siteSettings.web_logo) : null);
   const [mobileLogoFile, setMobileLogoFile] = useState(null);
-  const [mobileLogoPreview, setMobileLogoPreview] = useState(null);
+  const [mobileLogoPreview, setMobileLogoPreview] = useState(siteSettings?.mobile_logo ? getSiteLogoUrl(siteSettings.mobile_logo) : null);
   const [faviconFile, setFaviconFile] = useState(null);
-  const [faviconPreview, setFaviconPreview] = useState(null);
+  const [faviconPreview, setFaviconPreview] = useState(siteSettings?.favicon ? getSiteLogoUrl(siteSettings.favicon) : null);
   const [siteMeta, setSiteMeta] = useState(null);
   const [isLoadingSite, setIsLoadingSite] = useState(false);
   const [isSavingSite, setIsSavingSite] = useState(false);
@@ -46,41 +58,75 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
     setTimeout(() => setSiteToast(null), 4000);
   };
 
-  const loadSiteSettings = () => {
+  const loadSiteSettings = async () => {
     setIsLoadingSite(true);
-    getAdminSiteSettings()
-      .then((res) => {
-        const item = res?.data || res;
-        if (item) {
-          setSiteName(item.site_name || 'Vyapari Darbar');
-          setSiteTitle(item.site_title || '');
-          setSiteDescription(item.site_description || '');
-          setWebLogoUrl(item.web_logo || null);
-          setMobileLogoUrl(item.mobile_logo || null);
-          setFaviconUrl(item.favicon || null);
-          setWebLogoPreview(item.web_logo ? getSiteLogoUrl(item.web_logo) : null);
-          setMobileLogoPreview(item.mobile_logo ? getSiteLogoUrl(item.mobile_logo) : null);
-          setFaviconPreview(item.favicon ? getSiteLogoUrl(item.favicon) : null);
-          if (item.favicon) {
-            const fUrl = getSiteLogoUrl(item.favicon);
-            const link = document.querySelector("link[rel~='icon']");
-            if (link) link.href = fUrl;
-          }
-          setSiteMeta({
-            id: item.id || 1,
-            created_at: item.created_at,
-            updated_at: item.updated_at,
-          });
-          updateSiteSettingsState(item);
+    try {
+      let res;
+      try {
+        res = await getAdminSiteSettings();
+      } catch {
+        res = await getPublicSiteSettings();
+      }
+      const item = res?.data || res;
+      if (item) {
+        setSiteName(item.site_name || 'Vyapari Darbar');
+        setSiteTitle(item.site_title !== undefined ? (item.site_title ?? '') : '');
+        setSiteDescription(item.site_description !== undefined ? (item.site_description ?? '') : '');
+        setSiteEmail(item.email || item.site_email || item.admin_email || 'contact@vyaparidarbar.com');
+        setTimezone(item.timezone || 'Asia/Kolkata');
+        setDefaultLanguage(item.default_language || 'en');
+        setCurrency(item.currency || 'INR');
+        setWebLogoUrl(item.web_logo || null);
+        setMobileLogoUrl(item.mobile_logo || null);
+        setFaviconUrl(item.favicon || null);
+        setWebLogoPreview(item.web_logo ? getSiteLogoUrl(item.web_logo) : null);
+        setMobileLogoPreview(item.mobile_logo ? getSiteLogoUrl(item.mobile_logo) : null);
+        setFaviconPreview(item.favicon ? getSiteLogoUrl(item.favicon) : null);
+        if (item.favicon) {
+          const fUrl = getSiteLogoUrl(item.favicon);
+          const link = document.querySelector("link[rel~='icon']");
+          if (link) link.href = fUrl;
         }
-      })
-      .catch((err) => {
-        console.warn('Failed to load site settings from API:', err);
-      })
-      .finally(() => {
-        setIsLoadingSite(false);
-      });
+        setSiteMeta({
+          id: item.id || 1,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+        });
+        updateSiteSettingsState(item);
+      }
+    } catch (err) {
+      console.warn('Failed to load site settings from API:', err);
+    } finally {
+      setIsLoadingSite(false);
+    }
   };
+
+  // Sync state if context loads or changes
+  useEffect(() => {
+    if (siteSettings && !webLogoFile && !mobileLogoFile && !faviconFile) {
+      if (siteSettings.site_name) setSiteName(siteSettings.site_name);
+      if (siteSettings.site_title !== undefined) setSiteTitle(siteSettings.site_title || '');
+      if (siteSettings.site_description !== undefined) setSiteDescription(siteSettings.site_description || '');
+      if (siteSettings.email || siteSettings.site_email || siteSettings.admin_email) {
+        setSiteEmail(siteSettings.email || siteSettings.site_email || siteSettings.admin_email);
+      }
+      if (siteSettings.timezone) setTimezone(siteSettings.timezone);
+      if (siteSettings.default_language) setDefaultLanguage(siteSettings.default_language);
+      if (siteSettings.currency) setCurrency(siteSettings.currency);
+      if (siteSettings.web_logo) {
+        setWebLogoUrl(siteSettings.web_logo);
+        setWebLogoPreview(getSiteLogoUrl(siteSettings.web_logo));
+      }
+      if (siteSettings.mobile_logo) {
+        setMobileLogoUrl(siteSettings.mobile_logo);
+        setMobileLogoPreview(getSiteLogoUrl(siteSettings.mobile_logo));
+      }
+      if (siteSettings.favicon) {
+        setFaviconUrl(siteSettings.favicon);
+        setFaviconPreview(getSiteLogoUrl(siteSettings.favicon));
+      }
+    }
+  }, [siteSettings]);
 
   useEffect(() => {
     loadSiteSettings();
@@ -149,6 +195,12 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
         site_name: siteName.trim(),
         site_title: siteTitle.trim(),
         site_description: siteDescription.trim(),
+        email: siteEmail.trim(),
+        site_email: siteEmail.trim(),
+        admin_email: siteEmail.trim(),
+        timezone: timezone.trim(),
+        default_language: defaultLanguage.trim(),
+        currency: currency.trim(),
       };
       if (webLogoFile) {
         payload.web_logo = webLogoFile;
@@ -166,6 +218,13 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
         if (updated.site_name) setSiteName(updated.site_name);
         if (updated.site_title !== undefined) setSiteTitle(updated.site_title || '');
         if (updated.site_description !== undefined) setSiteDescription(updated.site_description || '');
+        if (updated.email !== undefined || updated.site_email !== undefined || updated.admin_email !== undefined) {
+          setSiteEmail(updated.email || updated.site_email || updated.admin_email || '');
+        }
+        if (updated.timezone) setTimezone(updated.timezone);
+        if (updated.default_language) setDefaultLanguage(updated.default_language);
+        if (updated.currency) setCurrency(updated.currency);
+
         if (updated.web_logo) {
           setWebLogoUrl(updated.web_logo);
           setWebLogoPreview(getSiteLogoUrl(updated.web_logo));
@@ -205,10 +264,6 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
   // Form states (System config)
   const [platformName, setPlatformName] = useState('Vyapari Darbaar');
   const [siteUrl, setSiteUrl] = useState('https://www.vyaparidarbaar.com');
-  const [adminEmail, setAdminEmail] = useState('admin@vyaparidarbaar.com');
-  const [timezone, setTimezone] = useState('Asia/Kolkata (GMT +5:30)');
-  const [defaultLanguage, setDefaultLanguage] = useState('English');
-  const [currency, setCurrency] = useState('INR (₹)');
 
   // Feature Toggles state
   const [features, setFeatures] = useState({
@@ -224,186 +279,304 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
     setFeatures((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // Filter states for Audit Logs
+  // ─── Audit Logs State ───
   const [searchLog, setSearchLog] = useState('');
   const [moduleFilter, setModuleFilter] = useState('All Modules');
   const [actionFilter, setActionFilter] = useState('All Actions');
-  const [userFilter, setUserFilter] = useState('All Users');
-  const [severityFilter, setSeverityFilter] = useState('All Severity');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
-  // KPI Data
+  // Live data from API
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [totalLogs, setTotalLogs] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [perPage, setPerPage] = useState(20);
+  const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+  const [logsError, setLogsError] = useState(null);
+
+  // Filter options from API
+  const [moduleOptions, setModuleOptions] = useState([]);
+  const [actionOptions, setActionOptions] = useState([]);
+
+  // Debounce ref for search
+  const searchTimerRef = useRef(null);
+
+  // ─── Fetch activity logs ───
+  const fetchActivityLogs = useCallback(async (pageNum = 1) => {
+    setIsLoadingLogs(true);
+    setLogsError(null);
+    try {
+      const res = await getActivityLogs({
+        page: pageNum,
+        per_page: perPage,
+        search: searchLog || undefined,
+        module: moduleFilter !== 'All Modules' ? moduleFilter : undefined,
+        action: actionFilter !== 'All Actions' ? actionFilter : undefined,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
+      });
+      const data = res?.data || res;
+      setAuditLogs(data?.items || []);
+      setTotalLogs(data?.total_logs ?? data?.pagination?.total ?? 0);
+      setCurrentPage(data?.pagination?.current_page ?? pageNum);
+      setLastPage(data?.pagination?.last_page ?? 1);
+    } catch (err) {
+      console.error('Failed to fetch activity logs:', err);
+      setLogsError(err.message || 'Failed to load activity logs');
+      setAuditLogs([]);
+    } finally {
+      setIsLoadingLogs(false);
+    }
+  }, [perPage, searchLog, moduleFilter, actionFilter, dateFrom, dateTo]);
+
+  // Fetch filter options on mount
+  useEffect(() => {
+    const loadFilterOptions = async () => {
+      try {
+        const [modRes, actRes] = await Promise.all([
+          getActivityLogModules(),
+          getActivityLogActions(),
+        ]);
+        setModuleOptions(modRes?.data || []);
+        setActionOptions(actRes?.data || []);
+      } catch (err) {
+        console.warn('Could not load filter options:', err);
+      }
+    };
+    loadFilterOptions();
+  }, []);
+
+  // Fetch logs when tab switches to Audit Logs or filters/page change
+  useEffect(() => {
+    if (activeTab === 'Audit Logs') {
+      fetchActivityLogs(currentPage);
+    }
+  }, [activeTab, currentPage, perPage, moduleFilter, actionFilter, dateFrom, dateTo]);
+
+  // Debounced search: trigger after 500ms of no typing
+  useEffect(() => {
+    if (activeTab !== 'Audit Logs') return;
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      setCurrentPage(1);
+      fetchActivityLogs(1);
+    }, 500);
+    return () => clearTimeout(searchTimerRef.current);
+  }, [searchLog]);
+
+  // ─── Audit Logs Selection & Deletion State ───
+  const [selectedLogIds, setSelectedLogIds] = useState([]);
+  const [activeActionMenuId, setActiveActionMenuId] = useState(null);
+  const [viewModalLog, setViewModalLog] = useState(null);
+  const [deleteSingleLog, setDeleteSingleLog] = useState(null);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+  const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
+  const [isDeletingLogs, setIsDeletingLogs] = useState(false);
+  const [modalError, setModalError] = useState(null);
+  const [logToast, setLogToast] = useState(null);
+
+  const headerCheckboxRef = useRef(null);
+
+  const showLogToast = (msg, type = 'success') => {
+    setLogToast({ msg, type });
+    setTimeout(() => setLogToast(null), 4500);
+  };
+
+  // Multi-select helpers
+  const isAllCurrentPageSelected = auditLogs.length > 0 && auditLogs.every((l) => selectedLogIds.includes(l.id));
+  const isSomeCurrentPageSelected = auditLogs.some((l) => selectedLogIds.includes(l.id)) && !isAllCurrentPageSelected;
+
+  useEffect(() => {
+    if (headerCheckboxRef.current) {
+      headerCheckboxRef.current.indeterminate = isSomeCurrentPageSelected;
+    }
+  }, [isSomeCurrentPageSelected]);
+
+  // Click outside to close row action menu
+  useEffect(() => {
+    const handleGlobalClick = () => setActiveActionMenuId(null);
+    document.addEventListener('click', handleGlobalClick);
+    return () => document.removeEventListener('click', handleGlobalClick);
+  }, []);
+
+  const handleClearSelection = () => {
+    setSelectedLogIds([]);
+  };
+
+  const handleToggleSelectAll = () => {
+    if (isAllCurrentPageSelected) {
+      const pageIds = new Set(auditLogs.map((l) => l.id));
+      setSelectedLogIds((prev) => prev.filter((id) => !pageIds.has(id)));
+    } else {
+      const newIds = new Set(selectedLogIds);
+      auditLogs.forEach((l) => newIds.add(l.id));
+      setSelectedLogIds(Array.from(newIds));
+    }
+  };
+
+  const handleToggleSelectRow = (id) => {
+    setSelectedLogIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  // Action: Single Delete
+  const handleConfirmSingleDelete = async () => {
+    if (!deleteSingleLog) return;
+    setIsDeletingLogs(true);
+    setModalError(null);
+    try {
+      await deleteActivityLog(deleteSingleLog.id);
+      showLogToast(`Activity log #${deleteSingleLog.id} deleted successfully!`, 'success');
+      setSelectedLogIds((prev) => prev.filter((id) => id !== deleteSingleLog.id));
+      setDeleteSingleLog(null);
+      fetchActivityLogs(currentPage);
+    } catch (err) {
+      const msg = err?.data?.message || err?.message || 'Failed to delete activity log';
+      setModalError(msg);
+      showLogToast(msg, 'error');
+    } finally {
+      setIsDeletingLogs(false);
+    }
+  };
+
+  // Action: Bulk Delete Selected
+  const handleConfirmBulkDelete = async () => {
+    const cleanIds = selectedLogIds
+      .map((id) => Number(id))
+      .filter((id) => !isNaN(id) && id > 0);
+
+    if (cleanIds.length === 0) {
+      const msg = 'Please select at least one activity log to delete.';
+      setModalError(msg);
+      showLogToast(msg, 'error');
+      return;
+    }
+
+    setIsDeletingLogs(true);
+    setModalError(null);
+    try {
+      const res = await bulkDeleteActivityLogs({ ids: cleanIds });
+      showLogToast(res?.message || `${cleanIds.length} activity logs deleted successfully!`, 'success');
+      setSelectedLogIds([]);
+      setIsBulkDeleteModalOpen(false);
+      fetchActivityLogs(currentPage);
+    } catch (err) {
+      const msg = err?.data?.message || err?.message || 'Failed to bulk delete activity logs';
+      setModalError(msg);
+      showLogToast(msg, 'error');
+    } finally {
+      setIsDeletingLogs(false);
+    }
+  };
+
+  // Action: Delete All Logs
+  const handleConfirmDeleteAll = async () => {
+    setIsDeletingLogs(true);
+    setModalError(null);
+    try {
+      const res = await bulkDeleteActivityLogs({ delete_all: true });
+      showLogToast(res?.message || 'All activity logs deleted successfully!', 'success');
+      setSelectedLogIds([]);
+      setIsDeleteAllModalOpen(false);
+      setCurrentPage(1);
+      fetchActivityLogs(1);
+    } catch (err) {
+      const msg = err?.data?.message || err?.message || 'Failed to clear all activity logs';
+      setModalError(msg);
+      showLogToast(msg, 'error');
+    } finally {
+      setIsDeletingLogs(false);
+    }
+  };
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= lastPage && page !== currentPage) {
+      setSelectedLogIds([]);
+      setCurrentPage(page);
+    }
+  };
+
+  const handlePerPageChange = (newPerPage) => {
+    setSelectedLogIds([]);
+    setPerPage(newPerPage);
+    setCurrentPage(1);
+  };
+
+  const handleClearFilters = () => {
+    setSelectedLogIds([]);
+    setSearchLog('');
+    setModuleFilter('All Modules');
+    setActionFilter('All Actions');
+    setDateFrom('');
+    setDateTo('');
+    setCurrentPage(1);
+  };
+
+  const handleApplyFilters = () => {
+    setSelectedLogIds([]);
+    setCurrentPage(1);
+    fetchActivityLogs(1);
+  };
+
+  // Build KPI from live total
+  const formatNum = (n) => (n || 0).toLocaleString('en-IN');
   const kpiData = [
     {
       title: 'Total System Events',
-      value: '12,584',
-      trend: '↑ 18.6% vs last month',
+      value: formatNum(totalLogs),
+      trend: `${auditLogs.length} loaded`,
       trendType: 'up',
       icon: 'gear',
       colorClass: 'kpi-green',
       sparkBars: [40, 55, 45, 70, 85, 100],
     },
     {
-      title: 'Security Events',
-      value: '328',
-      trend: '↓ 12.4% vs last month',
-      trendType: 'down',
-      icon: 'shield',
-      colorClass: 'kpi-red',
-      sparkBars: [80, 60, 75, 45, 55, 30],
-    },
-    {
-      title: 'Admin Actions',
-      value: '2,486',
-      trend: '↑ 9.8% vs last month',
-      trendType: 'up',
-      icon: 'user',
-      colorClass: 'kpi-blue',
-      sparkBars: [30, 45, 40, 65, 80, 95],
-    },
-    {
-      title: 'Data Changes',
-      value: '4,932',
-      trend: '↑ 16.2% vs last month',
+      title: 'Current Page',
+      value: `${currentPage} / ${lastPage}`,
+      trend: `${perPage} per page`,
       trendType: 'up',
       icon: 'database',
       colorClass: 'kpi-purple',
       sparkBars: [45, 50, 60, 75, 85, 100],
     },
+    {
+      title: 'Modules Tracked',
+      value: formatNum(moduleOptions.length),
+      trend: moduleOptions.slice(0, 3).map((m) => m.module).join(', ') || '—',
+      trendType: 'up',
+      icon: 'shield',
+      colorClass: 'kpi-blue',
+      sparkBars: [30, 45, 40, 65, 80, 95],
+    },
+    {
+      title: 'Actions Tracked',
+      value: formatNum(actionOptions.length),
+      trend: actionOptions.slice(0, 3).map((a) => a.action).join(', ') || '—',
+      trendType: 'up',
+      icon: 'user',
+      colorClass: 'kpi-red',
+      sparkBars: [80, 60, 75, 45, 55, 30],
+    },
   ];
 
-  // Audit Logs Rows
-  const auditLogs = [
-    {
-      id: 1,
-      date: '17 Sep 2026',
-      time: '10:22 AM',
-      user: 'Admin',
-      userRole: 'Super Admin',
-      action: 'Updated',
-      actionType: 'updated',
-      module: 'Website',
-      description: 'Updated homepage banner',
-      ip: '103.21.45.67',
-      status: 'Success',
-    },
-    {
-      id: 2,
-      date: '17 Sep 2026',
-      time: '09:48 AM',
-      user: 'Rohit Kumar',
-      userRole: 'Content Manager',
-      action: 'Created',
-      actionType: 'created',
-      module: 'News',
-      description: 'Published new article: Makhana Market Growth',
-      ip: '49.36.12.89',
-      status: 'Success',
-    },
-    {
-      id: 3,
-      date: '17 Sep 2026',
-      time: '08:31 AM',
-      user: 'Neha Singh',
-      userRole: 'Trader Manager',
-      action: 'Updated',
-      actionType: 'updated',
-      module: 'Users',
-      description: 'Updated trader verification status',
-      ip: '103.21.45.67',
-      status: 'Success',
-    },
-    {
-      id: 4,
-      date: '16 Sep 2026',
-      time: '07:15 PM',
-      user: 'System',
-      userRole: 'Automated',
-      action: 'Login',
-      actionType: 'login',
-      module: 'Auth',
-      description: 'User login successful',
-      ip: '-',
-      status: 'Success',
-    },
-    {
-      id: 5,
-      date: '16 Sep 2026',
-      time: '06:42 PM',
-      user: 'Amit Verma',
-      userRole: 'Marketing Manager',
-      action: 'Created',
-      actionType: 'created',
-      module: 'Ads',
-      description: 'Created new advertisement campaign',
-      ip: '182.74.33.12',
-      status: 'Success',
-    },
-    {
-      id: 6,
-      date: '16 Sep 2026',
-      time: '05:28 PM',
-      user: 'Pooja Mehta',
-      userRole: 'Finance Manager',
-      action: 'Updated',
-      actionType: 'updated',
-      module: 'Payments',
-      description: 'Updated payment status for order #PAY10248',
-      ip: '49.36.12.89',
-      status: 'Success',
-    },
-    {
-      id: 7,
-      date: '16 Sep 2026',
-      time: '04:11 PM',
-      user: 'System',
-      userRole: 'Automated',
-      action: 'Backup',
-      actionType: 'backup',
-      module: 'System',
-      description: 'Automatic database backup completed',
-      ip: '-',
-      status: 'Success',
-    },
-    {
-      id: 8,
-      date: '16 Sep 2026',
-      time: '03:56 PM',
-      user: 'Karan Sharma',
-      userRole: 'Support Executive',
-      action: 'Deleted',
-      actionType: 'deleted',
-      module: 'Content',
-      description: 'Deleted draft article',
-      ip: '103.21.45.67',
-      status: 'Success',
-    },
-    {
-      id: 9,
-      date: '16 Sep 2026',
-      time: '02:34 PM',
-      user: 'Admin',
-      userRole: 'Super Admin',
-      action: 'Updated',
-      actionType: 'updated',
-      module: 'Settings',
-      description: 'Changed email configuration',
-      ip: '103.21.45.67',
-      status: 'Success',
-    },
-    {
-      id: 10,
-      date: '16 Sep 2026',
-      time: '01:20 PM',
-      user: 'Sanjay Kumar',
-      userRole: 'Moderator',
-      action: 'Login',
-      actionType: 'login',
-      module: 'Auth',
-      description: 'User login successful',
-      ip: '49.36.12.89',
-      status: 'Success',
-    },
-  ];
+  // Pagination helper: generate page numbers
+  const getPaginationPages = () => {
+    const pages = [];
+    if (lastPage <= 7) {
+      for (let i = 1; i <= lastPage; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push('...');
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(lastPage - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (currentPage < lastPage - 2) pages.push('...');
+      pages.push(lastPage);
+    }
+    return pages;
+  };
 
   return (
     <div className="sys-settings-page">
@@ -459,7 +632,6 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
         <div className="sys-nav-tabs">
           {[
             'Site Settings',
-            'General Settings',
             'Email & Notifications',
             'Security',
             'Integrations',
@@ -479,10 +651,12 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
       </div>
 
       {/* 3. Main Split Layout: Left Settings vs Right Audit Logs */}
-      <div className="sys-main-split">
+      <div className={`sys-main-split ${activeTab === 'Audit Logs' ? 'full-width' : ''}`}>
         {/* ==================================================================
             Left Panel: Settings (Site Settings vs System Settings)
+            Hidden on Audit Logs tab so Audit Logs displays 100% full width
             ================================================================== */}
+        {activeTab !== 'Audit Logs' && (
         <div className="sys-settings-panel">
           <div className="sys-panel-header">
             <div>
@@ -573,6 +747,61 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                       outline: 'none',
                     }}
                   />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginTop: '4px' }}>
+                  <div className="sys-form-group">
+                    <label>Site Email</label>
+                    <input
+                      type="email"
+                      placeholder="contact@vyaparidarbar.com"
+                      value={siteEmail}
+                      onChange={(e) => setSiteEmail(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="sys-form-group">
+                    <label>Timezone</label>
+                    <select
+                      value={timezone}
+                      onChange={(e) => setTimezone(e.target.value)}
+                    >
+                      <option value="Asia/Kolkata">Asia/Kolkata (IST +5:30)</option>
+                      <option value="UTC">UTC (GMT +0:00)</option>
+                      <option value="America/New_York">America/New_York (EST -5:00)</option>
+                      <option value="Europe/London">Europe/London (GMT +0:00)</option>
+                      <option value="Asia/Dubai">Asia/Dubai (GST +4:00)</option>
+                      <option value="Asia/Singapore">Asia/Singapore (SGT +8:00)</option>
+                    </select>
+                  </div>
+
+                  <div className="sys-form-group">
+                    <label>Default Language</label>
+                    <select
+                      value={defaultLanguage}
+                      onChange={(e) => setDefaultLanguage(e.target.value)}
+                    >
+                      <option value="en">English (en)</option>
+                      <option value="hi">Hindi (हिन्दी)</option>
+                      <option value="gu">Gujarati (ગુજરાતી)</option>
+                      <option value="mr">Marathi (मराठी)</option>
+                      <option value="pa">Punjabi (ਪੰਜਾਬੀ)</option>
+                    </select>
+                  </div>
+
+                  <div className="sys-form-group">
+                    <label>Currency</label>
+                    <select
+                      value={currency}
+                      onChange={(e) => setCurrency(e.target.value)}
+                    >
+                      <option value="INR">INR (₹)</option>
+                      <option value="USD">USD ($)</option>
+                      <option value="EUR">EUR (€)</option>
+                      <option value="AED">AED (د.إ)</option>
+                      <option value="GBP">GBP (£)</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -819,11 +1048,12 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                       </div>
 
                       <div className="sys-form-group">
-                        <label>Admin Email</label>
+                        <label>Site Email</label>
                         <input
                           type="email"
-                          value={adminEmail}
-                          onChange={(e) => setAdminEmail(e.target.value)}
+                          placeholder="contact@vyaparidarbar.com"
+                          value={siteEmail}
+                          onChange={(e) => setSiteEmail(e.target.value)}
                         />
                       </div>
 
@@ -833,9 +1063,12 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                           value={timezone}
                           onChange={(e) => setTimezone(e.target.value)}
                         >
-                          <option>Asia/Kolkata (GMT +5:30)</option>
-                          <option>UTC (GMT +0:00)</option>
-                          <option>America/New_York (GMT -5:00)</option>
+                          <option value="Asia/Kolkata">Asia/Kolkata (IST +5:30)</option>
+                          <option value="UTC">UTC (GMT +0:00)</option>
+                          <option value="America/New_York">America/New_York (EST -5:00)</option>
+                          <option value="Europe/London">Europe/London (GMT +0:00)</option>
+                          <option value="Asia/Dubai">Asia/Dubai (GST +4:00)</option>
+                          <option value="Asia/Singapore">Asia/Singapore (SGT +8:00)</option>
                         </select>
                       </div>
 
@@ -845,10 +1078,11 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                           value={defaultLanguage}
                           onChange={(e) => setDefaultLanguage(e.target.value)}
                         >
-                          <option>English</option>
-                          <option>Hindi (हिन्दी)</option>
-                          <option>Gujarati (ગુજરાતી)</option>
-                          <option>Marathi (मराठी)</option>
+                          <option value="en">English (en)</option>
+                          <option value="hi">Hindi (हिन्दी)</option>
+                          <option value="gu">Gujarati (ગુજરાતી)</option>
+                          <option value="mr">Marathi (मराठी)</option>
+                          <option value="pa">Punjabi (ਪੰਜਾਬੀ)</option>
                         </select>
                       </div>
 
@@ -858,9 +1092,11 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                           value={currency}
                           onChange={(e) => setCurrency(e.target.value)}
                         >
-                          <option>INR (₹)</option>
-                          <option>USD ($)</option>
-                          <option>EUR (€)</option>
+                          <option value="INR">INR (₹)</option>
+                          <option value="USD">USD ($)</option>
+                          <option value="EUR">EUR (€)</option>
+                          <option value="AED">AED (د.إ)</option>
+                          <option value="GBP">GBP (£)</option>
                         </select>
                       </div>
                     </div>
@@ -1095,6 +1331,7 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
           </div>
         )}
       </div>
+      )}
 
         {/* ==================================================================
             Right Panel: Live Branding Preview (when Site Settings) or Audit Logs
@@ -1215,16 +1452,19 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
               <button
                 type="button"
                 className="btn-clear-filters"
-                onClick={() => {
-                  setSearchLog('');
-                  setModuleFilter('All Modules');
-                  setActionFilter('All Actions');
-                  setUserFilter('All Users');
-                  setSeverityFilter('All Severity');
-                }}
+                onClick={handleClearFilters}
               >
                 <span>✕</span>
                 <span>Clear Filters</span>
+              </button>
+              <button
+                type="button"
+                className="btn-apply-filters"
+                onClick={() => fetchActivityLogs(1)}
+                disabled={isLoadingLogs}
+                style={{ marginLeft: '4px' }}
+              >
+                {isLoadingLogs ? 'Loading...' : '↻ Refresh'}
               </button>
             </div>
           </div>
@@ -1247,130 +1487,267 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
 
               <select
                 value={moduleFilter}
-                onChange={(e) => setModuleFilter(e.target.value)}
+                onChange={(e) => { setModuleFilter(e.target.value); setCurrentPage(1); }}
                 className="logs-select"
               >
                 <option>All Modules</option>
-                <option>Website</option>
-                <option>News</option>
-                <option>Users</option>
-                <option>Auth</option>
-                <option>Ads</option>
-                <option>Payments</option>
-                <option>System</option>
-                <option>Content</option>
-                <option>Settings</option>
+                {moduleOptions.map((m) => (
+                  <option key={m.module} value={m.module}>
+                    {m.module} ({m.count})
+                  </option>
+                ))}
               </select>
 
               <select
                 value={actionFilter}
-                onChange={(e) => setActionFilter(e.target.value)}
+                onChange={(e) => { setActionFilter(e.target.value); setCurrentPage(1); }}
                 className="logs-select"
               >
                 <option>All Actions</option>
-                <option>Updated</option>
-                <option>Created</option>
-                <option>Login</option>
-                <option>Backup</option>
-                <option>Deleted</option>
+                {actionOptions.map((a) => (
+                  <option key={a.action} value={a.action}>
+                    {a.action} ({a.count})
+                  </option>
+                ))}
               </select>
             </div>
 
             <div className="filter-row-2">
-              <select
-                value={userFilter}
-                onChange={(e) => setUserFilter(e.target.value)}
-                className="logs-select"
-              >
-                <option>All Users</option>
-                <option>Admin</option>
-                <option>Rohit Kumar</option>
-                <option>Neha Singh</option>
-                <option>System</option>
-              </select>
-
-              <select
-                value={severityFilter}
-                onChange={(e) => setSeverityFilter(e.target.value)}
-                className="logs-select"
-              >
-                <option>All Severity</option>
-                <option>Low</option>
-                <option>Medium</option>
-                <option>High</option>
-              </select>
-
               <div className="logs-date-picker-box">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
-                </svg>
-                <span>01 Sep 2026 - 17 Sep 2026</span>
+                <label style={{ fontSize: '11px', color: '#6b7280', marginRight: '4px' }}>From</label>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => { setDateFrom(e.target.value); setCurrentPage(1); }}
+                  style={{ border: 'none', background: 'transparent', fontSize: '12px', color: '#374151', outline: 'none' }}
+                />
               </div>
 
-              <button type="button" className="btn-apply-filters">
-                Apply Filters
+              <div className="logs-date-picker-box">
+                <label style={{ fontSize: '11px', color: '#6b7280', marginRight: '4px' }}>To</label>
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => { setDateTo(e.target.value); setCurrentPage(1); }}
+                  style={{ border: 'none', background: 'transparent', fontSize: '12px', color: '#374151', outline: 'none' }}
+                />
+              </div>
+
+              <button type="button" className="btn-apply-filters" onClick={handleApplyFilters} disabled={isLoadingLogs}>
+                {isLoadingLogs ? 'Loading...' : 'Apply Filters'}
               </button>
             </div>
           </div>
 
           {/* Activity Logs Table */}
           <div className="sys-table-section">
-            <h3 className="sys-table-title">System Activity Logs (12,584)</h3>
+            <div className="sys-table-header-flex">
+              <h3 className="sys-table-title" style={{ margin: 0 }}>
+                System Activity Logs ({formatNum(totalLogs)})
+                {isLoadingLogs && <span style={{ fontSize: '12px', color: '#9ca3af', marginLeft: '8px' }}>Loading...</span>}
+              </h3>
+
+              <div className="sys-table-bulk-actions">
+                {selectedLogIds.length > 0 && (
+                  <>
+                    <span className="selection-count-badge">
+                      {selectedLogIds.length} {selectedLogIds.length === 1 ? 'log' : 'logs'} selected
+                    </span>
+                    <button
+                      type="button"
+                      className="btn-bulk-delete"
+                      onClick={() => setIsBulkDeleteModalOpen(true)}
+                      disabled={isDeletingLogs}
+                      title="Delete selected activity logs"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      </svg>
+                      <span>Delete Selected ({selectedLogIds.length})</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-deselect-all"
+                      onClick={handleClearSelection}
+                      title="Clear selection"
+                    >
+                      <span>✕ Deselect</span>
+                    </button>
+                  </>
+                )}
+
+                {totalLogs > 0 && (
+                  <button
+                    type="button"
+                    className="btn-clear-all-logs"
+                    onClick={() => setIsDeleteAllModalOpen(true)}
+                    disabled={isDeletingLogs}
+                    title="Delete all activity logs from the database"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      <line x1="10" y1="11" x2="10" y2="17" />
+                      <line x1="14" y1="11" x2="14" y2="17" />
+                    </svg>
+                    <span>Clear All Logs</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {logToast && (
+              <div className={`site-toast-banner ${logToast.type}`} style={{ marginBottom: '12px' }}>
+                <span>{logToast.type === 'success' ? '✓' : '⚠'} {logToast.msg}</span>
+                <button type="button" onClick={() => setLogToast(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: 'inherit' }}>✕</button>
+              </div>
+            )}
+
+            {logsError && (
+              <div style={{ padding: '12px 16px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#dc2626', fontSize: '13px', marginBottom: '12px' }}>
+                ⚠ {logsError}
+                <button type="button" onClick={() => fetchActivityLogs(currentPage)} style={{ marginLeft: '10px', background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', textDecoration: 'underline', fontSize: '12px' }}>Retry</button>
+              </div>
+            )}
 
             <div className="sys-table-wrapper">
               <table className="sys-table">
                 <thead>
                   <tr>
-                    <th style={{ width: '30px' }}>
-                      <input type="checkbox" />
+                    <th style={{ width: '38px', textAlign: 'center' }}>
+                      <input
+                        type="checkbox"
+                        ref={headerCheckboxRef}
+                        checked={isAllCurrentPageSelected}
+                        onChange={handleToggleSelectAll}
+                        disabled={auditLogs.length === 0}
+                        title={isAllCurrentPageSelected ? 'Deselect all on this page' : 'Select all on this page'}
+                        style={{ cursor: 'pointer', width: '15px', height: '15px', accentColor: '#026544' }}
+                      />
                     </th>
-                    <th style={{ width: '35px' }}>#</th>
-                    <th style={{ width: '100px' }}>Date & Time</th>
+                    <th style={{ width: '45px' }}>#</th>
+                    <th style={{ width: '140px' }}>Date & Time</th>
                     <th style={{ width: '130px' }}>User</th>
                     <th style={{ width: '80px', textAlign: 'center' }}>Action</th>
-                    <th style={{ width: '85px' }}>Module</th>
+                    <th style={{ width: '95px' }}>Module</th>
                     <th>Description</th>
                     <th style={{ width: '100px' }}>IP Address</th>
                     <th style={{ width: '75px', textAlign: 'center' }}>Status</th>
-                    <th style={{ width: '35px', textAlign: 'center' }}></th>
+                    <th style={{ width: '40px', textAlign: 'center' }}></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {auditLogs.map((log) => (
-                    <tr key={log.id}>
-                      <td>
-                        <input type="checkbox" />
-                      </td>
-                      <td className="td-id">{log.id}</td>
-                      <td className="td-datetime">
-                        <span className="td-date">{log.date}</span>
-                        <span className="td-time">{log.time}</span>
-                      </td>
-                      <td className="td-user">
-                        <span className="td-user-name">{log.user}</span>
-                        <span className="td-user-role">{log.userRole}</span>
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <span className={`act-pill act-${log.actionType}`}>
-                          {log.action}
-                        </span>
-                      </td>
-                      <td className="td-module">{log.module}</td>
-                      <td className="td-desc">{log.description}</td>
-                      <td className="td-ip">{log.ip}</td>
-                      <td style={{ textAlign: 'center' }}>
-                        <span className="status-pill success">{log.status}</span>
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <button type="button" className="btn-log-options">
-                          ⋮
-                        </button>
+                  {isLoadingLogs && auditLogs.length === 0 ? (
+                    <tr>
+                      <td colSpan="10" style={{ textAlign: 'center', padding: '40px 0', color: '#9ca3af' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '24px' }}>⏳</span>
+                          <span>Loading activity logs...</span>
+                        </div>
                       </td>
                     </tr>
-                  ))}
+                  ) : auditLogs.length === 0 ? (
+                    <tr>
+                      <td colSpan="10" style={{ textAlign: 'center', padding: '40px 0', color: '#9ca3af' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '24px' }}>📭</span>
+                          <span>No activity logs found</span>
+                          <span style={{ fontSize: '11px' }}>Try adjusting your filters or search query</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    auditLogs.map((log) => {
+                      const isSelected = selectedLogIds.includes(log.id);
+                      return (
+                        <tr
+                          key={log.id}
+                          className={isSelected ? 'row-selected' : ''}
+                          style={{ opacity: isLoadingLogs ? 0.5 : 1, transition: 'background-color 0.15s, opacity 0.2s' }}
+                        >
+                          <td style={{ textAlign: 'center' }}>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => handleToggleSelectRow(log.id)}
+                              style={{ cursor: 'pointer', width: '15px', height: '15px', accentColor: '#026544' }}
+                              aria-label={`Select log #${log.id}`}
+                            />
+                          </td>
+                          <td className="td-id">{log.id}</td>
+                          <td className="td-datetime">
+                            <span className="td-date">{log.date_time || '—'}</span>
+                          </td>
+                          <td className="td-user">
+                            <span className="td-user-name">{log.user?.name || log.user?.full_name || 'System'}</span>
+                            <span className="td-user-role">{log.user?.role || (log.user?.roles?.[0]?.name) || 'Automated'}</span>
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <span className={`act-pill act-${(log.action || 'updated').toLowerCase()}`}>
+                              {log.action}
+                            </span>
+                          </td>
+                          <td className="td-module">{log.module}</td>
+                          <td className="td-desc">{log.description}</td>
+                          <td className="td-ip">{log.ip_address || '-'}</td>
+                          <td style={{ textAlign: 'center' }}>
+                            <span className={`status-pill ${(log.status || 'success').toLowerCase()}`}>{log.status}</span>
+                          </td>
+                          <td style={{ textAlign: 'center', position: 'relative' }}>
+                            <button
+                              type="button"
+                              className={`btn-log-options ${activeActionMenuId === log.id ? 'active' : ''}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveActionMenuId((prev) => (prev === log.id ? null : log.id));
+                              }}
+                              title="Actions"
+                            >
+                              ⋮
+                            </button>
+
+                            {activeActionMenuId === log.id && (
+                              <div
+                                className="log-row-menu-dropdown"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <button
+                                  type="button"
+                                  className="log-menu-item"
+                                  onClick={() => {
+                                    setViewModalLog(log);
+                                    setActiveActionMenuId(null);
+                                  }}
+                                >
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                  </svg>
+                                  <span>View Details</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  className="log-menu-item danger"
+                                  onClick={() => {
+                                    setDeleteSingleLog(log);
+                                    setActiveActionMenuId(null);
+                                  }}
+                                >
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <polyline points="3 6 5 6 21 6" />
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                  </svg>
+                                  <span>Delete Log</span>
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1378,28 +1755,398 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
             {/* Pagination */}
             <div className="sys-pagination-row">
               <span className="sys-pagination-info">
-                Showing 1 to 10 of 12,584 entries
+                Showing {auditLogs.length === 0 ? 0 : ((currentPage - 1) * perPage + 1)} to {Math.min(currentPage * perPage, totalLogs)} of {formatNum(totalLogs)} entries
               </span>
 
               <div className="sys-page-numbers">
-                <button type="button" className="page-nav-btn">‹</button>
-                <button type="button" className="page-num-btn active">1</button>
-                <button type="button" className="page-num-btn">2</button>
-                <button type="button" className="page-num-btn">3</button>
-                <button type="button" className="page-num-btn">4</button>
-                <button type="button" className="page-num-btn">5</button>
-                <span className="page-ellipsis">...</span>
-                <button type="button" className="page-num-btn">1,259</button>
-                <button type="button" className="page-nav-btn">›</button>
+                <button
+                  type="button"
+                  className="page-nav-btn"
+                  disabled={currentPage <= 1}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                >‹</button>
+
+                {getPaginationPages().map((p, idx) =>
+                  p === '...' ? (
+                    <span key={`ellipsis-${idx}`} className="page-ellipsis">...</span>
+                  ) : (
+                    <button
+                      key={p}
+                      type="button"
+                      className={`page-num-btn ${p === currentPage ? 'active' : ''}`}
+                      onClick={() => handlePageChange(p)}
+                    >
+                      {formatNum(p)}
+                    </button>
+                  )
+                )}
+
+                <button
+                  type="button"
+                  className="page-nav-btn"
+                  disabled={currentPage >= lastPage}
+                  onClick={() => handlePageChange(currentPage + 1)}
+                >›</button>
               </div>
 
               <div className="sys-page-size-box">
-                <select defaultValue="10">
+                <select
+                  value={perPage}
+                  onChange={(e) => handlePerPageChange(Number(e.target.value))}
+                >
                   <option value="10">10 / page</option>
-                  <option value="25">25 / page</option>
+                  <option value="20">20 / page</option>
                   <option value="50">50 / page</option>
+                  <option value="100">100 / page</option>
                 </select>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating UI Toast Notification (Displays above all modals) */}
+      {logToast && (
+        <div className={`sys-floating-toast ${logToast.type}`}>
+          <div className="sys-floating-toast-icon">
+            {logToast.type === 'success' ? '✓' : '⚠'}
+          </div>
+          <div className="sys-floating-toast-body">
+            <span className="sys-floating-toast-title">
+              {logToast.type === 'success' ? 'Success' : logToast.type === 'error' ? 'Error' : 'Notification'}
+            </span>
+            <span className="sys-floating-toast-msg">{logToast.msg}</span>
+          </div>
+          <button
+            type="button"
+            className="sys-floating-toast-close"
+            onClick={() => setLogToast(null)}
+            title="Close notification"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Modal 1: View Activity Log Details */}
+      {viewModalLog && (
+        <div className="sys-modal-backdrop" onClick={() => setViewModalLog(null)}>
+          <div className="sys-modal-dialog modal-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="sys-modal-header">
+              <h3 className="sys-modal-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#026544" strokeWidth="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <span>Activity Log Details #{viewModalLog.id}</span>
+              </h3>
+              <button
+                type="button"
+                className="sys-modal-close-btn"
+                onClick={() => setViewModalLog(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="sys-modal-body">
+              <div className="sys-detail-grid">
+                <div className="sys-detail-item">
+                  <span className="sys-detail-label">Log ID</span>
+                  <span className="sys-detail-value">#{viewModalLog.id}</span>
+                </div>
+                <div className="sys-detail-item">
+                  <span className="sys-detail-label">Date & Time</span>
+                  <span className="sys-detail-value">{viewModalLog.date_time || viewModalLog.created_at || '—'}</span>
+                </div>
+                <div className="sys-detail-item">
+                  <span className="sys-detail-label">User</span>
+                  <span className="sys-detail-value">
+                    {viewModalLog.user?.name || viewModalLog.user?.full_name || 'System / Automated'}
+                    {viewModalLog.user?.email && ` (${viewModalLog.user.email})`}
+                  </span>
+                </div>
+                <div className="sys-detail-item">
+                  <span className="sys-detail-label">User Role</span>
+                  <span className="sys-detail-value">{viewModalLog.user?.role || (viewModalLog.user?.roles?.[0]?.name) || 'Automated'}</span>
+                </div>
+                <div className="sys-detail-item">
+                  <span className="sys-detail-label">Module</span>
+                  <span className="sys-detail-value">{viewModalLog.module}</span>
+                </div>
+                <div className="sys-detail-item">
+                  <span className="sys-detail-label">Action</span>
+                  <span className="sys-detail-value">
+                    <span className={`act-pill act-${(viewModalLog.action || 'updated').toLowerCase()}`}>
+                      {viewModalLog.action}
+                    </span>
+                  </span>
+                </div>
+                <div className="sys-detail-item">
+                  <span className="sys-detail-label">Status</span>
+                  <span className="sys-detail-value">
+                    <span className={`status-pill ${(viewModalLog.status || 'success').toLowerCase()}`}>
+                      {viewModalLog.status}
+                    </span>
+                  </span>
+                </div>
+                <div className="sys-detail-item">
+                  <span className="sys-detail-label">IP Address</span>
+                  <span className="sys-detail-value">{viewModalLog.ip_address || '—'}</span>
+                </div>
+                <div className="sys-detail-item full-width">
+                  <span className="sys-detail-label">Description</span>
+                  <div className="sys-detail-box">{viewModalLog.description}</div>
+                </div>
+                {viewModalLog.user_agent && (
+                  <div className="sys-detail-item full-width">
+                    <span className="sys-detail-label">User Agent</span>
+                    <span className="sys-detail-value" style={{ fontSize: '11.5px', color: '#64748b' }}>
+                      {viewModalLog.user_agent}
+                    </span>
+                  </div>
+                )}
+                {viewModalLog.properties && Object.keys(viewModalLog.properties).length > 0 && (
+                  <div className="sys-detail-item full-width">
+                    <span className="sys-detail-label">Payload / Changes</span>
+                    <pre style={{ background: '#0f172a', color: '#e2e8f0', padding: '12px', borderRadius: '6px', fontSize: '12px', overflowX: 'auto', maxHeight: '180px' }}>
+                      {JSON.stringify(viewModalLog.properties, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="sys-modal-footer">
+              <button
+                type="button"
+                className="btn-modal-cancel"
+                onClick={() => setViewModalLog(null)}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                className="btn-modal-danger"
+                onClick={() => {
+                  const logToDelete = viewModalLog;
+                  setViewModalLog(null);
+                  setModalError(null);
+                  setDeleteSingleLog(logToDelete);
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                </svg>
+                <span>Delete This Log</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal 2: Single Delete Confirmation */}
+      {deleteSingleLog && (
+        <div className="sys-modal-backdrop" onClick={() => !isDeletingLogs && setDeleteSingleLog(null)}>
+          <div className="sys-modal-dialog modal-sm" onClick={(e) => e.stopPropagation()}>
+            <div className="sys-modal-header">
+              <h3 className="sys-modal-title" style={{ color: '#dc2626' }}>
+                <span>Delete Activity Log #{deleteSingleLog.id}</span>
+              </h3>
+              <button
+                type="button"
+                className="sys-modal-close-btn"
+                disabled={isDeletingLogs}
+                onClick={() => { setModalError(null); setDeleteSingleLog(null); }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="sys-modal-body">
+              {modalError && (
+                <div className="sys-modal-inline-error">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  <span>{modalError}</span>
+                </div>
+              )}
+
+              <div className="sys-danger-box">
+                <div className="sys-danger-icon-circle">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
+                </div>
+                <div className="sys-danger-content">
+                  <h4>Delete Log #{deleteSingleLog.id}?</h4>
+                  <p>
+                    Are you sure you want to delete this log entry for <strong>{deleteSingleLog.module}</strong> ({deleteSingleLog.action})? This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="sys-modal-footer">
+              <button
+                type="button"
+                className="btn-modal-cancel"
+                disabled={isDeletingLogs}
+                onClick={() => { setModalError(null); setDeleteSingleLog(null); }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-modal-danger"
+                disabled={isDeletingLogs}
+                onClick={handleConfirmSingleDelete}
+              >
+                {isDeletingLogs ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal 3: Bulk Delete Confirmation */}
+      {isBulkDeleteModalOpen && (
+        <div className="sys-modal-backdrop" onClick={() => !isDeletingLogs && setIsBulkDeleteModalOpen(false)}>
+          <div className="sys-modal-dialog modal-sm" onClick={(e) => e.stopPropagation()}>
+            <div className="sys-modal-header">
+              <h3 className="sys-modal-title" style={{ color: '#dc2626' }}>
+                <span>Bulk Delete Activity Logs</span>
+              </h3>
+              <button
+                type="button"
+                className="sys-modal-close-btn"
+                disabled={isDeletingLogs}
+                onClick={() => { setModalError(null); setIsBulkDeleteModalOpen(false); }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="sys-modal-body">
+              {modalError && (
+                <div className="sys-modal-inline-error">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  <span>{modalError}</span>
+                </div>
+              )}
+
+              <div className="sys-danger-box">
+                <div className="sys-danger-icon-circle">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
+                </div>
+                <div className="sys-danger-content">
+                  <h4>Delete {selectedLogIds.length} Activity Logs?</h4>
+                  <p>
+                    Are you sure you want to permanently delete all <strong>{selectedLogIds.length}</strong> selected activity log entries? This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="sys-modal-footer">
+              <button
+                type="button"
+                className="btn-modal-cancel"
+                disabled={isDeletingLogs}
+                onClick={() => { setModalError(null); setIsBulkDeleteModalOpen(false); }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-modal-danger"
+                disabled={isDeletingLogs}
+                onClick={handleConfirmBulkDelete}
+              >
+                {isDeletingLogs ? 'Deleting...' : `Yes, Delete (${selectedLogIds.length})`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal 4: Delete ALL Logs Confirmation */}
+      {isDeleteAllModalOpen && (
+        <div className="sys-modal-backdrop" onClick={() => !isDeletingLogs && setIsDeleteAllModalOpen(false)}>
+          <div className="sys-modal-dialog modal-sm" onClick={(e) => e.stopPropagation()}>
+            <div className="sys-modal-header">
+              <h3 className="sys-modal-title" style={{ color: '#dc2626' }}>
+                <span>Clear All Activity Logs</span>
+              </h3>
+              <button
+                type="button"
+                className="sys-modal-close-btn"
+                disabled={isDeletingLogs}
+                onClick={() => { setModalError(null); setIsDeleteAllModalOpen(false); }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="sys-modal-body">
+              {modalError && (
+                <div className="sys-modal-inline-error">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  <span>{modalError}</span>
+                </div>
+              )}
+
+              <div className="sys-danger-box">
+                <div className="sys-danger-icon-circle">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    <line x1="10" y1="11" x2="10" y2="17" />
+                    <line x1="14" y1="11" x2="14" y2="17" />
+                  </svg>
+                </div>
+                <div className="sys-danger-content">
+                  <h4 style={{ color: '#dc2626' }}>Purge Entire Activity Log History?</h4>
+                  <p>
+                    <strong>Warning:</strong> You are about to permanently delete all <strong>{formatNum(totalLogs)}</strong> activity log records from the database. This purge is irreversible.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="sys-modal-footer">
+              <button
+                type="button"
+                className="btn-modal-cancel"
+                disabled={isDeletingLogs}
+                onClick={() => { setModalError(null); setIsDeleteAllModalOpen(false); }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-modal-danger"
+                disabled={isDeletingLogs}
+                onClick={handleConfirmDeleteAll}
+              >
+                {isDeletingLogs ? 'Purging...' : 'Yes, Clear All Logs'}
+              </button>
             </div>
           </div>
         </div>
