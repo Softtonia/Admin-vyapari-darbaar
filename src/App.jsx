@@ -227,6 +227,14 @@ export default function App() {
             }
           />
           <Route
+            path="/social-links"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Social Links" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/audit-logs"
             element={
               <ProtectedRoute>

@@ -119,3 +119,43 @@ export async function updateAdminSiteSettings(payload) {
   });
 }
 
+/**
+ * Fetch Admin Social Links
+ * Endpoint: GET /api/admin/site-settings/social-links
+ * @returns {Promise<{ status: boolean, message: string, data: Record<string, string|null> }>}
+ */
+export async function getAdminSocialLinks() {
+  return await apiFetch('/api/admin/site-settings/social-links', {
+    method: 'GET',
+  });
+}
+
+/**
+ * Update Admin Social Links
+ * Endpoint: PATCH /api/admin/site-settings/social-links
+ * @param {Record<string, string|null>|{ social_links: Record<string, string|null> }} socialLinks
+ * @returns {Promise<{ status: boolean, message: string, data: Record<string, string|null> }>}
+ */
+export async function updateAdminSocialLinks(socialLinks) {
+  const payload = socialLinks?.social_links ? socialLinks : { social_links: socialLinks };
+  return await apiFetch('/api/admin/site-settings/social-links', {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * Fetch Public Social Links
+ * Endpoint: GET /api/site-settings/social-links
+ * @returns {Promise<{ status: boolean, message: string, data: Record<string, string|null> }>}
+ */
+export async function getPublicSocialLinks() {
+  return await apiFetch('/api/site-settings/social-links', {
+    method: 'GET',
+    skipAuth: true,
+  });
+}
+

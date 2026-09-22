@@ -254,6 +254,7 @@ export default function AdminDashboard({
       title: 'SYSTEM',
       items: [
         { name: 'System Settings', icon: 'settings' },
+        { name: 'Social Links', icon: 'global' },
       ],
     },
   ];
@@ -419,8 +420,8 @@ export default function AdminDashboard({
               type="text"
               className="dash-search-input"
               placeholder={
-                activeNav === 'System Settings' || activeNav === 'Audit Logs'
-                  ? 'Search settings, logs, users, modules...'
+                activeNav === 'System Settings' || activeNav === 'Audit Logs' || activeNav === 'Social Links'
+                  ? 'Search settings, social links, logs, users, modules...'
                   : activeNav === 'Roles & Permissions'
                   ? 'Search users, roles, permissions, modules...'
                   : activeNav === 'Homepage'
@@ -529,6 +530,8 @@ export default function AdminDashboard({
               <h1 className="dash-welcome-title">
                 {activeNav === 'System Settings'
                   ? 'System Settings'
+                  : activeNav === 'Social Links'
+                  ? 'Social Links Management'
                   : activeNav === 'Audit Logs'
                   ? 'Audit Logs'
                   : activeNav === 'Roles & Permissions'
@@ -564,6 +567,8 @@ export default function AdminDashboard({
               <p className="dash-welcome-subtitle">
                 {activeNav === 'System Settings'
                   ? 'Configure platform settings, site branding, logos, and preferences.'
+                  : activeNav === 'Social Links'
+                  ? 'Manage official social channels, communication handles, and community profile links.'
                   : activeNav === 'Audit Logs'
                   ? 'Configure platform settings and monitor all system activities for complete transparency and security.'
                   : activeNav === 'Roles & Permissions'
@@ -600,8 +605,12 @@ export default function AdminDashboard({
 
             <div className="dash-welcome-center">
               <span className="dash-welcome-quote">
-                {activeNav === 'System Settings' || activeNav === 'Audit Logs' ? (
-                  <>“Transparent Systems<br />Build Greater Trust.”</>
+                {activeNav === 'System Settings' || activeNav === 'Audit Logs' || activeNav === 'Social Links' ? (
+                  activeNav === 'Social Links' ? (
+                    <>“Connect Seamlessly<br />Expand Platform Reach.”</>
+                  ) : (
+                    <>“Transparent Systems<br />Build Greater Trust.”</>
+                  )
                 ) : activeNav === 'Roles & Permissions' ? (
                   <>“Right People<br />Right Access<br />A Stronger Platform.”</>
                 ) : activeNav === 'Homepage'
@@ -644,8 +653,8 @@ export default function AdminDashboard({
             Dashboard Content Container (Notifications vs Platform Analytics vs Payments vs Advertisements vs Subscription Plans vs News & Articles vs Contact Unlocks vs Trader Directory vs Trade Requirements vs Mandi vs Overview vs Dashboard)
             ================================================================== */}
         <div className={`dash-content-container ${activeNav === 'Add Commodity' || activeNav === 'All Commodities' || activeNav === 'Add Mandi Rate' || activeNav === 'Import Mandi Rates' ? 'flush-content' : ''}`}>
-          {activeNav === 'System Settings' || activeNav === 'Audit Logs' ? (
-            <SystemSettingsAudit defaultTab={activeNav === 'Audit Logs' ? 'Audit Logs' : 'Site Settings'} />
+          {activeNav === 'System Settings' || activeNav === 'Audit Logs' || activeNav === 'Social Links' ? (
+            <SystemSettingsAudit defaultTab={activeNav === 'Audit Logs' ? 'Audit Logs' : activeNav === 'Social Links' ? 'Social Links' : 'Site Settings'} />
           ) : activeNav === 'Roles & Permissions' ? (
             <RolesPermissions />
           ) : activeNav === 'Homepage' ? (
