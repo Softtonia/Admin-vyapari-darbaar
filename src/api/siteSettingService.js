@@ -74,6 +74,10 @@ export async function updateAdminSiteSettings(payload) {
       formData.append('site_email', String(emailVal).trim());
       formData.append('admin_email', String(emailVal).trim());
     }
+    const phoneVal = payload.phone_number ?? payload.phone;
+    if (phoneVal !== undefined && phoneVal !== null) {
+      formData.append('phone_number', String(phoneVal).trim());
+    }
     if (payload.timezone !== undefined && payload.timezone !== null) {
       formData.append('timezone', String(payload.timezone).trim());
     }

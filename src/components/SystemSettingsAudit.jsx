@@ -32,6 +32,7 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
   const [siteTitle, setSiteTitle] = useState(siteSettings?.site_title || 'India Premier Mandi Platform');
   const [siteDescription, setSiteDescription] = useState(siteSettings?.site_description || 'Connecting mandi traders across India.');
   const [siteEmail, setSiteEmail] = useState(siteSettings?.email || siteSettings?.site_email || siteSettings?.admin_email || 'contact@vyaparidarbar.com');
+  const [phoneNumber, setPhoneNumber] = useState(siteSettings?.phone_number || siteSettings?.phone || '+919876543210');
   const [timezone, setTimezone] = useState(siteSettings?.timezone || 'Asia/Kolkata');
   const [defaultLanguage, setDefaultLanguage] = useState(siteSettings?.default_language || 'en');
   const [currency, setCurrency] = useState(siteSettings?.currency || 'INR');
@@ -73,6 +74,7 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
         setSiteTitle(item.site_title !== undefined ? (item.site_title ?? '') : '');
         setSiteDescription(item.site_description !== undefined ? (item.site_description ?? '') : '');
         setSiteEmail(item.email || item.site_email || item.admin_email || 'contact@vyaparidarbar.com');
+        setPhoneNumber(item.phone_number || item.phone || '');
         setTimezone(item.timezone || 'Asia/Kolkata');
         setDefaultLanguage(item.default_language || 'en');
         setCurrency(item.currency || 'INR');
@@ -109,6 +111,9 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
       if (siteSettings.site_description !== undefined) setSiteDescription(siteSettings.site_description || '');
       if (siteSettings.email || siteSettings.site_email || siteSettings.admin_email) {
         setSiteEmail(siteSettings.email || siteSettings.site_email || siteSettings.admin_email);
+      }
+      if (siteSettings.phone_number !== undefined || siteSettings.phone !== undefined) {
+        setPhoneNumber(siteSettings.phone_number || siteSettings.phone || '');
       }
       if (siteSettings.timezone) setTimezone(siteSettings.timezone);
       if (siteSettings.default_language) setDefaultLanguage(siteSettings.default_language);
@@ -198,6 +203,7 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
         email: siteEmail.trim(),
         site_email: siteEmail.trim(),
         admin_email: siteEmail.trim(),
+        phone_number: phoneNumber.trim(),
         timezone: timezone.trim(),
         default_language: defaultLanguage.trim(),
         currency: currency.trim(),
@@ -220,6 +226,9 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
         if (updated.site_description !== undefined) setSiteDescription(updated.site_description || '');
         if (updated.email !== undefined || updated.site_email !== undefined || updated.admin_email !== undefined) {
           setSiteEmail(updated.email || updated.site_email || updated.admin_email || '');
+        }
+        if (updated.phone_number !== undefined || updated.phone !== undefined) {
+          setPhoneNumber(updated.phone_number || updated.phone || '');
         }
         if (updated.timezone) setTimezone(updated.timezone);
         if (updated.default_language) setDefaultLanguage(updated.default_language);
@@ -757,6 +766,17 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                       placeholder="contact@vyaparidarbar.com"
                       value={siteEmail}
                       onChange={(e) => setSiteEmail(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="sys-form-group">
+                    <label>Phone Number / Helpline</label>
+                    <input
+                      type="tel"
+                      maxLength={50}
+                      placeholder="+919876543210"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
                     />
                   </div>
 
