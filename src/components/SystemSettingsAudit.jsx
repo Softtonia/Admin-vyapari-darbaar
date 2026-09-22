@@ -889,7 +889,7 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
       </div>
 
       {/* 3. Main Split Layout: Left Settings vs Right Audit Logs */}
-      <div className={`sys-main-split ${activeTab === 'Audit Logs' || activeTab === 'Social Links' || activeTab === 'Social Media' ? 'full-width' : ''}`}>
+      <div className={`sys-main-split ${activeTab === 'Audit Logs' ? 'full-width' : ''}`}>
         {/* ==================================================================
             Left Panel: Settings (Site Settings vs System Settings)
             Hidden on Audit Logs tab so Audit Logs displays 100% full width
@@ -902,7 +902,7 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                 {activeTab === 'Site Settings'
                   ? 'Site Settings'
                   : activeTab === 'Social Links' || activeTab === 'Social Media'
-                  ? 'Social Links Management'
+                  ? 'Social Links'
                   : 'System Settings'}
               </h2>
               <p className="sys-panel-subtitle">
@@ -916,10 +916,10 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
             <button
               type="button"
               className="btn-save-settings"
-              onClick={handleSaveSiteSettings}
-              disabled={isSavingSite}
+              onClick={activeTab === 'Social Links' || activeTab === 'Social Media' ? handleSaveSocialLinks : handleSaveSiteSettings}
+              disabled={activeTab === 'Social Links' || activeTab === 'Social Media' ? isSavingSocial : isSavingSite}
             >
-              {isSavingSite ? 'Saving...' : 'Save Changes'}
+              {activeTab === 'Social Links' || activeTab === 'Social Media' ? (isSavingSocial ? 'Saving...' : 'Save Social Links') : (isSavingSite ? 'Saving...' : 'Save Changes')}
             </button>
           </div>
 
@@ -1262,113 +1262,18 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
               </div>
             </div>
           ) : activeTab === 'Social Links' || activeTab === 'Social Media' ? (
-            /* Restyled Luxury Social Links Management View */
-            <div className="site-settings-view social-mgmt-container">
-              {/* 1. Hero Summary Card */}
-              <div className="social-hero-card">
-                <div className="social-hero-top">
-                  <div className="social-hero-info">
-                    <div className="social-hero-badge">
-                      <span className="social-hero-badge-dot" />
-                      <span>Verified Organization Channels</span>
-                    </div>
-                    <h2 className="social-hero-title">Social Links & Public Community Channels</h2>
-                    <p className="social-hero-subtitle">
-                      Manage official social profiles displayed across the web header, public mandi footer, trader communications, and mobile applications.
-                    </p>
-                  </div>
-
-                  <div className="social-hero-actions">
-                    <button
-                      type="button"
-                      className="btn-hero-reload"
-                      onClick={loadSocialLinks}
-                      disabled={isLoadingSocial || isSavingSocial}
-                      title="Reload from API"
-                    >
-                      <span style={{ display: 'inline-block', transform: isLoadingSocial ? 'rotate(180deg)' : 'none', transition: 'transform 0.5s' }}>↻</span>
-                      <span>{isLoadingSocial ? 'Syncing...' : 'Reload from Cloud'}</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-hero-save"
-                      onClick={handleSaveSocialLinks}
-                      disabled={isSavingSocial}
-                    >
-                      <span>💾</span>
-                      <span>{isSavingSocial ? 'Saving Channels...' : 'Save All Changes'}</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Hero Metrics Row */}
-                {(() => {
-                  const configuredCount = Object.values(socialLinks || {}).filter(u => u && String(u).trim()).length;
-                  const percent = Math.round((configuredCount / 7) * 100);
-                  return (
-                    <div className="social-hero-metrics">
-                      <div className="social-metric-box">
-                        <span className="social-metric-label">Channels Connected</span>
-                        <div className="social-metric-val">
-                          <span>{configuredCount} / 7</span>
-                          <span style={{ fontSize: '12px', color: '#86efac', fontWeight: 600 }}>({percent}%)</span>
-                        </div>
-                        <div className="social-progress-bar">
-                          <div className="social-progress-fill" style={{ width: `${percent}%` }} />
-                        </div>
-                      </div>
-
-                      <div className="social-metric-box">
-                        <span className="social-metric-label">Public Broadcast Status</span>
-                        <div className="social-metric-val">
-                          <span style={{ color: configuredCount > 0 ? '#86efac' : '#fca5a5', fontSize: '14.5px' }}>
-                            {configuredCount > 0 ? '● Active on Header & Footer' : '○ Pending Configuration'}
-                          </span>
-                        </div>
-                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.65)' }}>Live across visitor portals</span>
-                      </div>
-
-                      <div className="social-metric-box">
-                        <span className="social-metric-label">API Cloud Endpoint</span>
-                        <div className="social-metric-val" style={{ fontSize: '13px', color: '#fef08a' }}>
-                          <span>/api/admin/site-settings/social-links</span>
-                        </div>
-                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.65)' }}>Postman standard synced</span>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-
-              {/* Toast Feedback for Copy */}
-              {socialCopyToast && (
-                <div style={{
-                  padding: '10px 16px',
-                  background: '#ecfdf5',
-                  border: '1px solid #6ee7b7',
-                  color: '#065f46',
-                  borderRadius: '8px',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  boxShadow: '0 2px 8px rgba(16, 185, 129, 0.12)'
-                }}>
-                  <span>✓</span>
-                  <span>Link for <strong>{SOCIAL_PLATFORMS.find(p => p.key === socialCopyToast)?.name || socialCopyToast}</strong> copied to clipboard!</span>
-                </div>
-              )}
-
-              {/* 2. Controls & Search Toolbar */}
-              <div className="social-toolbar">
-                <div className="social-toolbar-left">
-                  <div className="social-search-box">
+            /* Dedicated Social Links Inputs Panel (Left Side) */
+            <div className="site-settings-view social-mgmt-left-panel">
+              {/* Controls & Search Toolbar */}
+              <div className="social-toolbar" style={{ marginBottom: '14px' }}>
+                <div className="social-toolbar-left" style={{ width: '100%' }}>
+                  <div className="social-search-box" style={{ flex: 1 }}>
                     <span className="social-search-icon">🔍</span>
                     <input
                       type="text"
                       className="social-search-input"
-                      placeholder="Search channels..."
+                      placeholder="Search platforms..."
+                      style={{ width: '100%' }}
                       value={socialSearch}
                       onChange={(e) => setSocialSearch(e.target.value)}
                     />
@@ -1384,7 +1289,7 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                           color: '#9ca3af',
                           cursor: 'pointer',
                           padding: '2px',
-                          fontSize: '12px'
+                          fontSize: '12px',
                         }}
                       >
                         ✕
@@ -1398,7 +1303,7 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                       className={`social-filter-chip ${socialFilter === 'all' ? 'active' : ''}`}
                       onClick={() => setSocialFilter('all')}
                     >
-                      <span>All Channels</span>
+                      <span>All</span>
                       <span className="social-filter-badge">7</span>
                     </button>
                     <button
@@ -1408,7 +1313,7 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                     >
                       <span>Connected</span>
                       <span className="social-filter-badge">
-                        {Object.values(socialLinks || {}).filter(u => u && String(u).trim()).length}
+                        {Object.values(socialLinks || {}).filter((u) => u && String(u).trim()).length}
                       </span>
                     </button>
                     <button
@@ -1416,41 +1321,51 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                       className={`social-filter-chip ${socialFilter === 'pending' ? 'active' : ''}`}
                       onClick={() => setSocialFilter('pending')}
                     >
-                      <span>Needs Setup</span>
+                      <span>Missing</span>
                       <span className="social-filter-badge">
-                        {7 - Object.values(socialLinks || {}).filter(u => u && String(u).trim()).length}
+                        {7 - Object.values(socialLinks || {}).filter((u) => u && String(u).trim()).length}
                       </span>
                     </button>
                   </div>
                 </div>
-
-                <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>
-                  Showing {
-                    SOCIAL_PLATFORMS.filter(p => {
-                      const val = socialLinks[p.key];
-                      const hasVal = val && String(val).trim().length > 0;
-                      if (socialFilter === 'configured' && !hasVal) return false;
-                      if (socialFilter === 'pending' && hasVal) return false;
-                      if (socialSearch.trim()) {
-                        const q = socialSearch.toLowerCase();
-                        return p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || (val && val.toLowerCase().includes(q));
-                      }
-                      return true;
-                    }).length
-                  } of 7 platforms
-                </span>
               </div>
 
-              {/* 3. Luxury Platform Cards Grid */}
-              <div className="social-luxury-grid">
-                {SOCIAL_PLATFORMS.filter(p => {
+              {/* Toast Feedback for Copy */}
+              {socialCopyToast && (
+                <div
+                  style={{
+                    padding: '8px 14px',
+                    background: '#ecfdf5',
+                    border: '1px solid #6ee7b7',
+                    color: '#065f46',
+                    borderRadius: '8px',
+                    fontSize: '12.5px',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    marginBottom: '12px',
+                  }}
+                >
+                  <span>✓</span>
+                  <span>Link copied to clipboard!</span>
+                </div>
+              )}
+
+              {/* Platform Cards List (Single Column in Left Split Panel) */}
+              <div className="social-split-cards-list">
+                {SOCIAL_PLATFORMS.filter((p) => {
                   const val = socialLinks[p.key];
                   const hasVal = val && String(val).trim().length > 0;
                   if (socialFilter === 'configured' && !hasVal) return false;
                   if (socialFilter === 'pending' && hasVal) return false;
                   if (socialSearch.trim()) {
                     const q = socialSearch.toLowerCase();
-                    return p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || (val && val.toLowerCase().includes(q));
+                    return (
+                      p.name.toLowerCase().includes(q) ||
+                      p.desc.toLowerCase().includes(q) ||
+                      (val && val.toLowerCase().includes(q))
+                    );
                   }
                   return true;
                 }).map((platform) => {
@@ -1460,10 +1375,8 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
 
                   return (
                     <div key={platform.key} className="social-luxury-card">
-                      {/* Top Accent Gradient Line */}
                       <div className="social-card-accent-bar" style={{ background: platform.gradient }} />
 
-                      {/* Header */}
                       <div className="social-card-header">
                         <div className="social-card-brand">
                           <div
@@ -1484,10 +1397,6 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                         </span>
                       </div>
 
-                      {/* Description */}
-                      <p className="social-card-desc">{platform.desc}</p>
-
-                      {/* Input Field with Prefix */}
                       <div className="social-card-input-wrapper">
                         <span className="social-card-input-icon">🔗</span>
                         <input
@@ -1519,7 +1428,6 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                         )}
                       </div>
 
-                      {/* Card Action Toolbar */}
                       <div className="social-card-actions">
                         <div className="social-card-action-btns">
                           <button
@@ -1550,7 +1458,7 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                         </div>
 
                         <span className="social-card-hint-text">
-                          {isSet ? (isHttps ? '✓ Secure HTTPS link' : '⚠️ Use https:// prefix') : 'Format: https://...'}
+                          {isSet ? (isHttps ? '✓ HTTPS' : '⚠️ Use https://') : 'https://...'}
                         </span>
                       </div>
                     </div>
@@ -1558,127 +1466,23 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                 })}
               </div>
 
-              {/* 4. Public Live Preview Showcase Widget */}
-              <div className="social-showcase-box">
-                <div className="social-showcase-title-bar">
-                  <div className="social-showcase-title-wrap">
-                    <span className="social-showcase-icon">🌐</span>
-                    <div>
-                      <h3 className="social-showcase-heading">Public Website & App Live Preview</h3>
-                      <p className="social-showcase-sub">Real-time simulation of how traders, buyers, and mandi brokers interact with your official links.</p>
-                    </div>
-                  </div>
-                  <span style={{ fontSize: '11.5px', color: '#026544', fontWeight: 600, background: '#dcfce7', padding: '3px 10px', borderRadius: '12px' }}>
-                    ● Interactive Preview
-                  </span>
-                </div>
-
-                {/* Preview Mode 1: Simulated Website Header */}
-                <div>
-                  <div style={{ fontSize: '11.5px', fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '6px' }}>
-                    1. Website Header Utility Bar Preview
-                  </div>
-                  <div className="mock-header-card">
-                    <div className="mock-header-contacts">
-                      <span>📞 {phoneNumber || '+91 98765 43210'}</span>
-                      <span>✉ {siteEmail || 'contact@vyaparidarbar.com'}</span>
-                    </div>
-                    <div className="mock-header-socials">
-                      <span style={{ opacity: 0.85, fontSize: '11px', marginRight: '4px' }}>Connect:</span>
-                      {SOCIAL_PLATFORMS.filter(p => socialLinks[p.key] && String(socialLinks[p.key]).trim()).length === 0 ? (
-                        <span style={{ fontSize: '11px', opacity: 0.7, fontStyle: 'italic' }}>No active handles configured</span>
-                      ) : (
-                        SOCIAL_PLATFORMS.filter(p => socialLinks[p.key] && String(socialLinks[p.key]).trim()).map((p) => (
-                          <a
-                            key={p.key}
-                            href={socialLinks[p.key]}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="mock-social-dot"
-                            style={{ background: p.gradient }}
-                            title={`Open ${p.name}`}
-                          >
-                            {p.icon}
-                          </a>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Preview Mode 2: Simulated Footer Showcase */}
-                <div>
-                  <div style={{ fontSize: '11.5px', fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '6px' }}>
-                    2. Mandi Portal Public Footer Badges
-                  </div>
-                  <div className="mock-footer-card">
-                    <div className="mock-footer-top">
-                      <div>
-                        <span className="mock-footer-brand-title">{siteName || 'Vyapari Darbaar'}</span>
-                        <span className="mock-footer-brand-sub" style={{ display: 'block', marginTop: '2px' }}>
-                          {siteTitle || "India's Premier Digital Mandi Platform"}
-                        </span>
-                      </div>
-                      <span style={{ fontSize: '12px', color: '#cbd5e1' }}>
-                        Helpline: <strong>{phoneNumber || '+91 98765 43210'}</strong>
-                      </span>
-                    </div>
-
-                    <div className="mock-footer-pills-row">
-                      {SOCIAL_PLATFORMS.filter(p => socialLinks[p.key] && String(socialLinks[p.key]).trim()).length === 0 ? (
-                        <span style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>
-                          Add URLs in the platform cards above to preview interactive channel badges here.
-                        </span>
-                      ) : (
-                        SOCIAL_PLATFORMS.filter(p => socialLinks[p.key] && String(socialLinks[p.key]).trim()).map((p) => (
-                          <a
-                            key={p.key}
-                            href={socialLinks[p.key]}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="mock-footer-pill"
-                            title={`Visit ${p.name}`}
-                          >
-                            <span style={{
-                              width: '16px',
-                              height: '16px',
-                              borderRadius: '50%',
-                              background: p.gradient,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '10px',
-                              fontWeight: 700
-                            }}>
-                              {p.icon}
-                            </span>
-                            <span>{p.name.split(' ')[0]}</span>
-                            <span style={{ opacity: 0.6, fontSize: '10px' }}>↗</span>
-                          </a>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* Bottom Quick Save Footer */}
-              <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
                 <button
                   type="button"
                   className="btn-save-settings"
                   onClick={handleSaveSocialLinks}
                   disabled={isSavingSocial}
-                  style={{ flex: 1, padding: '11px 20px', fontSize: '14px', borderRadius: '8px', fontWeight: 600 }}
+                  style={{ flex: 1, padding: '10px 18px', fontSize: '13.5px', borderRadius: '8px', fontWeight: 600 }}
                 >
-                  {isSavingSocial ? 'Saving Social Channels...' : 'Save All Social Links'}
+                  {isSavingSocial ? 'Saving Social Channels...' : 'Save Social Links'}
                 </button>
                 <button
                   type="button"
                   onClick={loadSocialLinks}
                   disabled={isLoadingSocial || isSavingSocial}
                   style={{
-                    padding: '9px 20px',
+                    padding: '8px 18px',
                     border: '1px solid #d1d5db',
                     borderRadius: '8px',
                     background: '#ffffff',
@@ -1692,9 +1496,9 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                 </button>
               </div>
 
-              <div className="site-meta-footer" style={{ marginTop: '4px' }}>
+              <div className="site-meta-footer" style={{ marginTop: '8px' }}>
                 <span>Channels Configured: {Object.values(socialLinks || {}).filter((u) => u && String(u).trim()).length} of 7</span>
-                <span>API Endpoint: /api/admin/site-settings/social-links (Postman Spec)</span>
+                <span>Synced via api/admin/site-settings/social-links</span>
               </div>
             </div>
 ) : (
@@ -2028,7 +1832,160 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
             Right Panel: Live Branding Preview (when Site Settings) or Audit Logs
             Hidden on Social Links and Audit Logs
             ================================================================== */}
-        {activeTab === 'Social Links' || activeTab === 'Social Media' ? null : activeTab === 'Site Settings' ? (
+        {activeTab === 'Social Links' || activeTab === 'Social Media' ? (
+          /* Live Public Preview Showcase (Right Side) */
+          <div className="sys-logs-panel">
+            <div className="sys-logs-header">
+              <div>
+                <h2 className="sys-panel-title">Live Social Channels & Public Preview</h2>
+                <p className="sys-panel-subtitle">
+                  Real-time preview of how official handles appear on website headers, footers, and mobile apps.
+                </p>
+              </div>
+              <span className="social-status-tag connected">
+                <span className="social-status-tag-dot" />
+                <span>{Object.values(socialLinks || {}).filter((u) => u && String(u).trim()).length} / 7 Connected</span>
+              </span>
+            </div>
+
+            {/* Preview 1: Website Header Utility Bar */}
+            <div className="site-preview-card" style={{ marginBottom: '14px' }}>
+              <div className="site-preview-header">
+                <span>🌐 Website Header Utility Bar Preview</span>
+              </div>
+              <div className="mock-header-card">
+                <div className="mock-header-contacts">
+                  <span>📞 {phoneNumber || '+91 98765 43210'}</span>
+                  <span>✉ {siteEmail || 'contact@vyaparidarbar.com'}</span>
+                </div>
+                <div className="mock-header-socials">
+                  <span style={{ opacity: 0.85, fontSize: '11px', marginRight: '4px' }}>Connect:</span>
+                  {SOCIAL_PLATFORMS.filter(p => socialLinks[p.key] && String(socialLinks[p.key]).trim()).length === 0 ? (
+                    <span style={{ fontSize: '11px', opacity: 0.7, fontStyle: 'italic' }}>No active handles configured</span>
+                  ) : (
+                    SOCIAL_PLATFORMS.filter(p => socialLinks[p.key] && String(socialLinks[p.key]).trim()).map((p) => (
+                      <a
+                        key={p.key}
+                        href={socialLinks[p.key]}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mock-social-dot"
+                        style={{ background: p.gradient }}
+                        title={`Open ${p.name}`}
+                      >
+                        {p.icon}
+                      </a>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Preview 2: Mandi Portal Public Footer Badges */}
+            <div className="site-preview-card" style={{ marginBottom: '14px' }}>
+              <div className="site-preview-header">
+                <span>🏛 Mandi Portal Public Footer Badges</span>
+              </div>
+              <div className="mock-footer-card">
+                <div className="mock-footer-top">
+                  <div>
+                    <span className="mock-footer-brand-title">{siteName || 'Vyapari Darbaar'}</span>
+                    <span className="mock-footer-brand-sub" style={{ display: 'block', marginTop: '2px' }}>
+                      {siteTitle || "India's Premier Digital Mandi Platform"}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '12px', color: '#cbd5e1' }}>
+                    Helpline: <strong>{phoneNumber || '+91 98765 43210'}</strong>
+                  </span>
+                </div>
+
+                <div className="mock-footer-pills-row">
+                  {SOCIAL_PLATFORMS.filter(p => socialLinks[p.key] && String(socialLinks[p.key]).trim()).length === 0 ? (
+                    <span style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>
+                      Add URLs in the platform cards on the left to preview interactive channel badges here.
+                    </span>
+                  ) : (
+                    SOCIAL_PLATFORMS.filter(p => socialLinks[p.key] && String(socialLinks[p.key]).trim()).map((p) => (
+                      <a
+                        key={p.key}
+                        href={socialLinks[p.key]}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mock-footer-pill"
+                        title={`Visit ${p.name}`}
+                      >
+                        <span style={{
+                          width: '16px',
+                          height: '16px',
+                          borderRadius: '50%',
+                          background: p.gradient,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '10px',
+                          fontWeight: 700
+                        }}>
+                          {p.icon}
+                        </span>
+                        <span>{p.name.split(' ')[0]}</span>
+                        <span style={{ opacity: 0.6, fontSize: '10px' }}>↗</span>
+                      </a>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Preview 3: Direct Verification Checklist */}
+            <div className="site-preview-card">
+              <div className="site-preview-header">
+                <span>✓ Profile Verification Checklist</span>
+              </div>
+              <div className="social-checklist-card">
+                {SOCIAL_PLATFORMS.map((platform) => {
+                  const url = socialLinks[platform.key];
+                  const hasUrl = Boolean(url && String(url).trim());
+                  return (
+                    <div key={platform.key} className="checklist-row">
+                      <div className="checklist-left">
+                        <span
+                          className="checklist-icon"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '22px',
+                            height: '22px',
+                            borderRadius: '6px',
+                            background: platform.gradient,
+                            color: '#ffffff',
+                            fontSize: '11px',
+                            fontWeight: 700
+                          }}
+                        >
+                          {platform.icon}
+                        </span>
+                        <span className="checklist-name">{platform.name}</span>
+                      </div>
+                      <div className="checklist-right">
+                        {hasUrl ? (
+                          <>
+                            <span className="checklist-status active">Connected</span>
+                            <a href={url} target="_blank" rel="noreferrer" className="checklist-visit-btn">
+                              Visit ↗
+                            </a>
+                          </>
+                        ) : (
+                          <span className="checklist-status inactive">Not Configured</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        ) : activeTab === 'Site Settings' ? (
           <div className="sys-logs-panel">
             <div className="sys-logs-header">
               <div>

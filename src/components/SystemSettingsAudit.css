@@ -175,7 +175,7 @@
    -------------------------------------------------------------------------- */
 .sys-main-split {
   display: grid;
-  grid-template-columns: 480px minmax(0, 1fr);
+  grid-template-columns: 500px minmax(0, 1fr);
   gap: 16px;
   align-items: start;
 }
@@ -2785,4 +2785,10 @@
   background: rgba(255, 255, 255, 0.2);
   transform: translateY(-1px);
   border-color: rgba(229, 185, 76, 0.5);
+}
+
+.social-split-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
