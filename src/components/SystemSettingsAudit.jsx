@@ -63,6 +63,7 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
   const [isLoadingSocial, setIsLoadingSocial] = useState(false);
   const [socialCopyToast, setSocialCopyToast] = useState(null);
   const [socialFilter, setSocialFilter] = useState('all');
+  const [socialSearch, setSocialSearch] = useState('');
   const [siteToast, setSiteToast] = useState(null);
 
   const webLogoInputRef = useRef(null);
@@ -357,58 +358,72 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
     {
       key: 'facebook',
       name: 'Facebook Page',
-      desc: 'Official page for vyapari updates, events, and community',
+      desc: 'Official organization page, updates & community group',
+      tagline: 'Header, Footer & Trader Community',
       placeholder: 'https://facebook.com/vyaparidarbar',
       icon: 'f',
       bgColor: '#1877f2',
+      gradient: 'linear-gradient(135deg, #1877f2, #0d5bbd)',
     },
     {
       key: 'twitter',
       name: 'X (formerly Twitter)',
-      desc: 'Official feed for rapid mandi rates and announcements',
+      desc: 'Official feed for rapid mandi rates, commodity news & announcements',
+      tagline: 'Mandi Rate Alerts & Breaking Feeds',
       placeholder: 'https://x.com/vyaparidarbar',
       icon: '𝕏',
       bgColor: '#0f1419',
+      gradient: 'linear-gradient(135deg, #2c333a, #0f1419)',
     },
     {
       key: 'instagram',
       name: 'Instagram Profile',
-      desc: 'Visual commodities, daily rate cards, and stories',
+      desc: 'Visual commodities, daily rate cards, stories & trader highlights',
+      tagline: 'Visual Marketing & Trader Highlights',
       placeholder: 'https://instagram.com/vyaparidarbar',
       icon: '📸',
       bgColor: '#e4405f',
+      gradient: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
     },
     {
       key: 'linkedin',
       name: 'LinkedIn Company',
-      desc: 'Corporate profile, agri-tech networking, and partners',
+      desc: 'Corporate profile, agri-tech networking & B2B partnerships',
+      tagline: 'Corporate Presence & B2B Inquiries',
       placeholder: 'https://linkedin.com/company/vyaparidarbar',
       icon: 'in',
       bgColor: '#0a66c2',
+      gradient: 'linear-gradient(135deg, #0a66c2, #004182)',
     },
     {
       key: 'youtube',
       name: 'YouTube Channel',
-      desc: 'Mandi video broadcasts, market trends, and guides',
+      desc: 'Mandi video broadcasts, market trends, trader tutorials & reviews',
+      tagline: 'Video Bhav Updates & Mandi Trends',
       placeholder: 'https://youtube.com/@vyaparidarbar',
       icon: '▶',
       bgColor: '#ff0000',
+      gradient: 'linear-gradient(135deg, #ff0000, #b20000)',
     },
     {
       key: 'whatsapp',
       name: 'WhatsApp Channel / Group',
-      desc: 'Direct trader alerts, bhav broadcasts, and instant support',
+      desc: 'Direct trader alerts, bhav broadcasts, buyer inquiries & instant chat',
+      tagline: 'Instant Bhav Alerts & Community Chat',
       placeholder: 'https://wa.me/919876543210 or https://whatsapp.com/channel/...',
       icon: '💬',
       bgColor: '#25d366',
+      gradient: 'linear-gradient(135deg, #25d366, #128c7e)',
     },
     {
       key: 'telegram',
       name: 'Telegram Community',
-      desc: 'High-speed daily rate broadcasts and trader community',
+      desc: 'High-speed daily rate broadcasts, auction discussions & trader group',
+      tagline: 'Live Auction Feeds & Trader Discussions',
       placeholder: 'https://t.me/vyaparidarbar',
       icon: '✈',
       bgColor: '#229ed9',
+      gradient: 'linear-gradient(135deg, #229ed9, #0088cc)',
     },
   ];
 
@@ -1247,149 +1262,237 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
               </div>
             </div>
           ) : activeTab === 'Social Links' || activeTab === 'Social Media' ? (
-            /* Dedicated Social Links Management View */
+            /* Restyled Luxury Social Links Management View */
             <div className="site-settings-view social-mgmt-container">
-              {/* Top Banner with Stats and Actions */}
-              <div className="social-mgmt-stats-bar">
-                <div className="social-mgmt-stats-left">
-                  <div className="social-stat-pill">
-                    <span className="social-stat-dot" />
-                    <span>Active Channels: <strong className="social-stat-count">{Object.values(socialLinks || {}).filter(u => u && String(u).trim()).length}</strong> / 7</span>
+              {/* 1. Hero Summary Card */}
+              <div className="social-hero-card">
+                <div className="social-hero-top">
+                  <div className="social-hero-info">
+                    <div className="social-hero-badge">
+                      <span className="social-hero-badge-dot" />
+                      <span>Verified Organization Channels</span>
+                    </div>
+                    <h2 className="social-hero-title">Social Links & Public Community Channels</h2>
+                    <p className="social-hero-subtitle">
+                      Manage official social profiles displayed across the web header, public mandi footer, trader communications, and mobile applications.
+                    </p>
                   </div>
-                  <div style={{ display: 'flex', gap: '6px', marginLeft: '8px' }}>
+
+                  <div className="social-hero-actions">
                     <button
                       type="button"
-                      className={`btn-filter-pill ${socialFilter === 'all' ? 'active' : ''}`}
-                      onClick={() => setSocialFilter('all')}
-                      style={{
-                        padding: '4px 12px',
-                        borderRadius: '12px',
-                        border: '1px solid #d1d5db',
-                        background: socialFilter === 'all' ? '#026544' : '#ffffff',
-                        color: socialFilter === 'all' ? '#ffffff' : '#4b5563',
-                        fontSize: '11.5px',
-                        fontWeight: 600,
-                        cursor: 'pointer'
-                      }}
+                      className="btn-hero-reload"
+                      onClick={loadSocialLinks}
+                      disabled={isLoadingSocial || isSavingSocial}
+                      title="Reload from API"
                     >
-                      All (7)
+                      <span style={{ display: 'inline-block', transform: isLoadingSocial ? 'rotate(180deg)' : 'none', transition: 'transform 0.5s' }}>↻</span>
+                      <span>{isLoadingSocial ? 'Syncing...' : 'Reload from Cloud'}</span>
                     </button>
                     <button
                       type="button"
-                      className={`btn-filter-pill ${socialFilter === 'configured' ? 'active' : ''}`}
-                      onClick={() => setSocialFilter('configured')}
-                      style={{
-                        padding: '4px 12px',
-                        borderRadius: '12px',
-                        border: '1px solid #d1d5db',
-                        background: socialFilter === 'configured' ? '#026544' : '#ffffff',
-                        color: socialFilter === 'configured' ? '#ffffff' : '#4b5563',
-                        fontSize: '11.5px',
-                        fontWeight: 600,
-                        cursor: 'pointer'
-                      }}
+                      className="btn-hero-save"
+                      onClick={handleSaveSocialLinks}
+                      disabled={isSavingSocial}
                     >
-                      Configured ({Object.values(socialLinks || {}).filter(u => u && String(u).trim()).length})
-                    </button>
-                    <button
-                      type="button"
-                      className={`btn-filter-pill ${socialFilter === 'pending' ? 'active' : ''}`}
-                      onClick={() => setSocialFilter('pending')}
-                      style={{
-                        padding: '4px 12px',
-                        borderRadius: '12px',
-                        border: '1px solid #d1d5db',
-                        background: socialFilter === 'pending' ? '#026544' : '#ffffff',
-                        color: socialFilter === 'pending' ? '#ffffff' : '#4b5563',
-                        fontSize: '11.5px',
-                        fontWeight: 600,
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Not Set ({7 - Object.values(socialLinks || {}).filter(u => u && String(u).trim()).length})
+                      <span>💾</span>
+                      <span>{isSavingSocial ? 'Saving Channels...' : 'Save All Changes'}</span>
                     </button>
                   </div>
                 </div>
 
-                <div className="social-mgmt-actions">
-                  <button
-                    type="button"
-                    className="btn-social-reload"
-                    onClick={loadSocialLinks}
-                    disabled={isLoadingSocial || isSavingSocial}
-                    title="Reload from API"
-                  >
-                    <span>↻</span>
-                    <span>{isLoadingSocial ? 'Loading...' : 'Reload'}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-social-save"
-                    onClick={handleSaveSocialLinks}
-                    disabled={isSavingSocial}
-                  >
-                    <span>💾</span>
-                    <span>{isSavingSocial ? 'Saving...' : 'Save Social Links'}</span>
-                  </button>
-                </div>
+                {/* Hero Metrics Row */}
+                {(() => {
+                  const configuredCount = Object.values(socialLinks || {}).filter(u => u && String(u).trim()).length;
+                  const percent = Math.round((configuredCount / 7) * 100);
+                  return (
+                    <div className="social-hero-metrics">
+                      <div className="social-metric-box">
+                        <span className="social-metric-label">Channels Connected</span>
+                        <div className="social-metric-val">
+                          <span>{configuredCount} / 7</span>
+                          <span style={{ fontSize: '12px', color: '#86efac', fontWeight: 600 }}>({percent}%)</span>
+                        </div>
+                        <div className="social-progress-bar">
+                          <div className="social-progress-fill" style={{ width: `${percent}%` }} />
+                        </div>
+                      </div>
+
+                      <div className="social-metric-box">
+                        <span className="social-metric-label">Public Broadcast Status</span>
+                        <div className="social-metric-val">
+                          <span style={{ color: configuredCount > 0 ? '#86efac' : '#fca5a5', fontSize: '14.5px' }}>
+                            {configuredCount > 0 ? '● Active on Header & Footer' : '○ Pending Configuration'}
+                          </span>
+                        </div>
+                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.65)' }}>Live across visitor portals</span>
+                      </div>
+
+                      <div className="social-metric-box">
+                        <span className="social-metric-label">API Cloud Endpoint</span>
+                        <div className="social-metric-val" style={{ fontSize: '13px', color: '#fef08a' }}>
+                          <span>/api/admin/site-settings/social-links</span>
+                        </div>
+                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.65)' }}>Postman standard synced</span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Toast Feedback for Copy */}
               {socialCopyToast && (
                 <div style={{
-                  padding: '8px 14px',
-                  background: '#dcfce7',
-                  border: '1px solid #86efac',
-                  color: '#166534',
-                  borderRadius: '6px',
-                  fontSize: '12.5px',
+                  padding: '10px 16px',
+                  background: '#ecfdf5',
+                  border: '1px solid #6ee7b7',
+                  color: '#065f46',
+                  borderRadius: '8px',
+                  fontSize: '13px',
                   fontWeight: 600,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px'
+                  gap: '8px',
+                  boxShadow: '0 2px 8px rgba(16, 185, 129, 0.12)'
                 }}>
                   <span>✓</span>
-                  <span>Link copied to clipboard successfully!</span>
+                  <span>Link for <strong>{SOCIAL_PLATFORMS.find(p => p.key === socialCopyToast)?.name || socialCopyToast}</strong> copied to clipboard!</span>
                 </div>
               )}
 
-              {/* Cards List */}
-              <div className="social-cards-list">
+              {/* 2. Controls & Search Toolbar */}
+              <div className="social-toolbar">
+                <div className="social-toolbar-left">
+                  <div className="social-search-box">
+                    <span className="social-search-icon">🔍</span>
+                    <input
+                      type="text"
+                      className="social-search-input"
+                      placeholder="Search channels..."
+                      value={socialSearch}
+                      onChange={(e) => setSocialSearch(e.target.value)}
+                    />
+                    {socialSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setSocialSearch('')}
+                        style={{
+                          position: 'absolute',
+                          right: '8px',
+                          border: 'none',
+                          background: 'none',
+                          color: '#9ca3af',
+                          cursor: 'pointer',
+                          padding: '2px',
+                          fontSize: '12px'
+                        }}
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="social-filter-pills">
+                    <button
+                      type="button"
+                      className={`social-filter-chip ${socialFilter === 'all' ? 'active' : ''}`}
+                      onClick={() => setSocialFilter('all')}
+                    >
+                      <span>All Channels</span>
+                      <span className="social-filter-badge">7</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`social-filter-chip ${socialFilter === 'configured' ? 'active' : ''}`}
+                      onClick={() => setSocialFilter('configured')}
+                    >
+                      <span>Connected</span>
+                      <span className="social-filter-badge">
+                        {Object.values(socialLinks || {}).filter(u => u && String(u).trim()).length}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`social-filter-chip ${socialFilter === 'pending' ? 'active' : ''}`}
+                      onClick={() => setSocialFilter('pending')}
+                    >
+                      <span>Needs Setup</span>
+                      <span className="social-filter-badge">
+                        {7 - Object.values(socialLinks || {}).filter(u => u && String(u).trim()).length}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>
+                  Showing {
+                    SOCIAL_PLATFORMS.filter(p => {
+                      const val = socialLinks[p.key];
+                      const hasVal = val && String(val).trim().length > 0;
+                      if (socialFilter === 'configured' && !hasVal) return false;
+                      if (socialFilter === 'pending' && hasVal) return false;
+                      if (socialSearch.trim()) {
+                        const q = socialSearch.toLowerCase();
+                        return p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || (val && val.toLowerCase().includes(q));
+                      }
+                      return true;
+                    }).length
+                  } of 7 platforms
+                </span>
+              </div>
+
+              {/* 3. Luxury Platform Cards Grid */}
+              <div className="social-luxury-grid">
                 {SOCIAL_PLATFORMS.filter(p => {
                   const val = socialLinks[p.key];
                   const hasVal = val && String(val).trim().length > 0;
-                  if (socialFilter === 'configured') return hasVal;
-                  if (socialFilter === 'pending') return !hasVal;
+                  if (socialFilter === 'configured' && !hasVal) return false;
+                  if (socialFilter === 'pending' && hasVal) return false;
+                  if (socialSearch.trim()) {
+                    const q = socialSearch.toLowerCase();
+                    return p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || (val && val.toLowerCase().includes(q));
+                  }
                   return true;
                 }).map((platform) => {
                   const val = socialLinks[platform.key] || '';
                   const isSet = Boolean(val && String(val).trim().length > 0);
+                  const isHttps = val.toLowerCase().startsWith('https://');
 
                   return (
-                    <div key={platform.key} className="social-platform-card">
-                      <div className="social-platform-card-header">
-                        <div className="social-platform-badge-group">
+                    <div key={platform.key} className="social-luxury-card">
+                      {/* Top Accent Gradient Line */}
+                      <div className="social-card-accent-bar" style={{ background: platform.gradient }} />
+
+                      {/* Header */}
+                      <div className="social-card-header">
+                        <div className="social-card-brand">
                           <div
-                            className="social-platform-logo-badge"
-                            style={{ backgroundColor: platform.bgColor }}
+                            className="social-card-icon-emblem"
+                            style={{ background: platform.gradient }}
                           >
                             {platform.icon}
                           </div>
-                          <div className="social-platform-info">
-                            <span className="social-platform-name">{platform.name}</span>
-                            <span className="social-platform-desc">{platform.desc}</span>
+                          <div className="social-card-meta">
+                            <span className="social-card-name">{platform.name}</span>
+                            <span className="social-card-tagline">{platform.tagline}</span>
                           </div>
                         </div>
 
-                        <span className={`social-status-pill ${isSet ? 'active' : 'empty'}`}>
-                          {isSet ? 'Active' : 'Not Set'}
+                        <span className={`social-status-tag ${isSet ? 'connected' : 'missing'}`}>
+                          <span className="social-status-tag-dot" />
+                          <span>{isSet ? 'Connected' : 'Missing URL'}</span>
                         </span>
                       </div>
 
-                      <div className="social-input-row">
+                      {/* Description */}
+                      <p className="social-card-desc">{platform.desc}</p>
+
+                      {/* Input Field with Prefix */}
+                      <div className="social-card-input-wrapper">
+                        <span className="social-card-input-icon">🔗</span>
                         <input
                           type="url"
-                          className="social-url-input"
+                          className="social-card-input"
                           placeholder={platform.placeholder}
                           value={val}
                           onChange={(e) =>
@@ -1399,118 +1502,185 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                             })
                           }
                         />
-
-                        <button
-                          type="button"
-                          className="social-btn-tool"
-                          onClick={() => handleCopySocialLink(platform.key, val)}
-                          disabled={!isSet}
-                          title={isSet ? 'Copy URL' : 'Enter a URL first'}
-                        >
-                          📋 {socialCopyToast === platform.key ? 'Copied!' : 'Copy'}
-                        </button>
-
-                        <a
-                          href={isSet ? val : undefined}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="social-btn-tool"
-                          style={{
-                            textDecoration: 'none',
-                            pointerEvents: isSet ? 'auto' : 'none',
-                            opacity: isSet ? 1 : 0.45,
-                          }}
-                          title={isSet ? 'Open in new tab' : 'Enter URL to test'}
-                        >
-                          ↗ Test
-                        </a>
-
                         {isSet && (
                           <button
                             type="button"
-                            className="social-btn-tool"
+                            className="social-card-clear-btn"
                             onClick={() =>
                               setSocialLinks({
                                 ...socialLinks,
                                 [platform.key]: '',
                               })
                             }
-                            title="Clear this URL"
-                            style={{ color: '#ef4444' }}
+                            title="Clear URL"
                           >
                             ✕
                           </button>
                         )}
+                      </div>
+
+                      {/* Card Action Toolbar */}
+                      <div className="social-card-actions">
+                        <div className="social-card-action-btns">
+                          <button
+                            type="button"
+                            className={`btn-card-action ${socialCopyToast === platform.key ? 'copied' : ''}`}
+                            onClick={() => handleCopySocialLink(platform.key, val)}
+                            disabled={!isSet}
+                            title={isSet ? 'Copy link to clipboard' : 'Add URL first'}
+                          >
+                            <span>{socialCopyToast === platform.key ? '✓' : '📋'}</span>
+                            <span>{socialCopyToast === platform.key ? 'Copied!' : 'Copy'}</span>
+                          </button>
+
+                          <a
+                            href={isSet ? val : undefined}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="btn-card-action"
+                            style={{
+                              pointerEvents: isSet ? 'auto' : 'none',
+                              opacity: isSet ? 1 : 0.45,
+                            }}
+                            title={isSet ? 'Test link in new tab' : 'Add URL first'}
+                          >
+                            <span>↗</span>
+                            <span>Test</span>
+                          </a>
+                        </div>
+
+                        <span className="social-card-hint-text">
+                          {isSet ? (isHttps ? '✓ Secure HTTPS link' : '⚠️ Use https:// prefix') : 'Format: https://...'}
+                        </span>
                       </div>
                     </div>
                   );
                 })}
               </div>
 
-              {/* Public Portal Live Preview Widget */}
-              <div className="social-preview-card">
-                <div className="social-preview-header">
-                  <span className="social-preview-title">Public Portal Live Preview (Header & Footer)</span>
-                  <span style={{ fontSize: '11.5px', opacity: 0.8 }}>
-                    Visible to mandi buyers, sellers, and app visitors
+              {/* 4. Public Live Preview Showcase Widget */}
+              <div className="social-showcase-box">
+                <div className="social-showcase-title-bar">
+                  <div className="social-showcase-title-wrap">
+                    <span className="social-showcase-icon">🌐</span>
+                    <div>
+                      <h3 className="social-showcase-heading">Public Website & App Live Preview</h3>
+                      <p className="social-showcase-sub">Real-time simulation of how traders, buyers, and mandi brokers interact with your official links.</p>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '11.5px', color: '#026544', fontWeight: 600, background: '#dcfce7', padding: '3px 10px', borderRadius: '12px' }}>
+                    ● Interactive Preview
                   </span>
                 </div>
 
-                <div className="social-preview-icons-bar">
-                  {SOCIAL_PLATFORMS.filter(p => socialLinks[p.key] && String(socialLinks[p.key]).trim()).length === 0 ? (
-                    <span style={{ fontSize: '12.5px', color: 'rgba(255, 255, 255, 0.7)', fontStyle: 'italic' }}>
-                      No active channels configured. Enter URLs above and save to display public social badges.
-                    </span>
-                  ) : (
-                    SOCIAL_PLATFORMS.filter(p => socialLinks[p.key] && String(socialLinks[p.key]).trim()).map((p) => (
-                      <a
-                        key={p.key}
-                        href={socialLinks[p.key]}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="social-preview-icon-pill"
-                        title={`Open ${p.name}`}
-                      >
-                        <span style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          width: '18px',
-                          height: '18px',
-                          borderRadius: '50%',
-                          background: p.bgColor,
-                          fontSize: '11px',
-                          color: '#ffffff'
-                        }}>
-                          {p.icon}
+                {/* Preview Mode 1: Simulated Website Header */}
+                <div>
+                  <div style={{ fontSize: '11.5px', fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '6px' }}>
+                    1. Website Header Utility Bar Preview
+                  </div>
+                  <div className="mock-header-card">
+                    <div className="mock-header-contacts">
+                      <span>📞 {phoneNumber || '+91 98765 43210'}</span>
+                      <span>✉ {siteEmail || 'contact@vyaparidarbar.com'}</span>
+                    </div>
+                    <div className="mock-header-socials">
+                      <span style={{ opacity: 0.85, fontSize: '11px', marginRight: '4px' }}>Connect:</span>
+                      {SOCIAL_PLATFORMS.filter(p => socialLinks[p.key] && String(socialLinks[p.key]).trim()).length === 0 ? (
+                        <span style={{ fontSize: '11px', opacity: 0.7, fontStyle: 'italic' }}>No active handles configured</span>
+                      ) : (
+                        SOCIAL_PLATFORMS.filter(p => socialLinks[p.key] && String(socialLinks[p.key]).trim()).map((p) => (
+                          <a
+                            key={p.key}
+                            href={socialLinks[p.key]}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mock-social-dot"
+                            style={{ background: p.gradient }}
+                            title={`Open ${p.name}`}
+                          >
+                            {p.icon}
+                          </a>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Preview Mode 2: Simulated Footer Showcase */}
+                <div>
+                  <div style={{ fontSize: '11.5px', fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '6px' }}>
+                    2. Mandi Portal Public Footer Badges
+                  </div>
+                  <div className="mock-footer-card">
+                    <div className="mock-footer-top">
+                      <div>
+                        <span className="mock-footer-brand-title">{siteName || 'Vyapari Darbaar'}</span>
+                        <span className="mock-footer-brand-sub" style={{ display: 'block', marginTop: '2px' }}>
+                          {siteTitle || "India's Premier Digital Mandi Platform"}
                         </span>
-                        <span>{p.name.split(' ')[0]}</span>
-                        <span style={{ fontSize: '10px', opacity: 0.6 }}>↗</span>
-                      </a>
-                    ))
-                  )}
+                      </div>
+                      <span style={{ fontSize: '12px', color: '#cbd5e1' }}>
+                        Helpline: <strong>{phoneNumber || '+91 98765 43210'}</strong>
+                      </span>
+                    </div>
+
+                    <div className="mock-footer-pills-row">
+                      {SOCIAL_PLATFORMS.filter(p => socialLinks[p.key] && String(socialLinks[p.key]).trim()).length === 0 ? (
+                        <span style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>
+                          Add URLs in the platform cards above to preview interactive channel badges here.
+                        </span>
+                      ) : (
+                        SOCIAL_PLATFORMS.filter(p => socialLinks[p.key] && String(socialLinks[p.key]).trim()).map((p) => (
+                          <a
+                            key={p.key}
+                            href={socialLinks[p.key]}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mock-footer-pill"
+                            title={`Visit ${p.name}`}
+                          >
+                            <span style={{
+                              width: '16px',
+                              height: '16px',
+                              borderRadius: '50%',
+                              background: p.gradient,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '10px',
+                              fontWeight: 700
+                            }}>
+                              {p.icon}
+                            </span>
+                            <span>{p.name.split(' ')[0]}</span>
+                            <span style={{ opacity: 0.6, fontSize: '10px' }}>↗</span>
+                          </a>
+                        ))
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Bottom Action Footer */}
-              <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+              {/* Bottom Quick Save Footer */}
+              <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
                 <button
                   type="button"
                   className="btn-save-settings"
                   onClick={handleSaveSocialLinks}
                   disabled={isSavingSocial}
-                  style={{ flex: 1, padding: '10px 18px', fontSize: '13.5px' }}
+                  style={{ flex: 1, padding: '11px 20px', fontSize: '14px', borderRadius: '8px', fontWeight: 600 }}
                 >
-                  {isSavingSocial ? 'Saving Social Channels...' : 'Save Social Media Channels'}
+                  {isSavingSocial ? 'Saving Social Channels...' : 'Save All Social Links'}
                 </button>
                 <button
                   type="button"
                   onClick={loadSocialLinks}
                   disabled={isLoadingSocial || isSavingSocial}
                   style={{
-                    padding: '8px 18px',
+                    padding: '9px 20px',
                     border: '1px solid #d1d5db',
-                    borderRadius: '6px',
+                    borderRadius: '8px',
                     background: '#ffffff',
                     fontSize: '13px',
                     fontWeight: 500,
@@ -1522,13 +1692,12 @@ export default function SystemSettingsAudit({ defaultTab = 'Site Settings' }) {
                 </button>
               </div>
 
-              <div className="site-meta-footer" style={{ marginTop: '6px' }}>
+              <div className="site-meta-footer" style={{ marginTop: '4px' }}>
                 <span>Channels Configured: {Object.values(socialLinks || {}).filter((u) => u && String(u).trim()).length} of 7</span>
                 <span>API Endpoint: /api/admin/site-settings/social-links (Postman Spec)</span>
               </div>
             </div>
-
-          ) : (
+) : (
             /* Accordion Container for General/Other Settings */
             <div className="sys-accordions-group">
               {/* Accordion 1: Site Configuration (Connected to api/admin/site-settings) */}
