@@ -251,6 +251,17 @@ export async function getAdminSessions() {
 }
 
 /**
+ * Revoke Admin Session
+ * @param {number|string} sessionId
+ * @returns {Promise<{ status: boolean, message: string }>}
+ */
+export async function revokeAdminSession(sessionId) {
+  return await apiFetch(`/api/admin/profile/sessions/${sessionId}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
  * Update Admin Profile (Name only)
  * @param {Object} payload
  * @param {string} [payload.name]

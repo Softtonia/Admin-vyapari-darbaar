@@ -282,6 +282,94 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/user-list"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="User List" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/traders"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Traders" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/subscribers"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Subscribers" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/advertisers"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Advertisers" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pending-verification"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Pending Verification" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/settings/email-templates"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Email Templates" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/settings/email-templates/create"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Email Template Form" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/settings/email-templates/:id/edit"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Email Template Form" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/settings/campaigns"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Campaigns" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/settings/campaigns/create"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Campaign Form" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/settings/campaigns/:id/edit"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Campaign Form" />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Fallback for undefined routes */}
           <Route path="*" element={<RootRedirect />} />

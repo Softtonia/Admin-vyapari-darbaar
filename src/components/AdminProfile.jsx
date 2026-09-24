@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../context/AdminAuthContext';
-import { updateAdminProfileName, sendEmailUpdateOtp, updateAdminProfileEmail, getAdminSessions } from '../api/adminAuth';
+import { updateAdminProfileName, sendEmailUpdateOtp, updateAdminProfileEmail, getAdminSessions, revokeAdminSession } from '../api/adminAuth';
 import './AdminProfile.css';
 
 export default function AdminProfile() {
@@ -26,6 +26,11 @@ export default function AdminProfile() {
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [sessionsError, setSessionsError] = useState('');
 
+  // Modals state
+  const [revokeSessionId, setRevokeSessionId] = useState(null);
+  const [isLogoutAllModalOpen, setIsLogoutAllModalOpen] = useState(false);
+  const [modalActionLoading, setModalActionLoading] = useState(false);
+
   useEffect(() => {
     if (admin) {
       setFirstName(admin.first_name || '');
@@ -35,6 +40,9 @@ export default function AdminProfile() {
   }, [admin]);
 
   useEffect(() => {
+    // Force a profile refresh on mount to ensure we have the full details (roles, status, last_login_at)
+    refreshProfile();
+
     async function fetchSessions() {
       setLoadingSessions(true);
       setSessionsError('');
@@ -132,10 +140,32 @@ export default function AdminProfile() {
     }
   };
 
-  const handleLogoutAll = async () => {
-    if (window.confirm("Are you sure you want to log out from all devices? You will be logged out of this device as well.")) {
+  const handleLogoutAllConfirm = async () => {
+    setModalActionLoading(true);
+    try {
       await logoutAll();
+      setIsLogoutAllModalOpen(false);
       navigate('/login');
+    } catch (err) {
+      alert(err.message || 'Failed to logout from all devices');
+      setModalActionLoading(false);
+    }
+  };
+
+  const handleRevokeConfirm = async () => {
+    setModalActionLoading(true);
+    try {
+      const res = await revokeAdminSession(revokeSessionId);
+      if (res?.status) {
+        setSessions(prev => prev.filter(s => s.id !== revokeSessionId));
+        setRevokeSessionId(null);
+      } else {
+        alert(res?.message || 'Failed to revoke session');
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to revoke session');
+    } finally {
+      setModalActionLoading(false);
     }
   };
 
@@ -300,7 +330,7 @@ export default function AdminProfile() {
           ) : (
             <div className="sessions-list">
               {sessions.map((session) => {
-                const isMobile = (session.device_name || '').toLowerCase().match(/iphone|android|mobile/);
+                const isMobile = (session.device_name || '').toLowerCase().match(/iphone|ios|android|mobile/);
                 return (
                   <div key={session.id} className={`session-item ${session.is_current_device ? 'current' : ''}`}>
                     <div className="session-icon">
@@ -323,13 +353,13 @@ export default function AdminProfile() {
                         {session.is_current_device && <span className="current-badge">Current Device</span>}
                       </div>
                       <div className="session-meta">
-                        <span>Last used: {session.last_used_at || 'Unknown'}</span>
+                        <span>Last active: {session.last_used_at || 'Unknown'}</span>
                         <span className="dot">•</span>
                         <span>Started on: {session.created_at || 'Unknown'}</span>
                       </div>
                     </div>
                     {!session.is_current_device && (
-                      <button className="btn revoke-btn" onClick={() => alert('Revoke functionality to be added.')}>
+                      <button className="btn revoke-btn" onClick={() => setRevokeSessionId(session.id)}>
                         Revoke
                       </button>
                     )}
@@ -350,12 +380,74 @@ export default function AdminProfile() {
             type="button" 
             className="btn primary" 
             style={{ backgroundColor: '#dc2626' }}
-            onClick={handleLogoutAll}
+            onClick={() => setIsLogoutAllModalOpen(true)}
           >
             Logout All Devices
           </button>
         </div>
       </div>
+
+      {/* Modals */}
+      {isLogoutAllModalOpen && (
+        <div className="ap-modal-backdrop" onClick={() => !modalActionLoading && setIsLogoutAllModalOpen(false)}>
+          <div className="ap-modal-dialog" onClick={e => e.stopPropagation()}>
+            <div className="ap-modal-header">
+              <h3>Logout All Devices</h3>
+            </div>
+            <div className="ap-modal-body">
+              <p>Are you sure you want to log out from all devices? This will instantly terminate all active sessions, including the one on this current device.</p>
+            </div>
+            <div className="ap-modal-footer">
+              <button 
+                className="btn text-btn" 
+                onClick={() => setIsLogoutAllModalOpen(false)}
+                disabled={modalActionLoading}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn primary" 
+                style={{ backgroundColor: '#dc2626' }} 
+                onClick={handleLogoutAllConfirm}
+                disabled={modalActionLoading}
+              >
+                {modalActionLoading ? 'Logging out...' : 'Confirm Logout All'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {revokeSessionId !== null && (
+        <div className="ap-modal-backdrop" onClick={() => !modalActionLoading && setRevokeSessionId(null)}>
+          <div className="ap-modal-dialog" onClick={e => e.stopPropagation()}>
+            <div className="ap-modal-header">
+              <h3>Revoke Session</h3>
+            </div>
+            <div className="ap-modal-body">
+              <p>Are you sure you want to revoke access for this device? The user on this device will be immediately logged out.</p>
+            </div>
+            <div className="ap-modal-footer">
+              <button 
+                className="btn text-btn" 
+                onClick={() => setRevokeSessionId(null)}
+                disabled={modalActionLoading}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn primary" 
+                style={{ backgroundColor: '#dc2626' }} 
+                onClick={handleRevokeConfirm}
+                disabled={modalActionLoading}
+              >
+                {modalActionLoading ? 'Revoking...' : 'Revoke Device'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

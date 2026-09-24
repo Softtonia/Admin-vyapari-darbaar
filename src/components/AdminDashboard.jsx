@@ -54,6 +54,15 @@ import NewsManageSources from './NewsManageSources';
 import NewsImportRuns from './NewsImportRuns';
 import NewsImportRunDetail from './NewsImportRunDetail';
 import AdminProfile from './AdminProfile';
+import EmailTemplates from './EmailTemplates';
+import EmailTemplateForm from './EmailTemplateForm';
+import Campaigns from './Campaigns';
+import CampaignForm from './CampaignForm';
+import UserList from './UserList';
+import Traders from './Traders';
+import Subscribers from './Subscribers';
+import Advertisers from './Advertisers';
+import PendingVerification from './PendingVerification';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import './AdminDashboard.css';
@@ -85,6 +94,13 @@ export const ROUTE_MAP = {
   'System Settings': '/system-settings',
   'Audit Logs': '/audit-logs',
   'Admin Profile': '/admin-profile',
+  'User List': '/user-list',
+  'Traders': '/traders',
+  'Subscribers': '/subscribers',
+  'Advertisers': '/advertisers',
+  'Pending Verification': '/pending-verification',
+  'Email Templates': '/admin/settings/email-templates',
+  'Campaigns': '/admin/settings/campaigns',
 };
 
 export const PATH_TO_NAV = {
@@ -117,7 +133,18 @@ export const PATH_TO_NAV = {
   '/system-settings': 'System Settings',
   '/audit-logs': 'Audit Logs',
   '/admin-profile': 'Admin Profile',
+  '/user-list': 'User List',
+  '/traders': 'Traders',
+  '/subscribers': 'Subscribers',
+  '/advertisers': 'Advertisers',
+  '/pending-verification': 'Pending Verification',
+  '/admin/settings/email-templates': 'Email Templates',
+  '/admin/settings/email-templates/create': 'Email Template Form',
+  '/admin/settings/campaigns': 'Campaigns',
+  '/admin/settings/campaigns/create': 'Campaign Form',
 };
+
+// We will map dynamic routes like /admin/settings/email-templates/:id/edit via `initialNav` from App.jsx
 
 export default function AdminDashboard({
   onNavigateToDesignSystem,
@@ -230,11 +257,13 @@ export default function AdminDashboard({
     {
       title: 'USERS & ACCESS',
       items: [
-        { name: 'Users', icon: 'users' },
+        { name: 'User List', icon: 'users' },
         { name: 'Traders', icon: 'traders' },
         { name: 'Subscribers', icon: 'subscribers' },
         { name: 'Advertisers', icon: 'advertisers' },
-        { name: 'Roles & Permissions', icon: 'roles' },
+        { name: 'Pending Verification', icon: 'roles' },
+        { name: 'KYC Verification', icon: 'roles' },
+        { name: 'Permissions', icon: 'roles' },
       ],
     },
     {
@@ -277,6 +306,8 @@ export default function AdminDashboard({
       title: 'SYSTEM',
       items: [
         { name: 'System Settings', icon: 'settings' },
+        { name: 'Email Templates', icon: 'email_templates' },
+        { name: 'Campaigns', icon: 'campaigns' },
       ],
     },
   ];
@@ -411,6 +442,7 @@ export default function AdminDashboard({
                       {item.icon === 'custom_pages' && <span>📄</span>}
                       {item.icon === 'themes' && <span>🎨</span>}
                       {item.icon === 'settings' && <SettingsIcon size={14} />}
+                      {item.icon === 'email_templates' && <span>✉️</span>}
                       {item.icon === 'api' && <span>🔌</span>}
                       {item.icon === 'logs' && <span>📜</span>}
                     </span>
@@ -775,6 +807,24 @@ export default function AdminDashboard({
             <MarketOverview />
           ) : activeNav === 'Admin Profile' ? (
             <AdminProfile />
+          ) : activeNav === 'Email Templates' ? (
+            <EmailTemplates />
+          ) : activeNav === 'Email Template Form' ? (
+            <EmailTemplateForm />
+          ) : activeNav === 'Campaigns' ? (
+            <Campaigns />
+          ) : activeNav === 'Campaign Form' ? (
+            <CampaignForm />
+          ) : activeNav === 'User List' ? (
+            <UserList />
+          ) : activeNav === 'Traders' ? (
+            <Traders />
+          ) : activeNav === 'Subscribers' ? (
+            <Subscribers />
+          ) : activeNav === 'Advertisers' ? (
+            <Advertisers />
+          ) : activeNav === 'Pending Verification' ? (
+            <PendingVerification />
           ) : (
             <>
               {/* Top Section: Main 3 rows + Right action column */}
