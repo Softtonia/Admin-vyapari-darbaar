@@ -159,6 +159,38 @@ export default function App() {
             }
           />
           <Route
+            path="/news-categories"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Manage Categories" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/news-sources"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Manage Sources" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/news-imports"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Automated Imports" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/news-imports/:runId"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Automated Import Detail" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/roles-permissions"
             element={
               <ProtectedRoute>

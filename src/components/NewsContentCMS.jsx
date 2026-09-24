@@ -1,756 +1,561 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import commWheat from '../assets/comm_wheat.png';
 import commMaize from '../assets/comm_maize.png';
 import commMakhana from '../assets/comm_makhana.png';
 import commChana from '../assets/comm_chana.png';
+import commCotton from '../assets/comm_cotton.png';
+import commRice from '../assets/comm_rice.png';
+import commSoybean from '../assets/comm_soybean.png';
 import newsThumb1 from '../assets/news_thumb_1.png';
 import newsThumb2 from '../assets/news_thumb_2.png';
-import newsThumb3 from '../assets/news_thumb_3.png';
-import newsThumb4 from '../assets/news_thumb_4.png';
-import newsThumb5 from '../assets/news_thumb_5.png';
+import adminAvatar from '../assets/admin_avatar.png';
+import mandiBannerThumb from '../assets/mandi_banner_thumb.png';
+
 import {
-  ChevronDownIcon,
   SearchIcon,
   CalendarIcon,
+  ChevronDownIcon,
   MoreVerticalIcon,
 } from './Icons';
 import './NewsContentCMS.css';
+import NewsArticleView from './NewsArticleView';
+import NewsArticleForm from './NewsArticleForm';
 
-export default function NewsContentCMS() {
-  const [activeTab, setActiveTab] = useState('All Content');
+// API Services
+import {
+  getAdminNewsArticles,
+  getAdminNewsCategoriesOptions,
+  getAdminNewsSourcesOptions,
+  deleteAdminNewsArticle,
+  updateAdminNewsStatus
+} from '../api/newsService';
+
+// Minimal Custom Icons needed
+const EditIcon = ({ size, color }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+);
+const EyeIcon = ({ size, color }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+);
+const FolderIcon = ({ size, color }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+);
+const TagIcon = ({ size, color }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+);
+const UsersIconLocal = ({ size, color }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+);
+const StarIcon = ({ size, color }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+);
+const SettingsIconLocal = ({ size, color }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+);
+
+
+export default function NewsContentCMS({ onNavigateToCategories, onNavigateToSources, onNavigateToImports }) {
+  const [activeTab, setActiveTab] = useState('All Articles');
+  const [viewingArticleId, setViewingArticleId] = useState(null);
+  const [editingArticleId, setEditingArticleId] = useState(null);
+  
+  // API State
+  const [articles, setArticles] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [sources, setSources] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Pagination & Filtering State
   const [keywordSearch, setKeywordSearch] = useState('');
-  const [contentType, setContentType] = useState('All Types');
-  const [category, setCategory] = useState('All Categories');
-  const [statusFilter, setStatusFilter] = useState('All Status');
-  const [authorFilter, setAuthorFilter] = useState('All Authors');
-  const [dateRange, setDateRange] = useState('Select date range');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState('10 / page');
+  const [searchQuery, setSearchQuery] = useState(''); // delayed search
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [sourceFilter, setSourceFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [meta, setMeta] = useState({ current_page: 1, last_page: 1, total: 0 });
+  const perPage = 15;
 
-  // Exact 10 rows from the screenshot
-  const contentItems = [
-    {
-      rowNum: 1,
-      id: '#NWS1024',
-      thumb: commMakhana,
-      isVideo: false,
-      title: 'Makhana exports set to reach $248 million in FY2026',
-      type: 'News',
-      typeClass: 'news',
-      category: 'Makhana',
-      author: 'Rohit Sharma',
-      publishedOn: '17 Sep 2026\n10:15 AM',
-      status: 'Published',
-      statusClass: 'published',
-      views: '2.4K',
-    },
-    {
-      rowNum: 2,
-      id: '#GOV210',
-      thumb: newsThumb1,
-      isVideo: false,
-      title: 'Government increases MSP for wheat by 5% for next season',
-      type: 'Government',
-      typeClass: 'government',
-      category: 'Policy',
-      author: 'Neha Verma',
-      publishedOn: '16 Sep 2026\n05:40 PM',
-      status: 'Published',
-      statusClass: 'published',
-      views: '1.8K',
-    },
-    {
-      rowNum: 3,
-      id: '#GLB318',
-      thumb: newsThumb2,
-      isVideo: false,
-      title: "India's agri exports reach $24B in FY2026",
-      type: 'Global Trade',
-      typeClass: 'global',
-      category: 'Exports',
-      author: 'Amit Singh',
-      publishedOn: '16 Sep 2026\n01:20 PM',
-      status: 'Published',
-      statusClass: 'published',
-      views: '3.6K',
-    },
-    {
-      rowNum: 4,
-      id: '#VID112',
-      thumb: newsThumb3,
-      isVideo: true,
-      title: "Mandi Bhav Analysis – This Week's Trends",
-      type: 'Video',
-      typeClass: 'video',
-      category: 'Market Analysis',
-      author: 'Pooja Mehta',
-      publishedOn: '15 Sep 2026\n11:00 AM',
-      status: 'Published',
-      statusClass: 'published',
-      views: '5.2K',
-    },
-    {
-      rowNum: 5,
-      id: '#NWS1023',
-      thumb: newsThumb4,
-      isVideo: false,
-      title: 'Soybean prices likely to remain firm amid strong demand',
-      type: 'News',
-      typeClass: 'news',
-      category: 'Soybean',
-      author: 'Rohit Sharma',
-      publishedOn: '15 Sep 2026\n09:30 AM',
-      status: 'Draft',
-      statusClass: 'draft',
-      views: '0',
-    },
-    {
-      rowNum: 6,
-      id: '#NP048',
-      thumb: newsThumb5,
-      isVideo: false,
-      title: 'Vyapari Darbaar Daily – 15 Sep 2026',
-      type: 'Newspaper',
-      typeClass: 'newspaper',
-      category: 'Daily Edition',
-      author: 'Editorial Team',
-      publishedOn: '15 Sep 2026\n07:00 AM',
-      status: 'Published',
-      statusClass: 'published',
-      views: '1.1K',
-    },
-    {
-      rowNum: 7,
-      id: '#GOV209',
-      thumb: newsThumb1,
-      isVideo: false,
-      title: 'New export guidelines for rice and maize',
-      type: 'Government',
-      typeClass: 'government',
-      category: 'Trade Policy',
-      author: 'Neha Verma',
-      publishedOn: '14 Sep 2026\n06:10 PM',
-      status: 'Published',
-      statusClass: 'published',
-      views: '2.1K',
-    },
-    {
-      rowNum: 8,
-      id: '#GLB317',
-      thumb: newsThumb2,
-      isVideo: false,
-      title: 'Global food prices show mixed trends in September',
-      type: 'Global Trade',
-      typeClass: 'global',
-      category: 'International',
-      author: 'Amit Singh',
-      publishedOn: '14 Sep 2026\n02:45 PM',
-      status: 'Published',
-      statusClass: 'published',
-      views: '1.9K',
-    },
-    {
-      rowNum: 9,
-      id: '#VID111',
-      thumb: newsThumb3,
-      isVideo: true,
-      title: 'Expert Talk: Future of Indian Commodity Trade',
-      type: 'Video',
-      typeClass: 'video',
-      category: 'Expert Insight',
-      author: 'Pooja Mehta',
-      publishedOn: '13 Sep 2026\n04:20 PM',
-      status: 'Published',
-      statusClass: 'published',
-      views: '4.8K',
-    },
-    {
-      rowNum: 10,
-      id: '#NWS1022',
-      thumb: commChana,
-      isVideo: false,
-      title: 'Tur (Arhar) prices rise 8% in key mandis',
-      type: 'News',
-      typeClass: 'news',
-      category: 'Pulses',
-      author: 'Rohit Sharma',
-      publishedOn: '13 Sep 2026\n11:15 AM',
-      status: 'Under Review',
-      statusClass: 'under-review',
-      views: '0',
-    },
+  // Handle delayed search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(keywordSearch);
+      setPage(1); // reset to page 1 on search
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [keywordSearch]);
+
+  const fetchFiltersOptions = async () => {
+    try {
+      const [catRes, srcRes] = await Promise.all([
+        getAdminNewsCategoriesOptions(),
+        getAdminNewsSourcesOptions()
+      ]);
+      if (catRes?.status && catRes?.data) {
+        setCategories(Array.isArray(catRes.data) ? catRes.data : (catRes.data.data || []));
+      }
+      if (srcRes?.status && srcRes?.data) {
+        setSources(Array.isArray(srcRes.data) ? srcRes.data : (srcRes.data.data || []));
+      }
+    } catch (err) {
+      console.error('Failed to load filter options:', err);
+    }
+  };
+
+  const fetchArticles = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // Map tabs to API status
+      let statusParam = '';
+      if (activeTab === 'Published') statusParam = 'published';
+      if (activeTab === 'Drafts') statusParam = 'draft';
+      if (activeTab === 'Scheduled') statusParam = 'scheduled';
+      if (activeTab === 'Archived') statusParam = 'archived';
+
+      const params = {
+        search: searchQuery,
+        status: statusParam,
+        news_source_id: sourceFilter,
+        news_category_id: categoryFilter,
+        content_type: '',
+        is_featured: '',
+        is_breaking: '',
+        per_page: perPage,
+        page: page,
+      };
+
+      const res = await getAdminNewsArticles(params);
+      if (res) {
+        // If the API wraps response in { status: true, data: { ... } }, payload is res.data
+        // If the API returns a Laravel Resource { data: [...], meta: {...} }, payload is res
+        const payload = res.data && res.status !== undefined ? res.data : res;
+
+        if (Array.isArray(payload)) {
+          setArticles(payload);
+          setMeta({ current_page: 1, last_page: 1, total: payload.length });
+        } else {
+          // Look for items array or data array
+          const articlesArray = Array.isArray(payload.items) ? payload.items : (Array.isArray(payload.data) ? payload.data : []);
+          setArticles(articlesArray);
+          
+          setMeta(payload.meta || payload.pagination || { 
+            current_page: payload.current_page || 1, 
+            last_page: payload.last_page || 1, 
+            total: payload.total || articlesArray.length
+          });
+        }
+      } else {
+        throw new Error(res?.message || 'Failed to fetch articles');
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [page, searchQuery, activeTab, categoryFilter, sourceFilter]);
+
+  useEffect(() => {
+    fetchFiltersOptions();
+  }, []);
+
+  useEffect(() => {
+    fetchArticles();
+  }, [fetchArticles]);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= meta.last_page) {
+      setPage(newPage);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this article?')) {
+      try {
+        await deleteAdminNewsArticle(id);
+        fetchArticles();
+      } catch (err) {
+        alert(err.message || 'Failed to delete article');
+      }
+    }
+  };
+
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      await updateAdminNewsStatus(id, newStatus);
+      fetchArticles();
+    } catch (err) {
+      alert(err.message || 'Failed to update status');
+    }
+  };
+
+  const tabs = ['All Articles', 'Published', 'Drafts', 'Scheduled', 'Archived'];
+
+  const kpis = [
+    { label: 'Total Articles', value: meta.total || '128', trend: '+12%', color: 'emerald', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> },
+    { label: 'Published', value: '96', trend: '+8%', color: 'green', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"></circle></svg> },
+    { label: 'Drafts', value: '18', trend: '+50%', color: 'amber', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> },
+    { label: 'Scheduled', value: '6', trend: '+200%', color: 'blue', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> },
+    { label: 'Total Views', value: '52.4K', trend: '+28%', color: 'purple', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> },
   ];
 
-  // Quick Create items
-  const quickCreateItems = [
-    { title: 'News Article', icon: '📄', bg: '#dcfce7', color: '#15803d' },
-    { title: 'Government Update', icon: '🏛', bg: '#f3e8ff', color: '#7e22ce' },
-    { title: 'Global Trade Update', icon: '🌐', bg: '#e0f2fe', color: '#0369a1' },
-    { title: 'Upload Video', icon: '▶', bg: '#fee2e2', color: '#b91c1c' },
-    { title: 'Newspaper Edition', icon: '📰', bg: '#ccfbf1', color: '#0f766e' },
-    { title: 'Announcement', icon: '📢', bg: '#fef3c7', color: '#b45309' },
-  ];
+  const getStatusClass = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'published': return 'status-published';
+      case 'draft': return 'status-draft';
+      case 'scheduled': return 'status-scheduled';
+      default: return '';
+    }
+  };
 
-  // Recent Published Content
-  const recentPublished = [
-    { thumb: commMakhana, title: 'Makhana exports set to reach $248 million...', date: '17 Sep 2026' },
-    { thumb: newsThumb1, title: 'Government increases MSP for wheat...', date: '16 Sep 2026' },
-    { thumb: newsThumb2, title: "India's agri exports reach $24B in FY2026", date: '16 Sep 2026' },
-    { thumb: newsThumb3, isVideo: true, title: "Mandi Bhav Analysis – This Week's Trends", date: '15 Sep 2026' },
-    { thumb: newsThumb5, title: 'Vyapari Darbaar Daily – 15 Sep 2026', date: '15 Sep 2026' },
-  ];
+  const getCategoryColor = (categoryName, index = 0) => {
+    switch (categoryName) {
+      case 'Market News': return { bg: '#e0f2fe', color: '#0284c7' };
+      case 'Export Import': return { bg: '#fee2e2', color: '#dc2626' };
+      case 'Government Update': return { bg: '#dcfce7', color: '#16a34a' };
+      case 'Price Analysis': return { bg: '#ffedd5', color: '#ea580c' };
+      case 'Global Market': return { bg: '#e0e7ff', color: '#4f46e5' };
+      case 'Expert Opinion': return { bg: '#fce7f3', color: '#db2777' };
+      case 'Trade Insights': return { bg: '#f3e8ff', color: '#9333ea' };
+      default: 
+        const colors = ['#3b82f6', '#f97316', '#ef4444', '#d946ef', '#ec4899', '#f43f5e', '#ea580c', '#f59e0b', '#10b981'];
+        return { bg: '#f3f4f6', color: colors[index % colors.length] };
+    }
+  };
 
-  // Top Performing Content
-  const topPerforming = [
-    { rank: 1, thumb: commMakhana, title: 'Makhana exports set to reach $248 million...', views: '2.4K' },
-    { rank: 2, thumb: newsThumb3, isVideo: true, title: 'Expert Talk: Future of Indian Commodity Trade', views: '4.8K' },
-    { rank: 3, thumb: newsThumb2, title: "India's agri exports reach $24B in FY2026", views: '3.6K' },
-    { rank: 4, thumb: newsThumb1, title: 'Government increases MSP for wheat...', views: '1.8K' },
-    { rank: 5, thumb: newsThumb2, title: 'Global food prices show mixed trends...', views: '1.9K' },
-  ];
+  const getThumbImage = (imgUrl) => {
+    return imgUrl || newsThumb1;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    const d = new Date(dateString);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  if (editingArticleId) {
+    return (
+      <NewsArticleForm 
+        articleId={editingArticleId} 
+        onBack={() => { setEditingArticleId(null); fetchArticles(); }} 
+        categories={categories}
+        sources={sources}
+      />
+    );
+  }
+
+  if (viewingArticleId) {
+    return <NewsArticleView articleId={viewingArticleId} onBack={() => setViewingArticleId(null)} onEdit={(id) => setEditingArticleId(id)} />;
+  }
 
   return (
-    <div className="cms-container">
-      {/* ====================================================================
-          ROW 1: 6 KPI Cards
-          ==================================================================== */}
-      <div className="cms-kpi-row-6">
-        {/* Card 1: Total Content */}
-        <div className="cms-kpi-card">
-          <div className="cms-kpi-top">
-            <div className="cms-icon-box amber">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-              </svg>
-            </div>
-            <div className="cms-kpi-info">
-              <span className="cms-kpi-label">Total Content</span>
-              <span className="cms-kpi-val">1,842</span>
-              <span className="cms-kpi-trend green">↑ 12.4% <small>vs last month</small></span>
-            </div>
-          </div>
+    <div className="na-container">
+      {/* HEADER SECTION */}
+      <div className="na-header">
+        <div className="na-header-left">
+          <h1 className="na-title">News & Articles</h1>
+          <p className="na-subtitle">Manage market news, expert articles, insights and updates for the commodity trading community.</p>
         </div>
-
-        {/* Card 2: News Articles */}
-        <div className="cms-kpi-card">
-          <div className="cms-kpi-top">
-            <div className="cms-icon-box green">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-              </svg>
-            </div>
-            <div className="cms-kpi-info">
-              <span className="cms-kpi-label">News Articles</span>
-              <span className="cms-kpi-val">984</span>
-              <span className="cms-kpi-trend green">↑ 18.2%</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 3: Govt. Updates */}
-        <div className="cms-kpi-card">
-          <div className="cms-kpi-top">
-            <div className="cms-icon-box red">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="2" y1="22" x2="22" y2="22" />
-                <line x1="4" y1="10" x2="4" y2="18" />
-                <line x1="10" y1="10" x2="10" y2="18" />
-                <line x1="14" y1="10" x2="14" y2="18" />
-                <line x1="20" y1="10" x2="20" y2="18" />
-                <polygon points="12 2 2 7 22 7 12 2" />
-              </svg>
-            </div>
-            <div className="cms-kpi-info">
-              <span className="cms-kpi-label">Govt. Updates</span>
-              <span className="cms-kpi-val">126</span>
-              <span className="cms-kpi-trend green">↑ 6.8%</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 4: Global Trade */}
-        <div className="cms-kpi-card">
-          <div className="cms-kpi-top">
-            <div className="cms-icon-box orange">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="2" y1="12" x2="22" y2="12" />
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-              </svg>
-            </div>
-            <div className="cms-kpi-info">
-              <span className="cms-kpi-label">Global Trade</span>
-              <span className="cms-kpi-val">320</span>
-              <span className="cms-kpi-trend green">↑ 14.6%</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 5: Videos */}
-        <div className="cms-kpi-card">
-          <div className="cms-kpi-top">
-            <div className="cms-icon-box blue">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="4" width="20" height="16" rx="2.5" />
-                <polygon points="10 8 16 12 10 16 10 8" fill="#2563eb" />
-              </svg>
-            </div>
-            <div className="cms-kpi-info">
-              <span className="cms-kpi-label">Videos</span>
-              <span className="cms-kpi-val">212</span>
-              <span className="cms-kpi-trend green">↑ 22.1%</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 6: Newspaper Editions */}
-        <div className="cms-kpi-card">
-          <div className="cms-kpi-top">
-            <div className="cms-icon-box teal">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d9488" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                <line x1="6" y1="8" x2="10" y2="8" />
-                <line x1="6" y1="12" x2="10" y2="12" />
-                <line x1="14" y1="8" x2="18" y2="8" />
-                <line x1="14" y1="12" x2="18" y2="12" />
-                <line x1="6" y1="16" x2="18" y2="16" />
-              </svg>
-            </div>
-            <div className="cms-kpi-info">
-              <span className="cms-kpi-label">Newspaper Editions</span>
-              <span className="cms-kpi-val">48</span>
-              <span className="cms-kpi-trend green">↑ 9.3%</span>
-            </div>
+        <div className="na-header-right">
+          <div className="na-banner">
+             <div className="na-banner-text">
+               <span className="quote-text">"Knowledge<br/>Today,<br/>Better Trades<br/>Tomorrow."</span>
+             </div>
+             <div className="na-banner-img-wrap">
+               <img src={mandiBannerThumb} alt="Banner" className="na-banner-img" onError={(e) => { e.target.style.display = 'none'; }} />
+             </div>
+             <div className="na-banner-tags">
+                <span className="tag-red">TRADE</span>
+                <span className="tag-red">INFORM</span>
+                <span className="tag-red">CONNECT</span>
+                <span className="tag-red">GROW</span>
+             </div>
           </div>
         </div>
       </div>
 
-      {/* ====================================================================
-          MAIN SPLIT: Left Area + Right Sidebar
-          ==================================================================== */}
-      <div className="cms-main-split">
-        {/* Left Column: Content Management */}
-        <div className="cms-left-content">
-          {/* Top Bar: Tabs + Create Button */}
-          <div className="cms-tabs-actions-bar">
-            {/* Tabs */}
-            <div className="cms-tabs-row">
-              {['All Content', 'News', 'Government Updates', 'Global Trade', 'Videos', 'Digital Newspaper'].map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  className={`cms-tab-btn ${activeTab === tab ? 'active' : ''}`}
-                  onClick={() => setActiveTab(tab)}
-                >
-                  {tab}
-                </button>
-              ))}
+      {/* KPI SECTION */}
+      <div className="na-kpi-row">
+        {kpis.map((kpi, idx) => (
+          <div key={idx} className="na-kpi-card">
+            <div className="na-kpi-top">
+              <div className={`na-icon-box ${kpi.color}`}>
+                {kpi.icon}
+              </div>
+              <div className="na-kpi-info">
+                <span className="na-kpi-val">{kpi.value}</span>
+                <span className="na-kpi-label">{kpi.label}</span>
+              </div>
+            </div>
+            <div className="na-kpi-bottom">
+              <span className="na-kpi-trend">↑ {kpi.trend} this month</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* TABS SECTION */}
+      <div className="na-tabs-row">
+        {tabs.map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            className={`na-tab-btn ${activeTab === tab ? 'active' : ''}`}
+            onClick={() => { setActiveTab(tab); setPage(1); }}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {/* MAIN LAYOUT SPLIT */}
+      <div className="na-main-split">
+        
+        {/* LEFT CONTENT */}
+        <div className="na-left-content">
+          
+          {/* FILTER TOOLBAR */}
+          <div className="na-filter-toolbar">
+            <div className="na-filter-group na-search-group">
+              <SearchIcon size={16} color="#9ca3af" />
+              <input
+                type="text"
+                placeholder="Search articles by title, content or tags..."
+                value={keywordSearch}
+                onChange={(e) => setKeywordSearch(e.target.value)}
+              />
+              <div className="shortcut">Ctrl + K</div>
             </div>
 
-            {/* Right Action Button */}
-            <div className="cms-actions-group">
-              <button type="button" className="btn-create-new">
-                <span>+</span>
-                <span>Create New</span>
-                <ChevronDownIcon size={12} color="#ffffff" />
-              </button>
+            <div className="na-filter-dropdowns">
+              <select 
+                className="na-dropdown" 
+                value={categoryFilter} 
+                onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
+              >
+                <option value="">All Categories</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+
+              <select 
+                className="na-dropdown" 
+                value={sourceFilter} 
+                onChange={(e) => { setSourceFilter(e.target.value); setPage(1); }}
+              >
+                <option value="">All Sources</option>
+                {sources.map(src => (
+                  <option key={src.id} value={src.id}>{src.name}</option>
+                ))}
+              </select>
+
+              <div className="na-dropdown">
+                <span>All Authors</span>
+                <ChevronDownIcon size={14} color="#6b7280" />
+              </div>
+              <div className="na-dropdown na-date-dropdown">
+                <CalendarIcon size={14} color="#6b7280" />
+                <span>Select Date Range</span>
+              </div>
             </div>
           </div>
 
-          {/* Filter Toolbar Card */}
-          <div className="cms-filter-toolbar">
-            <div className="filter-group search-group">
-              <label className="filter-lbl">Keyword Search</label>
-              <div className="filter-search-box">
-                <SearchIcon size={12} color="#9ca3af" />
-                <input
-                  type="text"
-                  placeholder="Search title, content, tags..."
-                  value={keywordSearch}
-                  onChange={(e) => setKeywordSearch(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="filter-group">
-              <label className="filter-lbl">Content Type</label>
-              <div className="filter-dropdown">
-                <span>{contentType}</span>
-                <ChevronDownIcon size={11} color="#6b7280" />
-              </div>
-            </div>
-
-            <div className="filter-group">
-              <label className="filter-lbl">Category</label>
-              <div className="filter-dropdown">
-                <span>{category}</span>
-                <ChevronDownIcon size={11} color="#6b7280" />
-              </div>
-            </div>
-
-            <div className="filter-group">
-              <label className="filter-lbl">Status</label>
-              <div className="filter-dropdown">
-                <span>{statusFilter}</span>
-                <ChevronDownIcon size={11} color="#6b7280" />
-              </div>
-            </div>
-
-            <div className="filter-group">
-              <label className="filter-lbl">Author</label>
-              <div className="filter-dropdown">
-                <span>{authorFilter}</span>
-                <ChevronDownIcon size={11} color="#6b7280" />
-              </div>
-            </div>
-
-            <div className="filter-group date-group">
-              <label className="filter-lbl">Date Range</label>
-              <div className="filter-date-box">
-                <CalendarIcon size={12} color="#9ca3af" />
-                <span>{dateRange}</span>
-              </div>
-            </div>
-
-            <div className="filter-actions">
-              <button type="button" className="btn-apply-filters">
-                Apply Filters
-              </button>
-              <button type="button" className="btn-reset-filters">
-                Reset
-              </button>
-              <button type="button" className="btn-cms-export">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                <span>Export</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Table Card */}
-          <div className="cms-card cms-table-card">
-            <div className="cms-card-header">
-              <h3 className="cms-card-title">Content List (1,842)</h3>
-            </div>
-
-            <div className="cms-table-wrapper">
-              <table className="cms-data-table">
+          {/* DATA TABLE */}
+          <div className="na-table-card">
+            <div className="na-table-wrapper">
+              <table className="na-data-table">
                 <thead>
                   <tr>
-                    <th className="th-check"><input type="checkbox" /></th>
                     <th>#</th>
-                    <th>Thumbnail</th>
-                    <th>Title</th>
-                    <th>Type</th>
+                    <th>Title <span className="sort-icon">⇅</span></th>
                     <th>Category</th>
+                    <th>Source</th>
                     <th>Author</th>
-                    <th>Published On</th>
-                    <th>Status</th>
-                    <th>Views</th>
-                    <th>Action</th>
-                    <th></th>
+                    <th>Date</th>
+                    <th>Views <span className="sort-icon">⇅</span></th>
+                    <th>Status <span className="sort-icon">⇅</span></th>
+                    <th className="th-actions">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {contentItems.map((item) => (
-                    <tr key={item.id}>
-                      <td className="td-check"><input type="checkbox" /></td>
-                      <td className="td-id">
-                        {item.rowNum === 1 ? (
-                          <div className="id-with-num">
-                            <span className="row-order-num">1</span>
-                            <span className="row-code-id">{item.id}</span>
-                          </div>
-                        ) : (
-                          <span className="row-code-id">{item.id}</span>
-                        )}
-                      </td>
-                      <td className="td-thumb-cell">
-                        <div className="content-thumb-wrap">
-                          <img src={item.thumb} alt="" className="content-img-thumb" />
-                          {item.isVideo && (
-                            <div className="video-play-overlay">
-                              <span className="play-triangle">▶</span>
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="td-title-cell">
-                        <span className="content-title-text">{item.title}</span>
-                      </td>
-                      <td>
-                        <span className={`cms-type-pill ${item.typeClass}`}>
-                          {item.type}
-                        </span>
-                      </td>
-                      <td className="td-category">{item.category}</td>
-                      <td className="td-author">{item.author}</td>
-                      <td className="td-published-date">
-                        {item.publishedOn.split('\n').map((line, idx) => (
-                          <div key={idx} className={idx === 1 ? 'time-sub' : 'date-main'}>{line}</div>
-                        ))}
-                      </td>
-                      <td>
-                        <span className={`cms-status-pill ${item.statusClass}`}>
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="td-views">{item.views}</td>
-                      <td className="td-action">
-                        <button type="button" className="cms-action-btn">Edit</button>
-                      </td>
-                      <td className="td-more">
-                        <MoreVerticalIcon size={14} color="#9ca3af" />
-                      </td>
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan="9" style={{ textAlign: 'center', padding: '40px' }}>Loading articles...</td>
                     </tr>
-                  ))}
+                  ) : error ? (
+                    <tr>
+                      <td colSpan="9" style={{ textAlign: 'center', padding: '40px', color: 'red' }}>Error: {error}</td>
+                    </tr>
+                  ) : articles.length === 0 ? (
+                    <tr>
+                      <td colSpan="9" style={{ textAlign: 'center', padding: '40px' }}>No articles found.</td>
+                    </tr>
+                  ) : (
+                    articles.map((item, index) => {
+                      const rowNumber = (meta.current_page - 1) * perPage + index + 1;
+                      const categoryName = item.category?.name || 'Uncategorized';
+                      const sourceName = item.source?.name || 'Vyapari Darbaar';
+                      return (
+                        <tr key={item.id}>
+                          <td className="td-id">{rowNumber}</td>
+                          <td className="td-title">
+                            <div className="title-cell">
+                              <img src={getThumbImage(item.featured_image)} alt="" className="item-thumb" />
+                              <span className="item-title">{item.title}</span>
+                            </div>
+                          </td>
+                          <td className="td-category">
+                            <span className="cat-pill" style={{ backgroundColor: getCategoryColor(categoryName).bg, color: getCategoryColor(categoryName).color }}>
+                              {categoryName}
+                            </span>
+                          </td>
+                          <td className="td-commodity">
+                            <span className="comm-text">{sourceName}</span>
+                          </td>
+                          <td className="td-author">
+                            <div className="author-cell">
+                              <img src={adminAvatar} alt="" className="author-avatar" />
+                              <span className="author-name">{item.author_name || 'Admin'}</span>
+                            </div>
+                          </td>
+                          <td className="td-date">{formatDate(item.published_at || item.created_at)}</td>
+                          <td className="td-views">
+                            <div className="views-cell">
+                              <EyeIcon size={12} color="#026544" />
+                              <span>{item.view_count || '0'}</span>
+                            </div>
+                          </td>
+                          <td className="td-status">
+                            <select 
+                              className={`status-pill ${getStatusClass(item.status)}`}
+                              value={item.status}
+                              onChange={(e) => handleStatusChange(item.id, e.target.value)}
+                              style={{ paddingRight: '20px', border: '1px solid #e5e7eb', appearance: 'none', cursor: 'pointer' }}
+                            >
+                              <option value="published">Published</option>
+                              <option value="draft">Draft</option>
+                              <option value="scheduled">Scheduled</option>
+                              <option value="archived">Archived</option>
+                            </select>
+                          </td>
+                          <td className="td-actions">
+                            <div className="action-btns">
+                              <button className="action-btn" title="Edit" onClick={() => setEditingArticleId(item.id)}><EditIcon size={14} color="#6b7280" /></button>
+                              <button className="action-btn" title="View" onClick={() => setViewingArticleId(item.id)}><EyeIcon size={14} color="#6b7280" /></button>
+                              <button className="action-btn" title="Delete" onClick={() => handleDelete(item.id)}>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
 
-            {/* Pagination */}
-            <div className="cms-pagination-row">
-              <span className="pagination-info">Showing 1 to 10 of 1,842 entries</span>
+            {/* PAGINATION */}
+            <div className="na-pagination-row">
+              <span className="pagination-info">
+                Showing {articles.length > 0 ? (meta.current_page - 1) * perPage + 1 : 0} to {Math.min(meta.current_page * perPage, meta.total)} of {meta.total} articles
+              </span>
+              <div className="pagination-nav">
+                <button 
+                  className="page-nav-btn" 
+                  disabled={meta.current_page === 1}
+                  onClick={() => handlePageChange(meta.current_page - 1)}
+                >←</button>
+                
+                {Array.from({ length: Math.min(5, meta.last_page) }, (_, i) => {
+                  let pageNum = i + 1;
+                  if (meta.current_page > 3 && meta.last_page > 5) {
+                    pageNum = meta.current_page - 2 + i;
+                    if (pageNum > meta.last_page) pageNum = meta.last_page - (4 - i);
+                  }
+                  return (
+                    <button 
+                      key={pageNum}
+                      className={`page-num-btn ${meta.current_page === pageNum ? 'active' : ''}`}
+                      onClick={() => handlePageChange(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
 
-              <div className="pagination-nav-group">
-                <button type="button" className="page-nav-btn" disabled>‹</button>
-                <button type="button" className={`page-num-btn ${currentPage === 1 ? 'active' : ''}`}>1</button>
-                <button type="button" className="page-num-btn">2</button>
-                <button type="button" className="page-num-btn">3</button>
-                <button type="button" className="page-num-btn">4</button>
-                <button type="button" className="page-num-btn">5</button>
-                <span className="page-ellipsis">...</span>
-                <button type="button" className="page-num-btn">185</button>
-                <button type="button" className="page-nav-btn">›</button>
-
-                <div className="page-size-selector">
-                  <span>{pageSize}</span>
-                  <ChevronDownIcon size={11} color="#6b7280" />
-                </div>
+                {meta.last_page > 5 && meta.current_page < meta.last_page - 2 && (
+                  <>
+                    <span className="page-ellipsis">...</span>
+                    <button 
+                      className="page-num-btn"
+                      onClick={() => handlePageChange(meta.last_page)}
+                    >{meta.last_page}</button>
+                  </>
+                )}
+                
+                <button 
+                  className="page-nav-btn"
+                  disabled={meta.current_page === meta.last_page || meta.last_page === 0}
+                  onClick={() => handlePageChange(meta.current_page + 1)}
+                >→</button>
               </div>
             </div>
           </div>
+
         </div>
 
-        {/* Right Column: Sidebar */}
-        <div className="cms-right-sidebar">
-          {/* Card 1: Content Status Donut */}
-          <div className="cms-card status-donut-card">
-            <div className="cms-card-header">
-              <h3 className="cms-card-title">Content Status</h3>
-            </div>
+        {/* RIGHT SIDEBAR */}
+        <div className="na-right-sidebar">
+          <button className="btn-create-article" onClick={() => setEditingArticleId('new')}>
+            + Create New Article
+          </button>
 
-            <div className="donut-body-layout">
-              <div className="donut-graphic-wrap">
-                <svg width="95" height="95" viewBox="0 0 100 100">
-                  {/* Published 69.7% (dark green) */}
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="38"
-                    fill="transparent"
-                    stroke="#026544"
-                    strokeWidth="12"
-                    strokeDasharray="166 238"
-                    strokeDashoffset="0"
-                    transform="rotate(-90 50 50)"
-                  />
-                  {/* Draft 17.4% (gray) */}
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="38"
-                    fill="transparent"
-                    stroke="#9ca3af"
-                    strokeWidth="12"
-                    strokeDasharray="41 238"
-                    strokeDashoffset="-166"
-                    transform="rotate(-90 50 50)"
-                  />
-                  {/* Under Review 6.8% (gold/amber) */}
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="38"
-                    fill="transparent"
-                    stroke="#f59e0b"
-                    strokeWidth="12"
-                    strokeDasharray="16 238"
-                    strokeDashoffset="-207"
-                    transform="rotate(-90 50 50)"
-                  />
-                  {/* Rejected 6.1% (red) */}
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="38"
-                    fill="transparent"
-                    stroke="#dc2626"
-                    strokeWidth="12"
-                    strokeDasharray="15 238"
-                    strokeDashoffset="-223"
-                    transform="rotate(-90 50 50)"
-                  />
-                </svg>
-                <div className="donut-center-info">
-                  <strong className="donut-big-num">1,842</strong>
-                  <span className="donut-sub-lbl">Total Content</span>
-                </div>
-              </div>
-
-              <div className="donut-legend-stack">
-                <div className="legend-row">
-                  <span className="dot green" />
-                  <span className="leg-name">Published</span>
-                  <strong className="leg-count">1,284 (69.7%)</strong>
-                </div>
-                <div className="legend-row">
-                  <span className="dot gray" />
-                  <span className="leg-name">Draft</span>
-                  <strong className="leg-count">320 (17.4%)</strong>
-                </div>
-                <div className="legend-row">
-                  <span className="dot gold" />
-                  <span className="leg-name">Under Review</span>
-                  <strong className="leg-count">126 (6.8%)</strong>
-                </div>
-                <div className="legend-row">
-                  <span className="dot red" />
-                  <span className="leg-name">Rejected</span>
-                  <strong className="leg-count">112 (6.1%)</strong>
-                </div>
-              </div>
-            </div>
+          <div className="na-sidebar-menu">
+            <button type="button" className="na-menu-item" onClick={onNavigateToCategories} style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 16px' }}>
+              <FolderIcon size={16} color="#026544" />
+              <span>Manage Categories</span>
+            </button>
+            <button type="button" className="na-menu-item" onClick={onNavigateToSources} style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 16px' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '16px', height: '16px' }}>📰</span>
+              <span>Manage Sources</span>
+            </button>
+            <button type="button" className="na-menu-item" onClick={onNavigateToImports} style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 16px' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '16px', height: '16px' }}>⚡</span>
+              <span>Automated Imports</span>
+            </button>
           </div>
 
-          {/* Card 2: Quick Create */}
-          <div className="cms-card quick-create-card">
-            <div className="cms-card-header">
-              <h3 className="cms-card-title">Quick Create</h3>
+          <div className="na-categories-card">
+            <div className="na-cat-header">
+              <h3>Article Categories</h3>
+              <button type="button" onClick={onNavigateToCategories} style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Manage →</button>
             </div>
-
-            <div className="quick-create-grid">
-              {quickCreateItems.map((item, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  className="quick-create-btn"
-                  style={{ backgroundColor: item.bg }}
-                >
-                  <span className="quick-btn-icon" style={{ color: item.color }}>{item.icon}</span>
-                  <span className="quick-btn-label">{item.title}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Card 3: Recent Published Content */}
-          <div className="cms-card recent-published-card">
-            <div className="cms-card-header">
-              <h3 className="cms-card-title">Recent Published Content</h3>
-              <a href="#viewall" className="cms-card-link">View All →</a>
-            </div>
-
-            <div className="recent-list-body">
-              {recentPublished.map((item, idx) => (
-                <div key={idx} className="recent-list-row">
-                  <div className="recent-thumb-box">
-                    <img src={item.thumb} alt="" className="recent-thumb-img" />
-                    {item.isVideo && (
-                      <span className="recent-play-badge">▶</span>
-                    )}
+            <div className="na-cat-list">
+              {categories.length === 0 ? (
+                <div style={{ padding: '12px', textAlign: 'center', color: '#6b7280', fontSize: '13px' }}>No categories found</div>
+              ) : (
+                categories.slice(0, 8).map((cat, idx) => (
+                  <div key={cat.id} className="na-cat-row">
+                    <div className="na-cat-name">
+                      <span className="dot" style={{ backgroundColor: getCategoryColor(cat.name, idx).color }}></span>
+                      <span>{cat.name}</span>
+                    </div>
                   </div>
-                  <span className="recent-title-txt">{item.title}</span>
-                  <span className="recent-date-txt">{item.date}</span>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
-          {/* Card 4: Top Performing Content */}
-          <div className="cms-card top-performing-card">
-            <div className="cms-card-header">
-              <h3 className="cms-card-title">Top Performing Content</h3>
-              <a href="#viewall" className="cms-card-link">View All →</a>
+          <div className="na-pro-tip">
+            <div className="tip-header">
+              <span className="tip-icon">💡</span>
+              <h4>Pro Tip</h4>
             </div>
-
-            <div className="top-perf-body">
-              {topPerforming.map((item) => (
-                <div key={item.rank} className="top-perf-row">
-                  <span className="top-perf-rank">{item.rank}</span>
-                  <div className="top-perf-thumb-box">
-                    <img src={item.thumb} alt="" className="top-perf-thumb-img" />
-                    {item.isVideo && (
-                      <span className="recent-play-badge">▶</span>
-                    )}
-                  </div>
-                  <span className="top-perf-title">{item.title}</span>
-                  <span className="top-perf-views">{item.views}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ====================================================================
-          ROW 3: 4 Bottom Brand Value Cards
-          ==================================================================== */}
-      <div className="cms-bottom-values-row">
-        {/* Value 1 */}
-        <div className="cms-value-card">
-          <div className="val-icon-box red-soft">
-            <span className="val-icon">📅</span>
-          </div>
-          <div className="val-text">
-            <h4 className="val-title">Content Calendar</h4>
-            <p className="val-desc">Plan and schedule content in advance.</p>
-            <a href="#calendar" className="val-action-link">View Calendar →</a>
+            <p>Regular, high-quality content helps build trust, improve SEO, and keep traders engaged on your platform.</p>
           </div>
         </div>
 
-        {/* Value 2 */}
-        <div className="cms-value-card">
-          <div className="val-icon-box gold-soft">
-            <span className="val-icon">📊</span>
-          </div>
-          <div className="val-text">
-            <h4 className="val-title">SEO Tools</h4>
-            <p className="val-desc">Optimize content for better reach.</p>
-            <a href="#seo" className="val-action-link">Manage SEO →</a>
-          </div>
-        </div>
-
-        {/* Value 3 */}
-        <div className="cms-value-card">
-          <div className="val-icon-box teal-soft">
-            <span className="val-icon">📚</span>
-          </div>
-          <div className="val-text">
-            <h4 className="val-title">Bulk Actions</h4>
-            <p className="val-desc">Update, publish or delete multiple items.</p>
-            <a href="#bulk" className="val-action-link">Go to Tools →</a>
-          </div>
-        </div>
-
-        {/* Value 4 */}
-        <div className="cms-value-card">
-          <div className="val-icon-box amber-soft">
-            <span className="val-icon">📈</span>
-          </div>
-          <div className="val-text">
-            <h4 className="val-title">Content Analytics</h4>
-            <p className="val-desc">Detailed insights on content performance.</p>
-            <a href="#analytics" className="val-action-link">View Analytics →</a>
-          </div>
-        </div>
       </div>
     </div>
   );

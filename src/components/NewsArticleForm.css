@@ -1,0 +1,286 @@
+/* ==========================================================================
+   Vyapari Darbaar - News Article Form CSS
+   ========================================================================== */
+
+.naform-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  color: #1f2937;
+  background-color: transparent;
+}
+
+/* Toolbar */
+.naform-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.naform-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: #1e3a8a;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 0;
+  transition: opacity 0.2s ease;
+}
+
+.naform-back-btn:hover {
+  opacity: 0.8;
+}
+
+.naform-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+/* Error & Loading */
+.naform-error {
+  background-color: #fef2f2;
+  border: 1px solid #f87171;
+  color: #b91c1c;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.naform-loading {
+  padding: 40px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Layout */
+.naform-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Main Fields */
+.naform-main-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid #f3f4f6;
+}
+
+.naform-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.naform-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.naform-group .req {
+  color: #ef4444;
+}
+
+.naform-group input[type="text"],
+.naform-group input[type="url"],
+.naform-group select,
+.naform-group textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #111827;
+  background-color: #ffffff;
+  transition: border-color 0.2s ease;
+  font-family: inherit;
+}
+
+.naform-group input:focus,
+.naform-group select:focus,
+.naform-group textarea:focus {
+  outline: none;
+  border-color: #026544;
+  box-shadow: 0 0 0 2px rgba(2, 101, 68, 0.1);
+}
+
+.naform-group textarea {
+  resize: vertical;
+}
+
+/* Sidebar */
+.naform-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.naform-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.naform-card h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 4px 0;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 8px;
+}
+
+.naform-image-preview {
+  width: 100%;
+  height: auto;
+  max-height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  margin-bottom: 8px;
+}
+
+/* Toggles */
+.naform-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.naform-toggle span {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #026544;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #026544;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+.slider.round {
+  border-radius: 24px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+/* Actions */
+.naform-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-save {
+  background-color: #026544;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(2, 101, 68, 0.2);
+  transition: background 0.2s ease;
+}
+
+.btn-save:hover:not(:disabled) {
+  background-color: #014f35;
+}
+
+.btn-save:disabled {
+  background-color: #6b7280;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.btn-cancel {
+  background-color: #ffffff;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.2s ease;
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.btn-cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

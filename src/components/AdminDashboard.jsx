@@ -49,6 +49,10 @@ import SystemSettingsAudit from './SystemSettingsAudit';
 import CommodityPrices from './CommodityPrices';
 import AllCommodities from './AllCommodities';
 import AddCommodity from './AddCommodity';
+import NewsManageCategories from './NewsManageCategories';
+import NewsManageSources from './NewsManageSources';
+import NewsImportRuns from './NewsImportRuns';
+import NewsImportRunDetail from './NewsImportRunDetail';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import './AdminDashboard.css';
@@ -67,6 +71,9 @@ export const ROUTE_MAP = {
   'Trader Directory': '/trader-directory',
   'Contact Unlocks': '/contact-unlocks',
   'News & Articles': '/news-articles',
+  'Manage Categories': '/news-categories',
+  'Manage Sources': '/news-sources',
+  'Automated Imports': '/news-imports',
   'Roles & Permissions': '/roles-permissions',
   'Subscription Plans': '/subscription-plans',
   'Payments': '/payments',
@@ -94,6 +101,9 @@ export const PATH_TO_NAV = {
   '/trader-directory': 'Trader Directory',
   '/contact-unlocks': 'Contact Unlocks',
   '/news-articles': 'News & Articles',
+  '/news-categories': 'Manage Categories',
+  '/news-sources': 'Manage Sources',
+  '/news-imports': 'Automated Imports',
   '/roles-permissions': 'Roles & Permissions',
   '/subscription-plans': 'Subscription Plans',
   '/payments': 'Payments',
@@ -198,6 +208,9 @@ export default function AdminDashboard({
       title: 'CONTENT MANAGEMENT',
       items: [
         { name: 'News & Articles', icon: 'news' },
+        { name: 'Manage Categories', icon: 'categories' },
+        { name: 'Manage Sources', icon: 'categories' },
+        { name: 'Automated Imports', icon: 'categories' },
         { name: 'Government Updates', icon: 'gov' },
         { name: 'Global Trade', icon: 'global' },
         { name: 'Videos', icon: 'videos' },
@@ -596,7 +609,13 @@ export default function AdminDashboard({
                     ? 'Real-time and historical prices of agricultural commodities across major mandis in India.'
                     : activeNav === 'Mandi Rates'
                     ? 'Get latest mandi rates from across India. Compare prices, track trends and make better business decisions.'
-                    : activeNav === 'Market Overview'
+                  : activeNav === 'Manage Categories'
+                  ? 'Manage and organize categories for your news and articles.'
+                  : activeNav === 'Manage Sources'
+                  ? 'Manage news agencies, portals, and media sources.'
+                  : activeNav === 'Automated Imports'
+                  ? 'Trigger and monitor scheduled API imports.'
+                  : activeNav === 'Market Overview'
                       ? 'Live commodity markets, mandi rates, exchange data and market insights.'
                       : "Here's what's happening with Vyapari Darbaar today."}
               </p>
@@ -636,7 +655,13 @@ export default function AdminDashboard({
                     <>“Better Market<br />Information<br />Stronger Farmers<br />A Prosperous Bharat.”</>
                   ) : activeNav === 'Mandi Rates'
                     ? '“From Every Mandi To A Stronger Bharat”'
-                    : activeNav === 'Market Overview'
+                  : activeNav === 'Manage Categories'
+                  ? '“Organized Information Reaches the Right Traders.”'
+                  : activeNav === 'Manage Sources'
+                  ? '“Trusted Sources. Reliable News.”'
+                  : activeNav === 'Automated Imports'
+                  ? '“Information At the Speed of Markets.”'
+                  : activeNav === 'Market Overview'
                       ? '“Real Markets. Real Opportunities.”'
                       : '“Indian Commodities. Global Opportunities.”'}
               </span>
@@ -668,8 +693,20 @@ export default function AdminDashboard({
             <AdvertisementManagement />
           ) : activeNav === 'Subscription Plans' ? (
             <SubscriptionPlans />
+          ) : activeNav === 'Manage Categories' ? (
+            <NewsManageCategories onBack={() => handleNavClick('News & Articles')} />
+          ) : activeNav === 'Manage Sources' ? (
+            <NewsManageSources onBack={() => handleNavClick('News & Articles')} />
+          ) : activeNav === 'Automated Imports' ? (
+            <NewsImportRuns onBack={() => handleNavClick('News & Articles')} />
+          ) : activeNav === 'Automated Import Detail' ? (
+            <NewsImportRunDetail onBack={() => navigate('/news-imports')} />
           ) : activeNav === 'News & Articles' ? (
-            <NewsContentCMS />
+            <NewsContentCMS 
+              onNavigateToCategories={() => handleNavClick('Manage Categories')} 
+              onNavigateToSources={() => handleNavClick('Manage Sources')} 
+              onNavigateToImports={() => handleNavClick('Automated Imports')} 
+            />
           ) : activeNav === 'Contact Unlocks' ? (
             <ContactUnlocks />
           ) : activeNav === 'Trader Directory' ? (
