@@ -10,16 +10,18 @@ export default function CampaignForm() {
   const isEdit = !!id;
 
   const [formData, setFormData] = useState({
-    name: '',
     email_template_id: '',
     send_type: 'now',
     event: '',
     scheduled_at: '',
+    target_users: [],
     is_active: true
   });
 
   const [templates, setTemplates] = useState([]);
   const [events, setEvents] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [sendToAll, setSendToAll] = useState(true);
   
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
@@ -46,6 +48,14 @@ export default function CampaignForm() {
       if (evRes?.status) {
         setEvents(evRes.data || []);
       }
+
+      // Fetch Users
+      const { fetchAdminUsers } = await import('../api/campaignApi');
+      const usrRes = await fetchAdminUsers({ per_page: 1000 }); // Try to get a large list
+      if (usrRes?.status) {
+        const fetchedUsers = usrRes.data?.data || usrRes.data || [];
+        setUsers(fetchedUsers);
+      }
     } catch (err) {
       console.error('Failed to load dependencies', err);
     }
@@ -60,9 +70,15 @@ export default function CampaignForm() {
           email_template_id: res.data.email_template_id || '',
           send_type: res.data.send_type || 'now',
           event: res.data.event || '',
-          scheduled_at: res.data.scheduled_at ? res.data.scheduled_at.slice(0, 16) : '', // format for datetime-local
+          scheduled_at: res.data.scheduled_at ? res.data.scheduled_at.slice(0, 16) : '',
+          target_users: res.data.target_users || [],
           is_active: !!res.data.is_active,
         });
+        if (res.data.target_users && res.data.target_users.length > 0) {
+          setSendToAll(false);
+        } else {
+          setSendToAll(true);
+        }
       } else {
         setError(res?.message || 'Failed to load campaign.');
       }
@@ -93,6 +109,11 @@ export default function CampaignForm() {
     });
   };
 
+  const handleUserSelectChange = (e) => {
+    const selectedOptions = Array.from(e.target.selectedOptions, option => parseInt(option.value, 10));
+    setFormData(prev => ({ ...prev, target_users: selectedOptions }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -107,6 +128,10 @@ export default function CampaignForm() {
       payload.event = null;
     } else if (payload.send_type === 'trigger') {
       payload.scheduled_at = null;
+    }
+
+    if (sendToAll || payload.send_type === 'trigger') {
+      payload.target_users = null; // or []
     }
 
     try {
@@ -239,6 +264,35 @@ export default function CampaignForm() {
                   value={formData.scheduled_at} 
                   onChange={handleChange} 
                 />
+              </div>
+            )}
+
+            {(formData.send_type === 'now' || formData.send_type === 'schedule') && (
+              <div className="camp-form-group flex-1">
+                <label style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  Target Audience
+                  <label style={{ fontSize: '12px', fontWeight: 'normal', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <input type="checkbox" checked={sendToAll} onChange={(e) => setSendToAll(e.target.checked)} />
+                    Send to ALL Users
+                  </label>
+                </label>
+                {!sendToAll ? (
+                  <select 
+                    multiple 
+                    className="camp-select" 
+                    style={{ height: '100px' }}
+                    value={formData.target_users}
+                    onChange={handleUserSelectChange}
+                  >
+                    {users.map(u => (
+                      <option key={u.id} value={u.id}>{u.name || u.email}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="camp-input" style={{ backgroundColor: '#f3f4f6', color: '#6b7280', display: 'flex', alignItems: 'center' }}>
+                    All Users Selected
+                  </div>
+                )}
               </div>
             )}
 

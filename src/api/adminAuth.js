@@ -325,6 +325,21 @@ export async function updateAdminProfileEmail({ name, first_name, last_name, ema
   return response;
 }
 
+/**
+ * Change Admin Password
+ * @param {Object} payload
+ * @param {string} payload.current_password
+ * @param {string} payload.password
+ * @param {string} payload.password_confirmation
+ * @returns {Promise<{ status: boolean, message: string }>}
+ */
+export async function changeAdminPassword(payload) {
+  return await apiFetch('/api/admin/change-password', {
+    method: 'POST',
+    body: payload,
+  });
+}
+
 export default {
   login: adminLogin,
   forgotPassword: adminForgotPassword,
@@ -339,4 +354,5 @@ export default {
   loginWithOtp,
   getToken: getAdminToken,
   getUser: getAdminUser,
+  changePassword: changeAdminPassword,
 };

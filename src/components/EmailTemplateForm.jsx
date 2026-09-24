@@ -24,8 +24,8 @@ export default function EmailTemplateForm() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   
-  // Preview
   const [previewHtml, setPreviewHtml] = useState(null);
+  const [previewSubject, setPreviewSubject] = useState('');
   const [previewLoading, setPreviewLoading] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
@@ -119,15 +119,24 @@ export default function EmailTemplateForm() {
   const handlePreview = async () => {
     setIsPreviewOpen(true);
     setPreviewLoading(true);
+    setPreviewSubject('Loading Preview...');
+    setPreviewHtml('');
     try {
-      const res = await previewEmailTemplate({ subject: formData.subject, body: formData.body });
+      const res = await previewEmailTemplate({ 
+        subject: formData.subject || 'Empty Subject', 
+        body: formData.body || '<p></p>',
+        key: formData.key || 'DUMMY_KEY'
+      });
       if (res?.status) {
-        setPreviewHtml(res.data?.html || res.data || '');
+        setPreviewHtml(res.data?.body || '');
+        setPreviewSubject(res.data?.subject || 'Preview Email');
       } else {
-        setPreviewHtml(`<p style="color:red">Failed to load preview: ${res?.message}</p>`);
+        setPreviewHtml(`<p style="color:red; font-family:sans-serif;">Failed to load preview: ${res?.message}</p>`);
+        setPreviewSubject('Preview Error');
       }
     } catch (err) {
-      setPreviewHtml(`<p style="color:red">Error loading preview.</p>`);
+      setPreviewHtml(`<p style="color:red; font-family:sans-serif;">Error loading preview.</p>`);
+      setPreviewSubject('Preview Error');
     } finally {
       setPreviewLoading(false);
     }
@@ -234,17 +243,23 @@ export default function EmailTemplateForm() {
         <div className="et-modal-backdrop" onClick={() => setIsPreviewOpen(false)}>
           <div className="et-modal-dialog preview-dialog" onClick={e => e.stopPropagation()}>
             <div className="et-modal-header">
-              <h3>Preview Email</h3>
+              <h3>{previewSubject || 'Preview Email'}</h3>
               <button className="et-close-btn" onClick={() => setIsPreviewOpen(false)}>✕</button>
             </div>
             <div className="et-modal-body p-0">
               {previewLoading ? (
-                <div className="p-8 text-center text-gray-500">Generating preview...</div>
+                <div className="p-8 text-center text-gray-500" style={{ padding: '40px 0' }}>Generating preview...</div>
               ) : (
                 <div 
                   className="et-preview-container"
-                  dangerouslySetInnerHTML={{ __html: previewHtml }}
-                />
+                  style={{ padding: '16px', background: '#f8fafc', borderBottomLeftRadius: '8px', borderBottomRightRadius: '8px' }}
+                >
+                  <iframe 
+                    title="Email Preview"
+                    srcDoc={previewHtml} 
+                    style={{ width: '100%', minHeight: '500px', border: '1px solid #e5e7eb', borderRadius: '4px', background: '#fff' }} 
+                  />
+                </div>
               )}
             </div>
           </div>

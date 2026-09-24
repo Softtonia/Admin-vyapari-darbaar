@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../context/AdminAuthContext';
-import { updateAdminProfileName, sendEmailUpdateOtp, updateAdminProfileEmail, getAdminSessions, revokeAdminSession } from '../api/adminAuth';
+import { updateAdminProfileName, sendEmailUpdateOtp, updateAdminProfileEmail, getAdminSessions, revokeAdminSession, changeAdminPassword } from '../api/adminAuth';
 import './AdminProfile.css';
 
 export default function AdminProfile() {
@@ -25,6 +25,15 @@ export default function AdminProfile() {
   const [sessions, setSessions] = useState([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [sessionsError, setSessionsError] = useState('');
+
+  // Change Password state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordValidationErrors, setPasswordValidationErrors] = useState({});
 
   // Modals state
   const [revokeSessionId, setRevokeSessionId] = useState(null);
@@ -137,6 +146,36 @@ export default function AdminProfile() {
       setEmailError(err.message || 'Error updating email.');
     } finally {
       setIsUpdatingEmail(false);
+    }
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordMessage('');
+    setPasswordError('');
+    setPasswordValidationErrors({});
+    setIsChangingPassword(true);
+    
+    try {
+      const res = await changeAdminPassword({
+        current_password: currentPassword,
+        password: newPassword,
+        password_confirmation: confirmPassword
+      });
+      if (res?.status) {
+        setPasswordMessage(res?.message || 'Password changed successfully.');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        setPasswordError(res?.message || 'Failed to change password.');
+        if (res?.errors) setPasswordValidationErrors(res.errors);
+      }
+    } catch (err) {
+      setPasswordError(err.message || 'Error changing password.');
+      if (err.errors) setPasswordValidationErrors(err.errors);
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -368,6 +407,68 @@ export default function AdminProfile() {
               })}
             </div>
           )}
+        </div>
+
+        {/* Change Password Card */}
+        <div className="profile-card full-width">
+          <h3>Change Password</h3>
+          {passwordMessage && <div className="alert success">{passwordMessage}</div>}
+          {passwordError && <div className="alert error">{passwordError}</div>}
+          <form onSubmit={handleChangePassword} style={{ maxWidth: '400px' }}>
+            <div className="form-group">
+              <label>Current Password</label>
+              <input 
+                type="password" 
+                value={currentPassword} 
+                onChange={e => setCurrentPassword(e.target.value)} 
+                placeholder="Enter current password"
+                required
+              />
+              {passwordValidationErrors.current_password && (
+                <div className="validation-error" style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>
+                  {passwordValidationErrors.current_password[0]}
+                </div>
+              )}
+            </div>
+            <div className="form-group">
+              <label>New Password</label>
+              <input 
+                type="password" 
+                value={newPassword} 
+                onChange={e => setNewPassword(e.target.value)} 
+                placeholder="Enter new password (min 8 characters)"
+                required
+                minLength="8"
+              />
+              {passwordValidationErrors.password && (
+                <div className="validation-error" style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>
+                  {passwordValidationErrors.password[0]}
+                </div>
+              )}
+            </div>
+            <div className="form-group">
+              <label>Confirm New Password</label>
+              <input 
+                type="password" 
+                value={confirmPassword} 
+                onChange={e => setConfirmPassword(e.target.value)} 
+                placeholder="Confirm new password"
+                required
+              />
+              {passwordValidationErrors.password_confirmation && (
+                <div className="validation-error" style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>
+                  {passwordValidationErrors.password_confirmation[0]}
+                </div>
+              )}
+            </div>
+            <button 
+              type="submit" 
+              className="btn primary"
+              disabled={isChangingPassword}
+            >
+              {isChangingPassword ? 'Changing Password...' : 'Change Password'}
+            </button>
+          </form>
         </div>
 
         {/* Security Card */}

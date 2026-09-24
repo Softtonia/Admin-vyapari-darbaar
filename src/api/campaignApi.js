@@ -46,3 +46,8 @@ export async function bulkDeleteCampaigns(ids) {
     body: { ids },
   });
 }
+
+export async function fetchAdminUsers(params = {}) {
+  const query = new URLSearchParams(params).toString();
+  return await apiFetch(`/api/admin/users?${query}`, { method: 'GET' });
+}
