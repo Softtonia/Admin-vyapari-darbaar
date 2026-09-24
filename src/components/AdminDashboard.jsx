@@ -53,6 +53,7 @@ import NewsManageCategories from './NewsManageCategories';
 import NewsManageSources from './NewsManageSources';
 import NewsImportRuns from './NewsImportRuns';
 import NewsImportRunDetail from './NewsImportRunDetail';
+import AdminProfile from './AdminProfile';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import './AdminDashboard.css';
@@ -83,6 +84,7 @@ export const ROUTE_MAP = {
   'Homepage': '/homepage',
   'System Settings': '/system-settings',
   'Audit Logs': '/audit-logs',
+  'Admin Profile': '/admin-profile',
 };
 
 export const PATH_TO_NAV = {
@@ -114,6 +116,7 @@ export const PATH_TO_NAV = {
   '/site-settings': 'System Settings',
   '/system-settings': 'System Settings',
   '/audit-logs': 'Audit Logs',
+  '/admin-profile': 'Admin Profile',
 };
 
 export default function AdminDashboard({
@@ -129,7 +132,7 @@ export default function AdminDashboard({
   const activeItemRef = useRef(null);
 
   // Admin Auth Context
-  const { admin, logout } = useAdminAuth();
+  const { admin, logout, logoutAll } = useAdminAuth();
   // Global Site Settings Context (Dynamic uploaded logo & branding)
   const { siteSettings, webLogoUrl, mobileLogoUrl } = useSiteSettings();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -171,6 +174,13 @@ export default function AdminDashboard({
   const handleLogout = async () => {
     await logout();
     navigate('/login');
+  };
+
+  const handleLogoutAll = async () => {
+    if (window.confirm("Are you sure you want to log out from all devices? You will be logged out of this device as well.")) {
+      await logoutAll();
+      navigate('/login');
+    }
   };
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -501,8 +511,10 @@ export default function AdminDashboard({
             >
               <img src={adminAvatarImg} alt="Admin" className="dash-avatar-img" />
               <div className="dash-admin-meta">
-                <span className="dash-admin-name">{admin?.name || admin?.username || 'Admin'}</span>
-                <span className="dash-admin-role">{admin?.role?.name || admin?.role || 'Super Administrator'}</span>
+                <span className="dash-admin-name">{admin?.full_name || admin?.name || admin?.username || 'Admin'}</span>
+                <span className="dash-admin-role" style={{ textTransform: 'capitalize' }}>
+                  {admin?.roles?.length ? admin.roles.map(r => r.name.replace('_', ' ')).join(', ') : (admin?.role?.name || admin?.role || 'Super Administrator')}
+                </span>
               </div>
               <ChevronDownIcon size={12} color="#6b7280" />
 
@@ -512,11 +524,23 @@ export default function AdminDashboard({
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="dropdown-user-header">
-                    <span className="dropdown-user-name">{admin?.name || admin?.username || 'Admin'}</span>
+                    <span className="dropdown-user-name">{admin?.full_name || admin?.name || admin?.username || 'Admin'}</span>
                     <span className="dropdown-user-email">{admin?.email || 'admin@example.com'}</span>
-                    <span className="dropdown-user-badge">{admin?.role?.name || admin?.role || 'Super Administrator'}</span>
+                    <span className="dropdown-user-badge" style={{ textTransform: 'capitalize' }}>
+                      {admin?.roles?.length ? admin.roles.map(r => r.name.replace('_', ' ')).join(', ') : (admin?.role?.name || admin?.role || 'Super Administrator')}
+                    </span>
                   </div>
                   <div className="dropdown-divider" />
+                  <button
+                    type="button"
+                    className="dropdown-action-btn"
+                    onClick={() => {
+                      setIsProfileMenuOpen(false);
+                      handleNavClick('Admin Profile');
+                    }}
+                  >
+                    <span>My Profile</span>
+                  </button>
                   <button
                     type="button"
                     className="dropdown-action-btn logout-btn"
@@ -528,6 +552,18 @@ export default function AdminDashboard({
                       <line x1="21" y1="12" x2="9" y2="12" />
                     </svg>
                     <span>Logout</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="dropdown-action-btn logout-all-btn"
+                    onClick={handleLogoutAll}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                      <path d="M12 16v-4"></path>
+                      <path d="M8 12h8"></path>
+                    </svg>
+                    <span>Logout All Devices</span>
                   </button>
                 </div>
               )}
@@ -546,6 +582,8 @@ export default function AdminDashboard({
                   ? 'Social Links Management'
                   : activeNav === 'Audit Logs'
                   ? 'Audit Logs'
+                  : activeNav === 'Admin Profile'
+                  ? 'Admin Profile'
                   : activeNav === 'Roles & Permissions'
                   ? 'Roles & Permissions'
                   : activeNav === 'Homepage'
@@ -583,6 +621,8 @@ export default function AdminDashboard({
                   ? 'Manage official social channels, communication handles, and community profile links.'
                   : activeNav === 'Audit Logs'
                   ? 'Configure platform settings and monitor all system activities for complete transparency and security.'
+                  : activeNav === 'Admin Profile'
+                  ? 'Update your personal details, email, and preferences.'
                   : activeNav === 'Roles & Permissions'
                   ? 'Manage user roles, permissions and access control for the entire platform.'
                   : activeNav === 'Homepage'
@@ -733,6 +773,8 @@ export default function AdminDashboard({
             />
           ) : activeNav === 'Market Overview' ? (
             <MarketOverview />
+          ) : activeNav === 'Admin Profile' ? (
+            <AdminProfile />
           ) : (
             <>
               {/* Top Section: Main 3 rows + Right action column */}

@@ -1363,11 +1363,13 @@
   color: #0f172a;
 }
 
-.dropdown-action-btn.logout-btn {
+.dropdown-action-btn.logout-btn,
+.dropdown-action-btn.logout-all-btn {
   color: #dc2626;
 }
 
-.dropdown-action-btn.logout-btn:hover {
+.dropdown-action-btn.logout-btn:hover,
+.dropdown-action-btn.logout-all-btn:hover {
   background-color: #fee2e2;
   color: #b91c1c;
 }

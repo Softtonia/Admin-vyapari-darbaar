@@ -274,6 +274,14 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/admin-profile"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Admin Profile" />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Fallback for undefined routes */}
           <Route path="*" element={<RootRedirect />} />

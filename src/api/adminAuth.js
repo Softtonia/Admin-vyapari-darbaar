@@ -241,15 +241,27 @@ export async function getAdminProfile() {
 }
 
 /**
+ * Get Admin Sessions
+ * @returns {Promise<{ status: boolean, message: string, data: any[] }>}
+ */
+export async function getAdminSessions() {
+  return await apiFetch('/api/admin/profile/sessions', {
+    method: 'GET',
+  });
+}
+
+/**
  * Update Admin Profile (Name only)
  * @param {Object} payload
- * @param {string} payload.name
+ * @param {string} [payload.name]
+ * @param {string} [payload.first_name]
+ * @param {string} [payload.last_name]
  * @returns {Promise<{ status: boolean, data: any }>}
  */
-export async function updateAdminProfileName({ name }) {
+export async function updateAdminProfileName({ name, first_name, last_name }) {
   const response = await apiFetch('/api/admin/profile', {
     method: 'PATCH',
-    body: { name },
+    body: { name, first_name, last_name },
   });
 
   if (response?.data) {
@@ -277,13 +289,17 @@ export async function sendEmailUpdateOtp({ email }) {
  * Update Admin Profile with Email & OTP
  * @param {Object} payload
  * @param {string} [payload.name]
+ * @param {string} [payload.first_name]
+ * @param {string} [payload.last_name]
  * @param {string} payload.email
  * @param {string} payload.otp
  * @returns {Promise<{ status: boolean, data: any }>}
  */
-export async function updateAdminProfileEmail({ name, email, otp }) {
+export async function updateAdminProfileEmail({ name, first_name, last_name, email, otp }) {
   const body = { email: email.trim(), otp };
   if (name) body.name = name;
+  if (first_name) body.first_name = first_name;
+  if (last_name) body.last_name = last_name;
 
   const response = await apiFetch('/api/admin/profile', {
     method: 'PATCH',
