@@ -663,3 +663,50 @@
   align-items: center;
   justify-content: center;
 }
+
+.au-photo-upload {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px dashed #d1d5db;
+  padding: 16px;
+  border-radius: 8px;
+  transition: 0.2s;
+  background: #f9fafb;
+}
+
+.au-photo-upload:hover {
+  border-color: #3b82f6;
+  background: #f0f9ff;
+}
+
+.au-photo-preview {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid #e5e7eb;
+}
+
+.au-photo-drop {
+  display: flex;
+  flex-direction: column;
+  color: #3b82f6;
+}
+
+.au-photo-drop svg {
+  margin-bottom: 4px;
+}
+
+.au-photo-drop-text {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.au-photo-drop-sub {
+  margin: 0;
+  font-size: 11px;
+  color: #6b7280;
+}

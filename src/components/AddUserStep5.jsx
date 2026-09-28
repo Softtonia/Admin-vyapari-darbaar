@@ -29,10 +29,18 @@ export default function AddUserStep5({ formData, uploadedFiles, profilePhoto, co
 
   const renderDocBox = (title, file, iconColor) => {
     if (!file) return null;
+    
+    // Check if file is an image
+    const isImage = file.type && file.type.startsWith('image/');
+    
     return (
       <div className="au-s5-doc-box">
-        <div className="doc-icon-wrap" style={{ color: iconColor }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+        <div className="doc-icon-wrap" style={{ color: iconColor, overflow: 'hidden' }}>
+          {isImage ? (
+            <img src={URL.createObjectURL(file)} alt={title} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+          ) : (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+          )}
         </div>
         <div className="doc-info-wrap">
           <span className="doc-title">{title}</span>
