@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api/config';
 import './AddUser.css';
 import AddUserStep4 from './AddUserStep4';
+import AddUserStep5 from './AddUserStep5';
 
 export default function AddUser() {
   const navigate = useNavigate();
@@ -1024,11 +1025,17 @@ export default function AddUser() {
             <AddUserStep4 formData={formData} setFormData={setFormData} />
           )}
 
-          {/* Fallback for steps 5 */}
+          {/* STEP 5: Review & Create */}
           {currentStep === 5 && (
-            <div className="au-col-left" style={{gridColumn: '1 / -1', textAlign: 'center', padding: '40px'}}>
-              <h3 style={{color: '#6b7280'}}>More steps coming soon...</h3>
-            </div>
+            <AddUserStep5 
+              formData={formData} 
+              uploadedFiles={uploadedFiles} 
+              profilePhoto={profilePhoto} 
+              countries={countries} 
+              states={states} 
+              cities={cities}
+              setCurrentStep={setCurrentStep}
+            />
           )}
 
         </div>
