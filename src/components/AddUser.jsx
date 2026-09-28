@@ -219,19 +219,65 @@ export default function AddUser() {
       if (formData.account_holder_name) fd.append('bank_account_holder_name', formData.account_holder_name);
       if (formData.branch_name) fd.append('bank_branch_name', formData.branch_name);
 
-      // KYC Document files
-      if (uploadedFiles.aadhaar) fd.append('aadhaar_card', uploadedFiles.aadhaar);
-      if (uploadedFiles.pan) fd.append('pan_card', uploadedFiles.pan);
-      if (uploadedFiles.passport) fd.append('passport_photo', uploadedFiles.passport);
-      if (uploadedFiles.gst) fd.append('gst_certificate', uploadedFiles.gst);
-      if (uploadedFiles.businessReg) fd.append('business_registration', uploadedFiles.businessReg);
+      // Remove the direct append of KYC files to the user creation form data
+      // We will upload them separately after getting the company_id
 
       const response = await apiFetch('/api/admin/users', {
         method: 'POST',
         body: fd,
       });
       
-      if (response.status) {
+      if (response.status && response.data) {
+        const createdUser = response.data;
+        const companyId = createdUser.companies && createdUser.companies.length > 0 ? createdUser.companies[0].id : null;
+
+        if (companyId) {
+          // 1. Batch Upload KYC Documents
+          const kycFiles = [];
+          if (uploadedFiles.aadhaar) kycFiles.push({ type: 'aadhaar_card', file: uploadedFiles.aadhaar });
+          if (uploadedFiles.pan) kycFiles.push({ type: 'pan_card', file: uploadedFiles.pan });
+          if (uploadedFiles.passport) kycFiles.push({ type: 'passport_photo', file: uploadedFiles.passport });
+
+          if (kycFiles.length > 0) {
+            const kycFd = new FormData();
+            kycFd.append('company_id', companyId);
+            kycFiles.forEach(kf => {
+              kycFd.append('document_type[]', kf.type);
+              kycFd.append('files[]', kf.file);
+            });
+            
+            try {
+              await apiFetch('/api/admin/kyc/batch-upload', {
+                method: 'POST',
+                body: kycFd,
+              });
+            } catch (err) {
+              console.error('KYC Upload Error:', err);
+            }
+          }
+
+          // 2. Upload Business Documents
+          const bizFiles = [];
+          if (uploadedFiles.gst) bizFiles.push({ type: 'gst_certificate', file: uploadedFiles.gst });
+          if (uploadedFiles.businessReg) bizFiles.push({ type: 'business_registration', file: uploadedFiles.businessReg });
+
+          for (const bf of bizFiles) {
+            const bizFd = new FormData();
+            bizFd.append('company_id', companyId);
+            bizFd.append('document_type', bf.type);
+            bizFd.append('file', bf.file);
+
+            try {
+              await apiFetch('/api/admin/business-documents', {
+                method: 'POST',
+                body: bizFd,
+              });
+            } catch (err) {
+              console.error('Business Doc Upload Error:', err);
+            }
+          }
+        }
+
         navigate('/user-list');
       } else {
         setError(response.message || 'Failed to create user');
