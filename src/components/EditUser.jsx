@@ -14,10 +14,10 @@ export default function EditUser() {
   const [currentStep, setCurrentStep] = useState(1);
   const [rolesList, setRolesList] = useState([]);
 
-  // Location states
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
+  const [businessCategories, setBusinessCategories] = useState([]);
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
 
@@ -218,6 +218,16 @@ export default function EditUser() {
         setCountries(Array.isArray(list) ? list : []);
       })
       .catch(err => console.error('Error fetching countries:', err));
+  }, []);
+
+  // Fetch business categories on mount
+  useEffect(() => {
+    apiFetch('/api/admin/business-categories')
+      .then(res => {
+        const list = res.data || res || [];
+        setBusinessCategories(Array.isArray(list) ? list : (list.data || []));
+      })
+      .catch(err => console.error('Error fetching business categories:', err));
   }, []);
 
   // Fetch states when country changes
@@ -808,7 +818,9 @@ export default function EditUser() {
                       <label className="au-label">Business Category <span className="req">*</span></label>
                       <select className="au-select" name="business_category" value={formData.business_category} onChange={handleChange}>
                         <option value="">Select</option>
-                        <option value="Trader">Trader</option>
+                        {businessCategories.map(cat => (
+                          <option key={cat.id} value={cat.name}>{cat.name}</option>
+                        ))}
                       </select>
                     </div>
                     <div className="au-form-col">
