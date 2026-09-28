@@ -1,0 +1,501 @@
+.au-step4-container {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  grid-column: 1 / -1;
+  font-family: 'Inter', sans-serif;
+}
+
+.au-step4-main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Header */
+.au-step4-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 16px 24px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.au-step4-title-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.au-s4-icon {
+  background: #f0fdf4;
+  color: #059669;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.au-s4-title {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.au-s4-subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+  max-width: 500px;
+}
+
+.au-billing-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.au-billing-toggle {
+  display: flex;
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 4px;
+  border: 1px solid #e5e7eb;
+}
+
+.au-bt-btn {
+  background: transparent;
+  border: none;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #4b5563;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.au-bt-btn.active {
+  background: white;
+  color: #111827;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.au-save-badge {
+  background: #ecfdf5;
+  color: #059669;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Plan Cards */
+.au-plans-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.au-plan-card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 24px;
+  position: relative;
+  transition: 0.3s;
+  display: flex;
+  flex-direction: column;
+}
+
+.au-plan-card.selected {
+  border: 2px solid #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+}
+
+.au-plan-card.popular.selected {
+  border: 2px solid #059669;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.1);
+}
+
+.au-plan-card.popular {
+  border: 2px solid #10b981;
+}
+
+.au-plan-popular-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #059669;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.au-plan-card-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.au-plan-badge-icon {
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+.au-plan-name {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.au-plan-desc {
+  margin: 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.au-plan-price-wrap {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.au-plan-price {
+  font-size: 32px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.au-plan-period {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.au-plan-features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+  flex: 1;
+}
+
+.au-pf-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: #374151;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.au-pf-check {
+  color: #10b981;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.au-pf-item.disabled {
+  color: #9ca3af;
+}
+
+.au-pf-cross {
+  color: #9ca3af;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.au-plan-select-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.au-plan-select-btn:hover {
+  background: #f3f4f6;
+}
+
+.au-plan-card.selected .au-plan-select-btn {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.au-plan-card.popular.selected .au-plan-select-btn {
+  background: #059669;
+  color: white;
+  border-color: #059669;
+}
+
+/* Feature Comparison Table */
+.au-step4-comparison {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 24px;
+}
+
+.au-comp-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #059669;
+  margin-bottom: 24px;
+}
+
+.au-comp-header h4 {
+  margin: 0;
+  color: #111827;
+  font-size: 16px;
+}
+
+.au-comp-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.au-comp-table th {
+  text-align: center;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.au-th-feat {
+  text-align: left !important;
+  color: #111827 !important;
+}
+
+.au-comp-table td {
+  padding: 12px;
+  text-align: center;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 13px;
+  color: #374151;
+}
+
+.au-comp-table tr:last-child td {
+  border-bottom: none;
+}
+
+.td-feat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  font-weight: 500;
+  color: #111827;
+}
+
+.check-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: #10b981;
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.dash-icon {
+  color: #9ca3af;
+  font-size: 18px;
+}
+
+.text-limited {
+  font-weight: 500;
+  color: #3b82f6;
+}
+
+.text-unlimited {
+  font-weight: 600;
+  color: #059669;
+}
+
+
+/* Sidebar */
+.au-step4-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.au-s4-sidebar-card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 24px;
+}
+
+.au-sb-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.au-sb-header h4 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.au-sb-header p {
+  margin: 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.au-sb-active-plan {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.au-ap-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.au-ap-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.au-ap-price {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.au-ap-price .period {
+  font-size: 13px;
+  font-weight: 400;
+  color: #6b7280;
+}
+
+.au-ap-meta {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.au-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.au-meta-label {
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.au-meta-val {
+  font-size: 13px;
+  font-weight: 500;
+  color: #111827;
+}
+
+.au-sb-benefits-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.au-sb-benefits-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: #111827;
+  margin-bottom: 16px;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.au-need-help {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.au-help-icon {
+  background: #2563eb;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.au-need-help p {
+  font-size: 13px;
+  color: #3b82f6;
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.au-compare-btn {
+  width: 100%;
+  background: white;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: 0.2s;
+}
+
+.au-compare-btn:hover {
+  background: #dbeafe;
+}

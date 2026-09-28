@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api/config';
 import './AddUser.css';
+import AddUserStep4 from './AddUserStep4';
 
 export default function AddUser() {
   const navigate = useNavigate();
@@ -105,7 +106,11 @@ export default function AddUser() {
 
     // Additional Info
     internal_notes: '',
-    business_description: ''
+    business_description: '',
+    
+    // Subscription Plan
+    subscription_plan: 'pro',
+    billing_cycle: 'yearly'
   });
 
   const handleChange = (e) => {
@@ -965,8 +970,12 @@ export default function AddUser() {
             </div>
           )}
 
-          {/* Fallback for steps 4 and 5 */}
-          {currentStep > 3 && (
+          {currentStep === 4 && (
+            <AddUserStep4 formData={formData} setFormData={setFormData} />
+          )}
+
+          {/* Fallback for steps 5 */}
+          {currentStep === 5 && (
             <div className="au-col-left" style={{gridColumn: '1 / -1', textAlign: 'center', padding: '40px'}}>
               <h3 style={{color: '#6b7280'}}>More steps coming soon...</h3>
             </div>
