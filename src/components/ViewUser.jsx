@@ -48,11 +48,11 @@ export default function ViewUser() {
         <div className="uv-details-grid">
           <div className="uv-detail-item">
             <span className="uv-detail-label">First Name</span>
-            <span className="uv-detail-value">{user.first_name || 'N/A'}</span>
+            <span className="uv-detail-value">{user.first_name || (user.name || user.full_name || '').split(' ')[0] || 'N/A'}</span>
           </div>
           <div className="uv-detail-item">
             <span className="uv-detail-label">Last Name</span>
-            <span className="uv-detail-value">{user.last_name || 'N/A'}</span>
+            <span className="uv-detail-value">{user.last_name || (user.name || user.full_name || '').split(' ').slice(1).join(' ') || 'N/A'}</span>
           </div>
           <div className="uv-detail-item">
             <span className="uv-detail-label">Email</span>
