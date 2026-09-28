@@ -198,7 +198,7 @@ export default function AddUser() {
       if (formData.business_type) fd.append('business_type', formData.business_type);
       if (formData.gstin) fd.append('gstin', formData.gstin);
       if (formData.pan_number) fd.append('pan_number', formData.pan_number);
-      if (formData.year_established) fd.append('year_established', formData.year_established);
+      if (formData.year_established) fd.append('year_of_establishment', formData.year_established);
       if (formData.business_category) fd.append('business_category', formData.business_category);
       if (formData.no_of_employees) fd.append('no_of_employees', formData.no_of_employees);
       if (formData.website) fd.append('website', formData.website);
