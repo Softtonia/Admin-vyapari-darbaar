@@ -160,6 +160,19 @@ export default function EditUser() {
           if (user.profile_photo_url) {
             setProfilePhotoPreview(user.profile_photo_url);
           }
+          
+          if (user.company?.country_id) {
+            setLoadingStates(true);
+            apiFetch(`/api/locations/states?country_id=${user.company.country_id}`)
+              .then(res => setStates(Array.isArray(res.data || res) ? (res.data || res) : []))
+              .finally(() => setLoadingStates(false));
+          }
+          if (user.company?.state_id) {
+            setLoadingCities(true);
+            apiFetch(`/api/locations/cities?state_id=${user.company.state_id}`)
+              .then(res => setCities(Array.isArray(res.data || res) ? (res.data || res) : []))
+              .finally(() => setLoadingCities(false));
+          }
         } else {
           setError('Failed to fetch user data');
         }
