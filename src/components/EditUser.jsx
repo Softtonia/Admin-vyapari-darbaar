@@ -145,9 +145,9 @@ export default function EditUser() {
 
             address_line_1: user.company?.address || '',
             address_line_2: user.company?.address_line_2 || '',
-            country: user.company?.country || 'India',
-            state: user.company?.state || '',
-            city: user.company?.city || '',
+            country: user.company?.country_id || '',
+            state: user.company?.state_id || '',
+            city: user.company?.city_id || '',
             pincode: user.company?.pincode || '',
 
             account_holder_name: user.bank?.account_holder_name || '',
@@ -776,7 +776,7 @@ export default function EditUser() {
                   <div className="au-form-row" style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px'}}>
                     <div className="au-form-col">
                       <label className="au-label">Year of Establishment</label>
-                      <input type="date" className="au-input" name="year_established" value={formData.year_established} onChange={handleChange} />
+                      <input type="text" className="au-input" name="year_established" value={formData.year_established} onChange={handleChange} placeholder="e.g. 2010" />
                     </div>
                     <div className="au-form-col">
                       <label className="au-label">Business Category <span className="req">*</span></label>
@@ -793,7 +793,8 @@ export default function EditUser() {
                         <option value="11-50">11 - 50</option>
                       </select>
                     </div>
-                    <div className="au-form-col" style={{gridColumn: '2 / span 2'}}>
+                    <div className="au-form-col" style={{gridColumn: '1 / span 3'}}>
+                      <label className="au-label">Website (Optional)</label>
                       <input type="url" className="au-input" name="website" value={formData.website} onChange={handleChange} placeholder="www.rajeshagrotraders.com" />
                     </div>
                   </div>

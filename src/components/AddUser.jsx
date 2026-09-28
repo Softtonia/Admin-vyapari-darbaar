@@ -715,7 +715,7 @@ export default function AddUser() {
                   <div className="au-form-row" style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px'}}>
                     <div className="au-form-col">
                       <label className="au-label">Year of Establishment</label>
-                      <input type="date" className="au-input" name="year_established" value={formData.year_established} onChange={handleChange} />
+                      <input type="text" className="au-input" name="year_established" value={formData.year_established} onChange={handleChange} placeholder="e.g. 2010" />
                     </div>
                     <div className="au-form-col">
                       <label className="au-label">Business Category <span className="req">*</span></label>
@@ -732,7 +732,8 @@ export default function AddUser() {
                         <option value="11-50">11 - 50</option>
                       </select>
                     </div>
-                    <div className="au-form-col" style={{gridColumn: '2 / span 2'}}>
+                    <div className="au-form-col" style={{gridColumn: '1 / span 3'}}>
+                      <label className="au-label">Website (Optional)</label>
                       <input type="url" className="au-input" name="website" value={formData.website} onChange={handleChange} placeholder="www.rajeshagrotraders.com" />
                     </div>
                   </div>
