@@ -710,3 +710,8 @@
   font-size: 11px;
   color: #6b7280;
 }
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
