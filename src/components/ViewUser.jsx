@@ -11,6 +11,7 @@ export default function ViewUser() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
+    if (!id) return;
     setLoading(true);
     apiFetch(`/api/admin/users/${id}`)
       .then(data => {

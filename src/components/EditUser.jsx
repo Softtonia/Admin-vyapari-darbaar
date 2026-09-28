@@ -31,14 +31,15 @@ export default function EditUser() {
   });
 
   useEffect(() => {
+    if (!id) return;
     setFetching(true);
     apiFetch(`/api/admin/users/${id}`)
       .then(data => {
         if (data.status && data.data) {
           const user = data.data;
           setFormData({
-            first_name: user.first_name || '',
-            last_name: user.last_name || '',
+            first_name: user.first_name || (user.name || user.full_name || '').split(' ')[0] || '',
+            last_name: user.last_name || (user.name || user.full_name || '').split(' ').slice(1).join(' ') || '',
             email: user.email || '',
             phone_number: user.phone_number || '',
             role: user.role || 'user',
