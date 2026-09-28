@@ -554,3 +554,13 @@ input:checked + .sub-slider:before { transform: translateX(14px); }
 }
 
 .sub-dp-empty { padding: 40px 20px; text-align: center; color: #6b7280; font-size: 13px; }
+
+.sub-badge-type {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.sub-badge-type.trader { background-color: #e0f2fe; color: #0369a1; }
+.sub-badge-type.subscriber { background-color: #f3e8ff; color: #7e22ce; }
+.sub-badge-type.advertiser { background-color: #ffedd5; color: #c2410c; }

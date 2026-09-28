@@ -59,6 +59,9 @@ import EmailTemplateForm from './EmailTemplateForm';
 import Campaigns from './Campaigns';
 import CampaignForm from './CampaignForm';
 import UserList from './UserList';
+import AddUser from './AddUser';
+import EditUser from './EditUser';
+import ViewUser from './ViewUser';
 import Traders from './Traders';
 import Subscribers from './Subscribers';
 import Advertisers from './Advertisers';
@@ -817,6 +820,12 @@ export default function AdminDashboard({
             <CampaignForm />
           ) : activeNav === 'User List' ? (
             <UserList />
+          ) : activeNav === 'Add User' ? (
+            <AddUser />
+          ) : activeNav === 'Edit User' ? (
+            <EditUser />
+          ) : activeNav === 'View User' ? (
+            <ViewUser />
           ) : activeNav === 'Traders' ? (
             <Traders />
           ) : activeNav === 'Subscribers' ? (

@@ -26,6 +26,9 @@ export default function CampaignForm() {
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  
+  // Custom Modal State
+  const [showWarningModal, setShowWarningModal] = useState(false);
 
   useEffect(() => {
     loadDependencies();
@@ -70,7 +73,7 @@ export default function CampaignForm() {
           email_template_id: res.data.email_template_id || '',
           send_type: res.data.send_type || 'now',
           event: res.data.event || '',
-          scheduled_at: res.data.scheduled_at ? res.data.scheduled_at.slice(0, 16) : '',
+          scheduled_at: res.data.scheduled_at ? res.data.scheduled_at.replace(' ', 'T').slice(0, 16) : '',
           target_users: res.data.target_users || [],
           is_active: !!res.data.is_active,
         });
@@ -114,8 +117,21 @@ export default function CampaignForm() {
     setFormData(prev => ({ ...prev, target_users: selectedOptions }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = (e) => {
+    if (e) e.preventDefault();
+
+    // Check if the selected template is active
+    const selectedTemplate = templates.find(t => String(t.id) === String(formData.email_template_id));
+    if (selectedTemplate && !selectedTemplate.is_active) {
+      setShowWarningModal(true);
+      return;
+    }
+
+    executeSave();
+  };
+
+  const executeSave = async () => {
+    setShowWarningModal(false);
     setSaving(true);
     setError('');
 
@@ -321,6 +337,35 @@ export default function CampaignForm() {
 
         </form>
       </div>
+
+      {/* Custom Warning Modal */}
+      {showWarningModal && (
+        <div className="camp-modal-backdrop">
+          <div className="camp-modal-dialog">
+            <div className="camp-modal-header">
+              <h3>⚠️ Inactive Template Warning</h3>
+            </div>
+            <div className="camp-modal-body">
+              <p>The selected email template is currently <strong>inactive</strong>. If you save this campaign with an inactive template, emails may not be sent as expected.</p>
+              <p style={{ marginTop: '12px' }}>Are you sure you want to proceed?</p>
+            </div>
+            <div className="camp-modal-footer">
+              <button 
+                className="camp-btn-text" 
+                onClick={() => setShowWarningModal(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="camp-btn-primary" 
+                onClick={executeSave}
+              >
+                Yes, Save Campaign
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

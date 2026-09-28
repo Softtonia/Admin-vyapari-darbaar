@@ -736,3 +736,13 @@
   color: #6b7280;
   font-size: 13px;
 }
+
+.trd-badge-type {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.trd-badge-type.trader { background-color: #e0f2fe; color: #0369a1; }
+.trd-badge-type.subscriber { background-color: #f3e8ff; color: #7e22ce; }
+.trd-badge-type.advertiser { background-color: #ffedd5; color: #c2410c; }

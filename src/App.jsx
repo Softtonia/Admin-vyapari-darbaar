@@ -323,6 +323,30 @@ export default function App() {
             }
           />
           <Route
+            path="/user/add"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Add User" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/user/edit/:id"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="Edit User" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/user/view/:id"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard initialNav="View User" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/settings/email-templates"
             element={
               <ProtectedRoute>

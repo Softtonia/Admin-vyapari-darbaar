@@ -542,3 +542,13 @@
 }
 
 .pv-dp-empty { padding: 40px 20px; text-align: center; color: #6b7280; font-size: 13px; }
+
+.pv-badge-type {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.pv-badge-type.trader { background-color: #e0f2fe; color: #0369a1; }
+.pv-badge-type.subscriber { background-color: #f3e8ff; color: #7e22ce; }
+.pv-badge-type.advertiser { background-color: #ffedd5; color: #c2410c; }

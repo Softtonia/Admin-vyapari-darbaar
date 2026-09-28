@@ -1,24 +1,110 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { apiFetch } from '../api/config';
+import DeleteModal from './DeleteModal';
 import './Traders.css';
 
-// Mock Data for Traders
-const tradersData = [
-  { id: 1, name: 'Rajesh Kumar', phone: '+91 98765 43210', email: 'rajesh.trader@gmail.com', company: 'Rajesh Agro Traders', type: 'Buyer', commodities: ['Makhana', 'Wheat'], moreComm: 2, location: 'Patna, Bihar', joinDate: '17 Sep 2026', status: 'Active', kyc: 'Verified', plan: 'Premium', avatar: 'https://i.pravatar.cc/150?u=1' },
-  { id: 2, name: 'Sunil Gupta', phone: '+91 98765 43211', email: 'sunil@gupta.com', company: 'Gupta Trading Co.', type: 'Seller', commodities: ['Maize', 'Soybean'], moreComm: 3, location: 'Indore, Madhya Pradesh', joinDate: '16 Sep 2026', status: 'Active', kyc: 'Verified', plan: 'Free', avatar: 'https://i.pravatar.cc/150?u=2' },
-  { id: 3, name: 'Priya Singh', phone: '+91 98765 43212', email: 'priya@ps.com', company: 'PS Commodities', type: 'Buyer', commodities: ['Pulses', 'Rice'], moreComm: 1, location: 'Jaipur, Rajasthan', joinDate: '15 Sep 2026', status: 'Active', kyc: 'Verified', plan: 'Premium', avatar: 'https://i.pravatar.cc/150?u=3' },
-  { id: 4, name: 'Amit Sharma', phone: '+91 98765 43213', email: 'amit@sharma.com', company: 'Sharma Traders', type: 'Seller', commodities: ['Wheat', 'Mustard'], moreComm: 2, location: 'Kota, Rajasthan', joinDate: '14 Sep 2026', status: 'Active', kyc: 'Pending', plan: 'Basic', avatar: 'https://i.pravatar.cc/150?u=4' },
-  { id: 5, name: 'Neha Verma', phone: '+91 98765 43214', email: 'neha@verma.com', company: 'Verma Exports', type: 'Exporter', commodities: ['Makhana', 'Spices'], moreComm: 4, location: 'Delhi, Delhi', joinDate: '13 Sep 2026', status: 'Active', kyc: 'Verified', plan: 'Premium', avatar: 'https://i.pravatar.cc/150?u=5' },
-  { id: 6, name: 'Sandeep Yadav', phone: '+91 98765 43215', email: 'sandeep@yadav.com', company: 'Yadav Trading', type: 'Buyer', commodities: ['Maize', 'Cotton'], moreComm: 1, location: 'Kanpur, Uttar Pradesh', joinDate: '12 Sep 2026', status: 'Inactive', kyc: 'Verified', plan: 'Free', avatar: 'https://i.pravatar.cc/150?u=6' },
-  { id: 7, name: 'Rohit Mehta', phone: '+91 98765 43216', email: 'rohit@mehta.com', company: 'Mehta Commodities', type: 'Seller', commodities: ['Soybean', 'Chana'], moreComm: 2, location: 'Ahmedabad, Gujarat', joinDate: '11 Sep 2026', status: 'Active', kyc: 'Verified', plan: 'Basic', avatar: 'https://i.pravatar.cc/150?u=7' },
-  { id: 8, name: 'Anjali Gupta', phone: '+91 98765 43217', email: 'anjali@agri.com', company: 'Agri Mart India', type: 'Trader', commodities: ['Makhana', 'Wheat'], moreComm: 3, location: 'Lucknow, Uttar Pradesh', joinDate: '10 Sep 2026', status: 'Active', kyc: 'Pending', plan: 'Premium', avatar: 'https://i.pravatar.cc/150?u=8' },
-  { id: 9, name: 'Vikram Joshi', phone: '+91 98765 43218', email: 'vikram@joshi.com', company: 'Joshi Agro LLP', type: 'Buyer', commodities: ['Rice', 'Pulses'], moreComm: 2, location: 'Bhopal, Madhya Pradesh', joinDate: '09 Sep 2026', status: 'Active', kyc: 'Verified', plan: 'Free', avatar: 'https://i.pravatar.cc/150?u=9' },
-  { id: 10, name: 'Kavita Rao', phone: '+91 98765 43219', email: 'kavita@rao.com', company: 'Rao Global Trade', type: 'Exporter', commodities: ['Makhana', 'Herbs'], moreComm: 3, location: 'Mumbai, Maharashtra', joinDate: '08 Sep 2026', status: 'Active', kyc: 'Verified', plan: 'Premium', avatar: 'https://i.pravatar.cc/150?u=10' },
-];
-
 export default function Traders() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Traders');
-  const [selectedTrader, setSelectedTrader] = useState(tradersData[0]);
-  const [dpTab, setDpTab] = useState('Overview');
+  const [tradersData, setTradersData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ total: 0, active: 0, premium: 0, new_this_month: 0, verified: 0 });
+  const [tabStats, setTabStats] = useState({ total: 0, traders: 0, subscribers: 0, advertisers: 0, pending: 0 });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  
+  useEffect(() => {
+    // Fetch Traders Data
+    setLoading(true);
+    apiFetch(`/api/admin/users?role=trader&page=${currentPage}&per_page=10`)
+      .then(data => {
+        if (data.status && data.data && data.data.data) {
+          const formatted = data.data.data.map(user => ({
+            id: user.id,
+            name: user.full_name || 'N/A',
+            phone: user.phone_number || 'N/A',
+            email: user.email || 'N/A',
+            company: user.company?.name || 'N/A',
+            type: user.company?.business_type || 'Trader',
+            commodities: user.company?.commodities_handled?.length > 0 
+                ? user.company.commodities_handled 
+                : ['N/A'],
+            moreComm: Math.max(0, (user.company?.commodities_handled?.length || 0) - 2),
+            location: user.company?.city && user.company?.state ? `${user.company.city}, ${user.company.state}` : 'N/A',
+            joinDate: new Date(user.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+            status: user.status ? user.status.charAt(0).toUpperCase() + user.status.slice(1) : 'Active',
+            kyc: user.company?.verification_status ? user.company.verification_status.charAt(0).toUpperCase() + user.company.verification_status.slice(1) : 'Pending',
+            plan: 'Basic', // Hardcoded fallback for now, as API might not provide it yet
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'Trader')}&background=random`
+          }));
+          setTradersData(formatted);
+          setTotalPages(data.data.last_page || 1);
+          setTotalItems(data.data.total || 0);
+        }
+      })
+      .catch(err => console.error("Error fetching traders:", err))
+      .finally(() => setLoading(false));
+
+    // Fetch Stats
+    apiFetch('/api/admin/users/stats?role=trader')
+      .then(data => {
+        if (data.status && data.data) {
+          setStats({
+            total: data.data.total || 0,
+            active: data.data.active || 0,
+            premium: data.data.premium || 0,
+            new_this_month: data.data.new_this_month || 0,
+            verified: data.data.verified || 0,
+          });
+        }
+      })
+      .catch(err => console.error("Error fetching trader stats:", err));
+
+    // Fetch Global Stats for Tabs
+    apiFetch('/api/admin/users/stats')
+      .then(data => {
+        if (data.status && data.data) {
+          setTabStats({
+            total: data.data.total || 0,
+            traders: data.data.traders || 0,
+            subscribers: data.data.subscribers || 0,
+            advertisers: data.data.advertisers || 0,
+            pending: data.data.pending || 0,
+          });
+        }
+      })
+      .catch(err => console.error("Error fetching global stats:", err));
+  }, [currentPage]);
+
+  const confirmDelete = (id) => {
+    setUserToDelete(id);
+    setDeleteModalOpen(true);
+  };
+
+  const executeDelete = () => {
+    if (!userToDelete) return;
+    apiFetch(`/api/admin/users/${userToDelete}`, { method: 'DELETE' })
+      .then(res => {
+        if (res.status) {
+          setTradersData(tradersData.filter(t => t.id !== userToDelete));
+        } else {
+          alert(res.message || 'Failed to delete user');
+        }
+      })
+      .catch(err => {
+        console.error("Error deleting user:", err);
+        alert("Error deleting user");
+      })
+      .finally(() => {
+        setDeleteModalOpen(false);
+        setUserToDelete(null);
+      });
+  };
   
   return (
     <div className="trd-page-container">
@@ -37,7 +123,7 @@ export default function Traders() {
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
           </div>
           <div className="trd-kpi-info">
-            <h3 className="trd-kpi-value">8,215</h3>
+            <h3 className="trd-kpi-value">{stats.total}</h3>
             <p className="trd-kpi-label">Total Traders</p>
             <span className="trd-kpi-trend green">↑ +12% this month</span>
           </div>
@@ -48,7 +134,7 @@ export default function Traders() {
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
           </div>
           <div className="trd-kpi-info">
-            <h3 className="trd-kpi-value">6,824</h3>
+            <h3 className="trd-kpi-value">{stats.active}</h3>
             <p className="trd-kpi-label">Active Traders</p>
             <span className="trd-kpi-trend green">↑ +9% this month</span>
           </div>
@@ -59,7 +145,7 @@ export default function Traders() {
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 17l10 5 10-5M2 12l10 5 10-5M12 2L2 7l10 5 10-5-10-5z"></path></svg>
           </div>
           <div className="trd-kpi-info">
-            <h3 className="trd-kpi-value">1,021</h3>
+            <h3 className="trd-kpi-value">{stats.premium}</h3>
             <p className="trd-kpi-label">Premium Traders</p>
             <span className="trd-kpi-trend green">↑ +18% this month</span>
           </div>
@@ -70,7 +156,7 @@ export default function Traders() {
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
           </div>
           <div className="trd-kpi-info">
-            <h3 className="trd-kpi-value">540</h3>
+            <h3 className="trd-kpi-value">{stats.new_this_month}</h3>
             <p className="trd-kpi-label">New This Month</p>
             <span className="trd-kpi-trend green">↑ +25% this month</span>
           </div>
@@ -81,7 +167,7 @@ export default function Traders() {
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>
           </div>
           <div className="trd-kpi-info">
-            <h3 className="trd-kpi-value">870</h3>
+            <h3 className="trd-kpi-value">{stats.verified}</h3>
             <p className="trd-kpi-label">Verified Traders</p>
             <span className="trd-kpi-trend green">↑ +14% this month</span>
           </div>
@@ -91,17 +177,26 @@ export default function Traders() {
       {/* Tabs Row */}
       <div className="trd-tabs-actions-row">
         <div className="trd-tabs">
-          {['All Users', 'Traders', 'Subscribers', 'Advertisers', 'Pending Verification'].map(tab => (
-            <button 
-              key={tab} 
-              className={`trd-tab-btn ${activeTab === tab ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab} {tab === 'All Users' ? '(12,842)' : tab === 'Traders' ? '(8,215)' : tab === 'Subscribers' ? '(1,245)' : tab === 'Advertisers' ? '(326)' : '(450)'}
-            </button>
-          ))}
+          {['All Users', 'Traders', 'Subscribers', 'Advertisers', 'Pending Verification'].map(tab => {
+            const getRoute = (t) => {
+              if(t === 'Traders') return '/traders';
+              if(t === 'Subscribers') return '/subscribers';
+              if(t === 'Advertisers') return '/advertisers';
+              if(t === 'Pending Verification') return '/pending-verification';
+              return '/user-list';
+            };
+            return (
+              <button 
+                key={tab} 
+                className={`trd-tab-btn ${activeTab === tab ? 'active' : ''}`}
+                onClick={() => navigate(getRoute(tab))}
+              >
+                {tab} {tab === 'All Users' ? `(${tabStats.total.toLocaleString()})` : tab === 'Traders' ? `(${tabStats.traders.toLocaleString()})` : tab === 'Subscribers' ? `(${tabStats.subscribers.toLocaleString()})` : tab === 'Advertisers' ? `(${tabStats.advertisers.toLocaleString()})` : `(${tabStats.pending.toLocaleString()})`}
+              </button>
+            )
+          })}
         </div>
-        <button className="trd-btn-add">+ Add New Trader</button>
+        <button className="trd-btn-add" onClick={() => navigate('/user/add')}>+ Add New Trader</button>
       </div>
 
       {/* Filters 2 Rows */}
@@ -161,12 +256,12 @@ export default function Traders() {
                 </tr>
               </thead>
               <tbody>
-                {tradersData.map((trader, index) => (
-                  <tr 
-                    key={trader.id} 
-                    className={selectedTrader?.id === trader.id ? 'selected-row' : ''}
-                    onClick={() => setSelectedTrader(trader)}
-                  >
+                {loading ? (
+                  <tr><td colSpan="11" className="text-center" style={{padding: '20px'}}>Loading...</td></tr>
+                ) : tradersData.length === 0 ? (
+                  <tr><td colSpan="11" className="text-center" style={{padding: '20px'}}>No traders found.</td></tr>
+                ) : tradersData.map((trader, index) => (
+                  <tr key={trader.id}>
                     <td className="trd-td-checkbox" onClick={e => e.stopPropagation()}>
                       <input type="checkbox" />
                     </td>
@@ -182,20 +277,21 @@ export default function Traders() {
                     </td>
                     <td><span className="trd-company-name">{trader.company}</span></td>
                     <td>
-                      <span className={`trd-badge-type ${trader.type.toLowerCase()}`}>{trader.type}</span>
+                      <span className={`trd-badge-type ${(trader.role || trader.type || '').toLowerCase()}`}>
+                        {trader.role ? (trader.role.charAt(0).toUpperCase() + trader.role.slice(1)) : trader.type}
+                      </span>
                     </td>
                     <td>
                       <div className="trd-commodity-cell">
                         <span className="trd-comm-main">{trader.commodities[0]}</span>
-                        <span className="trd-comm-sub">{trader.commodities[1]} +{trader.moreComm}</span>
+                        {trader.commodities[1] && <span className="trd-comm-sub">{trader.commodities[1]} {trader.moreComm > 0 ? `+${trader.moreComm}` : ''}</span>}
                       </div>
                     </td>
                     <td>
                       <div className="trd-location-cell">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                         <div style={{display: 'flex', flexDirection: 'column'}}>
-                          <span>{trader.location.split(',')[0]},</span>
-                          <span>{trader.location.split(',')[1]}</span>
+                          <span>{trader.location}</span>
                         </div>
                       </div>
                     </td>
@@ -216,10 +312,16 @@ export default function Traders() {
                         {trader.plan}
                       </span>
                     </td>
-                    <td className="trd-actions-cell" onClick={e => e.stopPropagation()}>
-                      <button className="trd-action-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
-                      <button className="trd-action-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-                      <button className="trd-action-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button>
+                    <td className="trd-actions-cell" onClick={e => e.stopPropagation()} style={{display: 'flex', gap: '12px', alignItems: 'center'}}>
+                      <button className="trd-action-btn" onClick={() => navigate(`/user/view/${trader.id}`)} title="View" style={{background:'none',border:'none',color:'#1e3a8a',cursor:'pointer',padding:'4px'}}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                      </button>
+                      <button className="trd-action-btn" onClick={() => navigate(`/user/edit/${trader.id}`)} title="Edit" style={{background:'none',border:'none',color:'#1e3a8a',cursor:'pointer',padding:'4px'}}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                      </button>
+                      <button className="trd-action-btn" onClick={() => confirmDelete(trader.id)} title="Delete" style={{background:'none',border:'none',color:'#ef4444',cursor:'pointer',padding:'4px'}}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -228,167 +330,58 @@ export default function Traders() {
           </div>
           
           <div className="trd-pagination">
-            <span className="trd-page-info">Showing 1 to 10 of 8,215 traders</span>
+            <span className="trd-page-info">Showing {tradersData.length > 0 ? (currentPage - 1) * 10 + 1 : 0} to {Math.min(currentPage * 10, totalItems)} of {totalItems} traders</span>
             <div className="trd-page-controls">
-              <button className="trd-page-nav">←</button>
-              <button className="trd-page-num active">1</button>
-              <button className="trd-page-num">2</button>
-              <button className="trd-page-num">3</button>
-              <button className="trd-page-num">4</button>
-              <button className="trd-page-num">5</button>
-              <span className="trd-page-dots">...</span>
-              <button className="trd-page-num">822</button>
-              <button className="trd-page-nav">→</button>
+              <button 
+                className="trd-page-nav" 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >←</button>
+              
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                // simple pagination logic for display
+                let pageNum = i + 1;
+                if (totalPages > 5 && currentPage > 3) {
+                  pageNum = currentPage - 2 + i;
+                  if (pageNum > totalPages) pageNum = totalPages - (4 - i);
+                }
+                return (
+                  <button 
+                    key={pageNum}
+                    className={`trd-page-num ${currentPage === pageNum ? 'active' : ''}`}
+                    onClick={() => setCurrentPage(pageNum)}
+                  >
+                    {pageNum}
+                  </button>
+                )
+              })}
+              
+              {totalPages > 5 && currentPage < totalPages - 2 && (
+                <>
+                  <span className="trd-page-dots">...</span>
+                  <button 
+                    className="trd-page-num"
+                    onClick={() => setCurrentPage(totalPages)}
+                  >{totalPages}</button>
+                </>
+              )}
+              <button 
+                className="trd-page-nav"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages || totalPages === 0}
+              >→</button>
             </div>
           </div>
         </div>
-
-        {/* Right: Trader Details Panel */}
-        <div className="trd-details-panel">
-          {selectedTrader ? (
-            <div className="trd-dp-inner">
-              <div className="trd-dp-header">
-                <h3>Trader Details</h3>
-                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                  <span className={`trd-badge-status ${selectedTrader.status.toLowerCase()}`}>
-                    <span className="trd-dot"></span> {selectedTrader.status}
-                  </span>
-                  <button className="trd-close-btn" onClick={() => setSelectedTrader(null)}>×</button>
-                </div>
-              </div>
-              
-              <div className="trd-dp-profile">
-                <img src={selectedTrader.avatar} alt={selectedTrader.name} className="trd-dp-avatar" />
-                <div className="trd-dp-name-box">
-                  <h4 className="trd-dp-name">{selectedTrader.name}</h4>
-                  <p className="trd-dp-role">{selectedTrader.type} | ID: #TRD00{selectedTrader.id}</p>
-                  <p className="trd-dp-member-since">Member since {selectedTrader.joinDate}</p>
-                </div>
-              </div>
-
-              <div className="trd-dp-tabs">
-                {['Overview', 'Business', 'Activity', 'Documents'].map(tab => (
-                  <button 
-                    key={tab} 
-                    className={`trd-dp-tab ${dpTab === tab ? 'active' : ''}`}
-                    onClick={() => setDpTab(tab)}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-
-              {dpTab === 'Overview' && (
-                <div className="trd-dp-content">
-                  <div className="trd-dp-grid">
-                    <div className="trd-dp-item">
-                      <div className="trd-dp-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg></div>
-                      <div className="trd-dp-data">
-                        <span className="trd-dp-label">Company</span>
-                        <span className="trd-dp-value" style={{color: '#1e3a8a'}}>{selectedTrader.company}</span>
-                      </div>
-                    </div>
-
-                    <div className="trd-dp-item">
-                      <div className="trd-dp-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
-                      <div className="trd-dp-data">
-                        <span className="trd-dp-label">Trader Type</span>
-                        <span className="trd-dp-value">{selectedTrader.type}</span>
-                      </div>
-                    </div>
-
-                    <div className="trd-dp-item">
-                      <div className="trd-dp-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></div>
-                      <div className="trd-dp-data">
-                        <span className="trd-dp-label">Mobile</span>
-                        <span className="trd-dp-value" style={{color: '#1e3a8a'}}>{selectedTrader.phone}</span>
-                      </div>
-                    </div>
-
-                    <div className="trd-dp-item">
-                      <div className="trd-dp-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></div>
-                      <div className="trd-dp-data">
-                        <span className="trd-dp-label">Email</span>
-                        <a href={`mailto:${selectedTrader.email}`} className="trd-dp-value link">{selectedTrader.email}</a>
-                      </div>
-                    </div>
-
-                    <div className="trd-dp-item">
-                      <div className="trd-dp-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>
-                      <div className="trd-dp-data">
-                        <span className="trd-dp-label">Location</span>
-                        <span className="trd-dp-value" style={{color: '#1e3a8a'}}>{selectedTrader.location}</span>
-                      </div>
-                    </div>
-
-                    <div className="trd-dp-item">
-                      <div className="trd-dp-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>
-                      <div className="trd-dp-data">
-                        <span className="trd-dp-label">Address</span>
-                        <span className="trd-dp-value" style={{lineHeight: '1.4'}}>Near Gandhi Maidan, Patna, Bihar 800001</span>
-                      </div>
-                    </div>
-
-                    <div className="trd-dp-item" style={{alignItems: 'center'}}>
-                      <div className="trd-dp-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg></div>
-                      <div className="trd-dp-data" style={{flexDirection: 'row', alignItems: 'center', gap: '8px'}}>
-                        <span className="trd-dp-label" style={{marginBottom: 0}}>KYC Status</span>
-                        <span className={`trd-badge-kyc ${selectedTrader.kyc.toLowerCase()}`} style={{ padding: '2px 6px', fontSize: '11px' }}>
-                          <span className="trd-dot"></span> {selectedTrader.kyc}
-                        </span>
-                        <a href="#" className="trd-dp-link-small" onClick={e => e.preventDefault()}>View Documents</a>
-                      </div>
-                    </div>
-
-                    <div className="trd-dp-item" style={{alignItems: 'center'}}>
-                      <div className="trd-dp-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div>
-                      <div className="trd-dp-data">
-                        <span className="trd-dp-label" style={{marginBottom: '4px'}}>Subscription Plan</span>
-                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                           <span className={`trd-badge-plan ${selectedTrader.plan.toLowerCase()}`} style={{ padding: '2px 8px', fontSize: '11px' }}>
-                            {selectedTrader.plan === 'Premium' && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 17l10 5 10-5M2 12l10 5 10-5M12 2L2 7l10 5 10-5-10-5z"></path></svg>}
-                            {selectedTrader.plan}
-                           </span>
-                           <span className="trd-dp-small-gray">Valid till 17 Sep 2027</span>
-                        </div>
-                      </div>
-                    </div>
-
-                  </div>
-
-                  <div className="trd-dp-section">
-                    <h5 className="trd-dp-subtitle">Preferred Commodities</h5>
-                    <div className="trd-dp-chips">
-                      <span className="trd-chip">Makhana</span>
-                      <span className="trd-chip">Wheat</span>
-                      <span className="trd-chip">Pulses</span>
-                      <span className="trd-chip">Maize</span>
-                    </div>
-                  </div>
-
-                  <div className="trd-dp-section">
-                    <h5 className="trd-dp-subtitle">About</h5>
-                    <p className="trd-dp-about-text">
-                      We are a leading commodities trading company dealing in makhana, wheat, pulses and other agri products across Bihar and neighbouring states.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <div className="trd-dp-actions">
-                <button className="trd-dp-btn-solid"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg> Send Message</button>
-                <button className="trd-dp-btn-outline"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Edit Trader</button>
-                <button className="trd-dp-btn-more"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button>
-              </div>
-
-            </div>
-          ) : (
-            <div className="trd-dp-empty">
-              Select a trader from the list to view details
-            </div>
-          )}
-        </div>
       </div>
+      
+      <DeleteModal 
+        isOpen={deleteModalOpen} 
+        onClose={() => setDeleteModalOpen(false)} 
+        onConfirm={executeDelete}
+        title="Delete Trader"
+        message="Are you sure you want to delete this trader? This action cannot be undone."
+      />
     </div>
   );
 }

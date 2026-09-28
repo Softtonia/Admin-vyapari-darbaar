@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { apiFetch } from '../api/config';
+import DeleteModal from './DeleteModal';
 import './PendingVerification.css';
 
 // Mock Data for Pending Verification
@@ -16,9 +19,97 @@ const pendingData = [
 ];
 
 export default function PendingVerification() {
-  const [activeTab, setActiveTab] = useState('All Pending');
-  const [selectedItem, setSelectedItem] = useState(pendingData[0]);
-  const [dpTab, setDpTab] = useState('Overview');
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('Pending Verification');
+  const [pendingDataState, setPendingDataState] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ total: 0, traders: 0, subscribers: 0, advertisers: 0 });
+  const [tabStats, setTabStats] = useState({ total: 0, traders: 0, subscribers: 0, advertisers: 0, pending: 0 });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+
+  useEffect(() => {
+    setLoading(true);
+    apiFetch(`/api/admin/users?verification_status=pending&page=${currentPage}&per_page=10`)
+      .then(data => {
+        if (data.status && data.data && data.data.data) {
+          const formatted = data.data.data.map(user => ({
+            id: user.id,
+            name: user.full_name || 'N/A',
+            email: user.email || 'N/A',
+            phone: user.phone_number || 'N/A',
+            userType: user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Trader',
+            company: user.company?.name || 'N/A',
+            appliedOn: new Date(user.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+            docsStatus: '2/4 Uploaded', // Mock fallback
+            kycStatus: 'Under Review',
+            status: 'Pending Approval',
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'User')}&background=random`
+          }));
+          setPendingDataState(formatted);
+          setTotalPages(data.data.last_page || 1);
+          setTotalItems(data.data.total || 0);
+        }
+      })
+      .catch(err => console.error("Error fetching pending verifications:", err))
+      .finally(() => setLoading(false));
+
+    apiFetch('/api/admin/users/stats?verification_status=pending')
+      .then(data => {
+        if (data.status && data.data) {
+          setStats({
+            total: data.data.total || 0,
+            traders: data.data.traders || 0,
+            subscribers: data.data.subscribers || 0,
+            advertisers: data.data.advertisers || 0,
+          });
+        }
+      })
+      .catch(err => console.error("Error fetching pending stats:", err));
+
+    apiFetch('/api/admin/users/stats')
+      .then(data => {
+        if (data.status && data.data) {
+          setTabStats({
+            total: data.data.total || 0,
+            traders: data.data.traders || 0,
+            subscribers: data.data.subscribers || 0,
+            advertisers: data.data.advertisers || 0,
+            pending: data.data.pending || 0,
+          });
+        }
+      })
+      .catch(err => console.error("Error fetching global stats:", err));
+  }, [currentPage]);
+
+  const confirmDelete = (id) => {
+    setUserToDelete(id);
+    setDeleteModalOpen(true);
+  };
+
+  const executeDelete = () => {
+    if (!userToDelete) return;
+    apiFetch(`/api/admin/users/${userToDelete}`, { method: 'DELETE' })
+      .then(res => {
+        if (res.status) {
+          setPendingDataState(pendingDataState.filter(u => u.id !== userToDelete));
+        } else {
+          alert(res.message || 'Failed to delete user');
+        }
+      })
+      .catch(err => {
+        console.error("Error deleting user:", err);
+        alert("Error deleting user");
+      })
+      .finally(() => {
+        setDeleteModalOpen(false);
+        setUserToDelete(null);
+      });
+  };
 
   return (
     <div className="pv-page-container">
@@ -41,7 +132,7 @@ export default function PendingVerification() {
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
           </div>
           <div className="pv-kpi-info">
-            <h3 className="pv-kpi-value">450</h3>
+            <h3 className="pv-kpi-value">{stats.total}</h3>
             <p className="pv-kpi-label">Pending Verification</p>
             <span className="pv-kpi-trend red">↓ -8% from last week</span>
           </div>
@@ -52,7 +143,7 @@ export default function PendingVerification() {
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
           </div>
           <div className="pv-kpi-info">
-            <h3 className="pv-kpi-value">280</h3>
+            <h3 className="pv-kpi-value">{stats.traders}</h3>
             <p className="pv-kpi-label">Trader Applications</p>
             <span className="pv-kpi-trend green">↑ +12% from last week</span>
           </div>
@@ -63,7 +154,7 @@ export default function PendingVerification() {
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
           </div>
           <div className="pv-kpi-info">
-            <h3 className="pv-kpi-value">120</h3>
+            <h3 className="pv-kpi-value">{stats.subscribers}</h3>
             <p className="pv-kpi-label">Subscriber Applications</p>
             <span className="pv-kpi-trend green">↑ +6% from last week</span>
           </div>
@@ -79,7 +170,7 @@ export default function PendingVerification() {
             <svg style={{position:'absolute', backgroundColor:'#dcfce7'}} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11l18-5v12L3 14v-3z"></path><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path></svg>
           </div>
           <div className="pv-kpi-info">
-            <h3 className="pv-kpi-value">50</h3>
+            <h3 className="pv-kpi-value">{stats.advertisers}</h3>
             <p className="pv-kpi-label">Advertiser Applications</p>
             <span className="pv-kpi-trend green">↑ +15% from last week</span>
           </div>
@@ -89,15 +180,24 @@ export default function PendingVerification() {
       {/* Tabs Row */}
       <div className="pv-tabs-actions-row">
         <div className="pv-tabs">
-          {['All Pending (450)', 'Traders (280)', 'Subscribers (120)', 'Advertisers (50)'].map(tab => (
-            <button 
-              key={tab} 
-              className={`pv-tab-btn ${activeTab === tab ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab}
-            </button>
-          ))}
+          {['All Users', 'Traders', 'Subscribers', 'Advertisers', 'Pending Verification'].map(tab => {
+            const getRoute = (t) => {
+              if(t === 'Traders') return '/traders';
+              if(t === 'Subscribers') return '/subscribers';
+              if(t === 'Advertisers') return '/advertisers';
+              if(t === 'Pending Verification') return '/pending-verification';
+              return '/user-list';
+            };
+            return (
+              <button 
+                key={tab} 
+                className={`pv-tab-btn ${activeTab === tab ? 'active' : ''}`}
+                onClick={() => navigate(getRoute(tab))}
+              >
+                {tab} {tab === 'All Users' ? `(${tabStats.total.toLocaleString()})` : tab === 'Traders' ? `(${tabStats.traders.toLocaleString()})` : tab === 'Subscribers' ? `(${tabStats.subscribers.toLocaleString()})` : tab === 'Advertisers' ? `(${tabStats.advertisers.toLocaleString()})` : `(${tabStats.pending.toLocaleString()})`}
+              </button>
+            )
+          })}
         </div>
         <button className="pv-btn-bulk">
           Bulk Actions ▾
@@ -145,12 +245,8 @@ export default function PendingVerification() {
                 </tr>
               </thead>
               <tbody>
-                {pendingData.map((user, index) => (
-                  <tr 
-                    key={user.id} 
-                    className={selectedItem?.id === user.id ? 'selected-row' : ''}
-                    onClick={() => setSelectedItem(user)}
-                  >
+                {pendingDataState.map((user, index) => (
+                  <tr key={user.id}>
                     <td className="pv-td-checkbox" onClick={e => e.stopPropagation()}>
                       <input type="checkbox" />
                     </td>
@@ -166,7 +262,9 @@ export default function PendingVerification() {
                       </div>
                     </td>
                     <td className="text-center">
-                      <span className={`pv-badge-type ${user.userType.toLowerCase()}`}>{user.userType}</span>
+                      <span className={`pv-badge-type ${(user.role || user.userType || '').toLowerCase()}`}>
+                        {user.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1)) : user.userType}
+                      </span>
                     </td>
                     <td><span className="pv-company-name">{user.company}</span></td>
                     <td className="pv-date-cell">{user.appliedOn}</td>
@@ -197,11 +295,16 @@ export default function PendingVerification() {
                         {user.status}
                       </span>
                     </td>
-                    <td className="pv-actions-cell" onClick={e => e.stopPropagation()}>
-                      <button className="pv-action-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
-                      <button className="pv-action-btn success"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
-                      <button className="pv-action-btn danger"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
-                      <button className="pv-action-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button>
+                    <td className="pv-actions-cell" onClick={e => e.stopPropagation()} style={{display: 'flex', gap: '12px', alignItems: 'center'}}>
+                      <button className="pv-action-btn" onClick={() => navigate(`/user/view/${user.id}`)} title="View" style={{background:'none',border:'none',color:'#1e3a8a',cursor:'pointer',padding:'4px'}}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                      </button>
+                      <button className="pv-action-btn" onClick={() => navigate(`/user/edit/${user.id}`)} title="Edit" style={{background:'none',border:'none',color:'#1e3a8a',cursor:'pointer',padding:'4px'}}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                      </button>
+                      <button className="pv-action-btn danger" onClick={() => confirmDelete(user.id)} title="Delete" style={{background:'none',border:'none',color:'#ef4444',cursor:'pointer',padding:'4px'}}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -210,181 +313,57 @@ export default function PendingVerification() {
           </div>
           
           <div className="pv-pagination">
-            <span className="pv-page-info">Showing 1 to 10 of 450 pending verifications</span>
+            <span className="pv-page-info">Showing {pendingDataState.length > 0 ? (currentPage - 1) * 10 + 1 : 0} to {Math.min(currentPage * 10, totalItems)} of {totalItems} pending verifications</span>
             <div className="pv-page-controls">
-              <button className="pv-page-nav">←</button>
-              <button className="pv-page-num active">1</button>
-              <button className="pv-page-num">2</button>
-              <button className="pv-page-num">3</button>
-              <button className="pv-page-num">4</button>
-              <button className="pv-page-num">5</button>
-              <span className="pv-page-dots">...</span>
-              <button className="pv-page-num">45</button>
-              <button className="pv-page-nav">→</button>
+              <button 
+                className="pv-page-nav"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >←</button>
+
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum = i + 1;
+                if (totalPages > 5 && currentPage > 3) {
+                  pageNum = currentPage - 2 + i;
+                  if (pageNum > totalPages) pageNum = totalPages - (4 - i);
+                }
+                return (
+                  <button 
+                    key={pageNum}
+                    className={`pv-page-num ${currentPage === pageNum ? 'active' : ''}`}
+                    onClick={() => setCurrentPage(pageNum)}
+                  >
+                    {pageNum}
+                  </button>
+                )
+              })}
+
+              {totalPages > 5 && currentPage < totalPages - 2 && (
+                <>
+                  <span className="pv-page-dots">...</span>
+                  <button 
+                    className="pv-page-num"
+                    onClick={() => setCurrentPage(totalPages)}
+                  >{totalPages}</button>
+                </>
+              )}
+              <button 
+                className="pv-page-nav"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages || totalPages === 0}
+              >→</button>
             </div>
           </div>
         </div>
-
-        {/* Right: Details Panel */}
-        <div className="pv-details-panel">
-          {selectedItem ? (
-            <div className="pv-dp-inner">
-              <div className="pv-dp-header">
-                <h3>User Verification Details</h3>
-                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                  <button className="pv-close-btn" onClick={() => setSelectedItem(null)}>×</button>
-                </div>
-              </div>
-              
-              <div className="pv-dp-profile">
-                <div className="pv-dp-profile-top">
-                  <img src={selectedItem.avatar} alt={selectedItem.name} className="pv-dp-avatar" />
-                  <div className="pv-dp-name-box">
-                    <h4 className="pv-dp-name">
-                      {selectedItem.name} 
-                      <span className={`pv-badge-status ${selectedItem.status.toLowerCase().replace(' ', '-')}`} style={{marginLeft: 'auto', padding: '2px 6px', fontSize: '10px'}}>
-                         {selectedItem.status}
-                      </span>
-                    </h4>
-                    <p className="pv-dp-role">{selectedItem.userType} | ID: #TRD001</p>
-                    <p className="pv-dp-member-since">Applied on: {selectedItem.appliedOn} | 10:24 AM</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pv-dp-tabs">
-                {['Overview', 'Documents', 'KYC Details', 'Activity'].map(tab => (
-                  <button 
-                    key={tab} 
-                    className={`pv-dp-tab ${dpTab === tab ? 'active' : ''}`}
-                    onClick={() => setDpTab(tab)}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-
-              {dpTab === 'Overview' && (
-                <div className="pv-dp-content">
-                  <div className="pv-dp-grid">
-                    <div className="pv-dp-item">
-                      <div className="pv-dp-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></div>
-                      <div className="pv-dp-data">
-                        <span className="pv-dp-label">Email</span>
-                        <a href={`mailto:${selectedItem.email}`} className="pv-dp-value link">{selectedItem.email}</a>
-                      </div>
-                    </div>
-
-                    <div className="pv-dp-item">
-                      <div className="pv-dp-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></div>
-                      <div className="pv-dp-data">
-                        <span className="pv-dp-label">Phone</span>
-                        <span className="pv-dp-value" style={{color: '#1e3a8a'}}>{selectedItem.phone}</span>
-                      </div>
-                    </div>
-
-                    <div className="pv-dp-item">
-                      <div className="pv-dp-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg></div>
-                      <div className="pv-dp-data">
-                        <span className="pv-dp-label">Company</span>
-                        <span className="pv-dp-value" style={{color: '#1e3a8a'}}>{selectedItem.company}</span>
-                      </div>
-                    </div>
-
-                    <div className="pv-dp-item">
-                      <div className="pv-dp-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
-                      <div className="pv-dp-data">
-                        <span className="pv-dp-label">GSTIN</span>
-                        <span className="pv-dp-value">10ABCDE1234F1Z5</span>
-                      </div>
-                    </div>
-                    
-                    <div className="pv-dp-item">
-                      <div className="pv-dp-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
-                      <div className="pv-dp-data">
-                        <span className="pv-dp-label">User Type</span>
-                        <span className="pv-dp-value">{selectedItem.userType}</span>
-                      </div>
-                    </div>
-
-                    <div className="pv-dp-item">
-                      <div className="pv-dp-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>
-                      <div className="pv-dp-data">
-                        <span className="pv-dp-label">Location</span>
-                        <span className="pv-dp-value">Patna, Bihar</span>
-                      </div>
-                    </div>
-                    
-                    <div className="pv-dp-item">
-                      <div className="pv-dp-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>
-                      <div className="pv-dp-data">
-                        <span className="pv-dp-label">Address</span>
-                        <span className="pv-dp-value" style={{lineHeight: '1.4'}}>Near Gandhi Maidan, Patna, Bihar 800001</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pv-dp-section">
-                    <div className="pv-dp-section-header">
-                      <h5 className="pv-dp-subtitle">Documents Status</h5>
-                      <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                        <span className="pv-badge-docs partial">3/4 Uploaded</span>
-                        <a href="#" className="pv-dp-link-small" onClick={e=>e.preventDefault()}>View All</a>
-                      </div>
-                    </div>
-                    
-                    <div className="pv-docs-grid">
-                      <div className="pv-doc-card">
-                        <div className="pv-doc-img-box">
-                          {/* Mock Image Placeholder */}
-                        </div>
-                        <span className="pv-doc-name">Aadhaar Card</span>
-                        <span className="pv-doc-status success"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Uploaded</span>
-                      </div>
-                      
-                      <div className="pv-doc-card">
-                        <div className="pv-doc-img-box">
-                        </div>
-                        <span className="pv-doc-name">PAN Card</span>
-                        <span className="pv-doc-status success"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Uploaded</span>
-                      </div>
-                      
-                      <div className="pv-doc-card">
-                        <div className="pv-doc-img-box">
-                        </div>
-                        <span className="pv-doc-name">GST Certificate</span>
-                        <span className="pv-doc-status success"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Uploaded</span>
-                      </div>
-                      
-                      <div className="pv-doc-card empty">
-                        <div className="pv-doc-img-box empty">
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        </div>
-                        <span className="pv-doc-name">Business Proof</span>
-                        <span className="pv-doc-status error"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg> Not Uploaded</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pv-dp-bottom-actions">
-                    <div style={{display: 'flex', gap: '8px', width: '100%'}}>
-                      <button className="pv-dp-btn-solid approve"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Approve User</button>
-                      <button className="pv-dp-btn-solid reject"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Reject</button>
-                    </div>
-                    <button className="pv-dp-btn-outline"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> Request More Info</button>
-                  </div>
-
-                </div>
-              )}
-
-            </div>
-          ) : (
-            <div className="pv-dp-empty">
-              Select an application from the list to view details
-            </div>
-          )}
-        </div>
       </div>
+      
+      <DeleteModal 
+        isOpen={deleteModalOpen} 
+        onClose={() => setDeleteModalOpen(false)} 
+        onConfirm={executeDelete}
+        title="Delete User"
+        message="Are you sure you want to delete this verification request? This action cannot be undone."
+      />
     </div>
   );
 }
