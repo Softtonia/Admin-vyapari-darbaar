@@ -287,7 +287,7 @@ export default function EditUser() {
       if (!formData.company_name) errors.push("The company/business name is required.");
       if (!formData.business_type) errors.push("The business type is required.");
       if (!formData.pan_number) errors.push("The PAN number is required.");
-      if (!formData.business_category) errors.push("The business category is required.");
+      if (!formData.business_category_ids || formData.business_category_ids.length === 0) errors.push("The business category is required.");
       if (!formData.address_line_1) errors.push("The address line 1 is required.");
       if (!formData.country || isNaN(formData.country)) errors.push("The country id field must be an integer.");
       if (!formData.state || isNaN(formData.state)) errors.push("The state id field must be an integer.");
