@@ -505,12 +505,12 @@ export default function EditUser() {
                 </div>
                 <div className="au-form-col" style={{ flex: 1 }}>
                   <label className="au-label">Profile Photo</label>
-                  <div className="au-photo-upload" onClick={() => profilePhotoRef.current.click()} style={{cursor:'pointer'}}>
-                    <img src={profilePhotoPreview || "https://i.pravatar.cc/150?u=a042581f4e29026704d"} alt="Profile" className="au-photo-preview" />
-                    <div className="au-photo-drop">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                      <p className="au-photo-drop-text">{profilePhoto ? profilePhoto.name : 'Click to upload'}</p>
-                      <p className="au-photo-drop-sub">or drag and drop<br/>JPG, PNG (Max 2 MB)</p>
+                  <div className="au-upload-box" style={{flexDirection: 'row', gap: '16px', height: 'auto', padding: '16px', justifyContent: 'flex-start'}} onClick={() => profilePhotoRef.current.click()}>
+                    <img src={profilePhotoPreview || "https://i.pravatar.cc/150?u=a042581f4e29026704d"} alt="Profile" style={{width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #e5e7eb'}} />
+                    <div style={{textAlign: 'left', display: 'flex', flexDirection: 'column'}}>
+                      <p style={{marginBottom: '4px'}}><span style={{color: '#3b82f6', fontWeight: 500}}>Click to upload</span> <span style={{color: '#6b7280', fontSize:'13px'}}>or drag and drop</span></p>
+                      <span style={{fontSize: '11px', color: '#9ca3af'}}>JPG, PNG (Max 2 MB)</span>
+                      {profilePhoto && <span style={{fontSize: '11px', color: '#10b981', marginTop: '4px', fontWeight: '500'}}>{profilePhoto.name}</span>}
                     </div>
                   </div>
                   <input type="file" ref={profilePhotoRef} accept="image/*" style={{display:'none'}} onChange={handleProfilePhotoChange} />
