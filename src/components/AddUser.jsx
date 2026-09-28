@@ -1005,26 +1005,7 @@ export default function AddUser() {
                   </div>
                 </div>
 
-                {/* Additional Information */}
-                <div className="au-step3-card" style={{flex: 1.2}}>
-                  <div className="au-card-header" style={{marginBottom: '20px'}}>
-                    <div className="au-card-icon" style={{background: '#eff6ff', color: '#3b82f6'}}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                    </div>
-                    <div className="au-card-title-wrap">
-                      <h3 className="au-card-title">Additional Information</h3>
-                      <p className="au-card-subtitle">Add any additional details for verification.</p>
-                    </div>
-                  </div>
-                  
-                  <div className="au-form-row">
-                    <div className="au-form-col">
-                      <label className="au-label">Business Description <span style={{fontSize:'12px', fontWeight:'400', color:'#6b7280'}}>(Optional)</span></label>
-                      <textarea className="au-textarea" name="business_description" value={formData.business_description} onChange={handleChange} placeholder="We are involved in trading and supplying rice, wheat, pulses and other agri commodities across Bihar. Operating since 2020 with a strong supply network."></textarea>
-                      <div className="au-notes-hint">{formData.business_description.length}/500</div>
-                    </div>
-                  </div>
-                </div>
+
               </div>
             </div>
           )}
