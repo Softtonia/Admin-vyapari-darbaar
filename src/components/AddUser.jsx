@@ -738,12 +738,29 @@ export default function AddUser() {
                     </div>
                     <div className="au-form-col">
                       <label className="au-label">Business Category <span className="req">*</span></label>
-                      <select className="au-select" name="business_category_ids" value={formData.business_category_ids} onChange={handleChange} multiple style={{height: '100px'}}>
+                      <div className="au-select" style={{height: '120px', overflowY: 'auto', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px', background: '#f9fafb'}}>
                         {businessCategories.map(cat => (
-                          <option key={cat.id} value={cat.id}>{cat.name}</option>
+                          <label key={cat.id} style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', margin: 0, fontWeight: 'normal'}}>
+                            <input 
+                              type="checkbox" 
+                              value={cat.id.toString()}
+                              checked={formData.business_category_ids.includes(cat.id.toString())}
+                              onChange={(e) => {
+                                const checked = e.target.checked;
+                                const val = e.target.value;
+                                setFormData(prev => ({
+                                  ...prev,
+                                  business_category_ids: checked 
+                                    ? [...prev.business_category_ids, val]
+                                    : prev.business_category_ids.filter(id => id !== val)
+                                }));
+                              }}
+                              style={{ width: '16px', height: '16px', accentColor: '#2563eb', margin: 0 }}
+                            />
+                            {cat.name}
+                          </label>
                         ))}
-                      </select>
-                      <span style={{fontSize:'12px', color:'#6b7280'}}>Hold Ctrl (or Cmd) to select multiple</span>
+                      </div>
                     </div>
                     <div className="au-form-col">
                       <label className="au-label">No. of Employees (Optional)</label>
