@@ -67,8 +67,7 @@ export default function AddUser() {
   };
 
   const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
+    name: '',
     email: '',
     phone_number: '',
     alternate_number: '',
@@ -182,8 +181,8 @@ export default function AddUser() {
   const validateStep = (step) => {
     let errors = [];
     if (step === 1) {
-      if (!formData.first_name) errors.push("The first name is required.");
-      if (!formData.last_name) errors.push("The last name is required.");
+      if (!formData.name) errors.push("The full name is required.");
+      if (formData.name && formData.name.trim().split(' ').length < 2) errors.push("The last name is required (please enter your full name).");
       if (!formData.phone_number) errors.push("The phone number is required.");
       if (!formData.email) errors.push("The email address is required.");
     } else if (step === 2) {
@@ -227,9 +226,14 @@ export default function AddUser() {
     try {
       const fd = new FormData();
 
+      // Split name
+      const nameParts = formData.name ? formData.name.trim().split(' ') : [];
+      const fName = nameParts.length > 0 ? nameParts[0] : '';
+      const lName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
       // Personal Info
-      fd.append('first_name', formData.first_name);
-      if (formData.last_name) fd.append('last_name', formData.last_name);
+      fd.append('first_name', fName);
+      if (lName) fd.append('last_name', lName);
       fd.append('email', formData.email);
       fd.append('phone_number', formData.phone_number);
       if (formData.alternate_number) fd.append('alternate_number', formData.alternate_number);
@@ -429,7 +433,7 @@ export default function AddUser() {
               <div className="au-form-row">
                 <div className="au-form-col" style={{ flex: 1.5 }}>
                   <label className="au-label">Full Name <span className="req">*</span></label>
-                  <input type="text" className="au-input" name="first_name" value={formData.first_name} onChange={handleChange} placeholder="Rajesh Kumar" required />
+                  <input type="text" className="au-input" name="name" value={formData.name} onChange={handleChange} placeholder="Rajesh Kumar" required />
                   
                   <label className="au-label" style={{ marginTop: '16px' }}>Date of Birth</label>
                   <input type="date" className="au-input" name="dob" value={formData.dob} onChange={handleChange} />
