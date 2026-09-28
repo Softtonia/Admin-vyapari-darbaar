@@ -277,7 +277,7 @@ export default function AddUser() {
       
       if (response.status && response.data) {
         const createdUser = response.data;
-        const companyId = createdUser.companies && createdUser.companies.length > 0 ? createdUser.companies[0].id : null;
+        const companyId = createdUser.company ? createdUser.company.id : null;
 
         if (companyId) {
           // 1. Batch Upload KYC Documents

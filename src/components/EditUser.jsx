@@ -40,6 +40,9 @@ export default function EditUser() {
     businessReg: null,
   });
 
+  const [existingKycDocs, setExistingKycDocs] = useState([]);
+  const [existingBizDocs, setExistingBizDocs] = useState([]);
+
   const handleFileSelect = (key, ref) => {
     ref.current.click();
   };
@@ -172,6 +175,16 @@ export default function EditUser() {
             apiFetch(`/api/locations/cities?state_id=${user.company.state_id}`)
               .then(res => setCities(Array.isArray(res.data || res) ? (res.data || res) : []))
               .finally(() => setLoadingCities(false));
+          }
+          
+          if (user.company?.id) {
+            apiFetch(`/api/admin/kyc?company_id=${user.company.id}`)
+              .then(res => setExistingKycDocs(Array.isArray(res.data || res) ? (res.data || res) : []))
+              .catch(err => console.error('Error fetching KYC docs', err));
+              
+            apiFetch(`/api/admin/business-documents?company_id=${user.company.id}`)
+              .then(res => setExistingBizDocs(Array.isArray(res.data || res) ? (res.data || res) : []))
+              .catch(err => console.error('Error fetching Biz docs', err));
           }
         } else {
           setError('Failed to fetch user data');
@@ -343,7 +356,7 @@ export default function EditUser() {
       
       if (response.status && response.data) {
         const createdUser = response.data;
-        const companyId = createdUser.companies && createdUser.companies.length > 0 ? createdUser.companies[0].id : null;
+        const companyId = createdUser.company ? createdUser.company.id : null;
 
         if (companyId) {
           // 1. Batch Upload KYC Documents
@@ -945,6 +958,14 @@ export default function EditUser() {
                           <div className="au-file-delete" onClick={() => removeFile('aadhaar')}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div>
                         </div>
                       )}
+                      {!uploadedFiles.aadhaar && existingKycDocs.find(d => d.document_type === 'aadhaar_card') && (
+                        <div className="au-file-preview">
+                          <div className="au-file-info">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{color:'#3b82f6'}}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+                            <div><a href={existingKycDocs.find(d => d.document_type === 'aadhaar_card').file_path} target="_blank" rel="noreferrer" style={{color:'#1e293b', textDecoration:'none'}}>Existing Aadhaar</a></div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label className="au-label"><span style={{color: '#3b82f6', marginRight:'4px'}}>🪪</span> PAN Card <span className="req">*</span></label>
@@ -963,6 +984,14 @@ export default function EditUser() {
                           <div className="au-file-delete" onClick={() => removeFile('pan')}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div>
                         </div>
                       )}
+                      {!uploadedFiles.pan && existingKycDocs.find(d => d.document_type === 'pan_card') && (
+                        <div className="au-file-preview">
+                          <div className="au-file-info">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{color:'#3b82f6'}}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+                            <div><a href={existingKycDocs.find(d => d.document_type === 'pan_card').file_path} target="_blank" rel="noreferrer" style={{color:'#1e293b', textDecoration:'none'}}>Existing PAN</a></div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label className="au-label"><span style={{color: '#6366f1', marginRight:'4px'}}>👤</span> Passport Photo (Optional)</label>
@@ -979,6 +1008,14 @@ export default function EditUser() {
                             <div>{uploadedFiles.passport.name}<span className="au-file-size">{formatFileSize(uploadedFiles.passport.size)}</span></div>
                           </div>
                           <div className="au-file-delete" onClick={() => removeFile('passport')}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div>
+                        </div>
+                      )}
+                      {!uploadedFiles.passport && existingKycDocs.find(d => d.document_type === 'passport_photo') && (
+                        <div className="au-file-preview">
+                          <div className="au-file-info">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{color:'#3b82f6'}}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+                            <div><a href={existingKycDocs.find(d => d.document_type === 'passport_photo').file_path} target="_blank" rel="noreferrer" style={{color:'#1e293b', textDecoration:'none'}}>Existing Passport</a></div>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1015,6 +1052,14 @@ export default function EditUser() {
                           <div className="au-file-delete" onClick={() => removeFile('gst')}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div>
                         </div>
                       )}
+                      {!uploadedFiles.gst && existingBizDocs.find(d => d.document_type === 'gst_certificate') && (
+                        <div className="au-file-preview">
+                          <div className="au-file-info">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{color:'#16a34a'}}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+                            <div><a href={existingBizDocs.find(d => d.document_type === 'gst_certificate').file_path} target="_blank" rel="noreferrer" style={{color:'#1e293b', textDecoration:'none'}}>Existing GST</a></div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label className="au-label">Business Registration <span style={{fontSize:'12px', fontWeight:'400', color:'#6b7280'}}>(Shop Act / Trade License)</span></label>
@@ -1031,6 +1076,14 @@ export default function EditUser() {
                             <div>{uploadedFiles.businessReg.name}<span className="au-file-size">{formatFileSize(uploadedFiles.businessReg.size)}</span></div>
                           </div>
                           <div className="au-file-delete" onClick={() => removeFile('businessReg')}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div>
+                        </div>
+                      )}
+                      {!uploadedFiles.businessReg && existingBizDocs.find(d => d.document_type === 'business_registration') && (
+                        <div className="au-file-preview">
+                          <div className="au-file-info">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{color:'#16a34a'}}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+                            <div><a href={existingBizDocs.find(d => d.document_type === 'business_registration').file_path} target="_blank" rel="noreferrer" style={{color:'#1e293b', textDecoration:'none'}}>Existing Registration</a></div>
+                          </div>
                         </div>
                       )}
                     </div>
