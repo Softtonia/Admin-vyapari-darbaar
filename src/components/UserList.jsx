@@ -55,7 +55,8 @@ export default function UserList() {
             email: user.email || 'N/A',
             phone: user.phone_number || 'N/A',
             company: user.company?.name || user.company?.company_name || 'N/A',
-            type: user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1).replace('_', ' ') : 'User',
+            type: user.role ? user.role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : 'User',
+            role: user.role || 'user',
             location: user.company?.city && user.company?.state ? `${user.company.city}, ${user.company.state}` : 'N/A',
             address: user.company?.address || user.company?.address_line_1 || 'N/A',
             gstin: user.company?.gstin || 'N/A',
@@ -220,7 +221,7 @@ export default function UserList() {
                     <td className="ul-td-checkbox" onClick={e => e.stopPropagation()}><input type="checkbox" /></td>
                     <td className="ul-td-id">{(currentPage - 1) * 20 + index + 1}</td>
                     <td><div className="ul-user-cell"><img src={user.avatar} alt={user.name} className="ul-user-avatar" /><div className="ul-user-meta"><span className="ul-user-name">{user.name}</span><span className="ul-user-contact">{user.email}</span><span className="ul-user-contact">{user.phone}</span></div></div></td>
-                    <td><span className={`ul-badge-type ${(user.role || user.type || '').toLowerCase()}`}>{user.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1)) : user.type}</span></td>
+                    <td><span className={`ul-badge-type ${user.role}`}>{user.type}</span></td>
                     <td><div className="ul-location-cell"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span>{user.location}</span></div></td>
                     <td className="ul-date-cell">{user.joinDate}</td>
                     <td><span className={`ul-badge-status ${user.status.toLowerCase()}`}><span className="ul-dot"></span> {user.status}</span></td>
