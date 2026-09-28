@@ -85,7 +85,7 @@ export default function AddUserStep5({ formData, uploadedFiles, profilePhoto, co
                   <tr>
                     <td className="lbl">Full Name</td>
                     <td className="sep">:</td>
-                    <td className="val">{formData.name}</td>
+                    <td className="val">{formData.first_name} {formData.last_name}</td>
                   </tr>
                   <tr>
                     <td className="lbl">Date of Birth</td>
