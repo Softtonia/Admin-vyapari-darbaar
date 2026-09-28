@@ -26,7 +26,7 @@ export default function Traders() {
         if (data.status && data.data && data.data.data) {
           const formatted = data.data.data.map(user => ({
             id: user.id,
-            name: user.full_name || 'N/A',
+            name: user.name || user.full_name || 'N/A',
             phone: user.phone_number || 'N/A',
             email: user.email || 'N/A',
             company: user.company?.name || 'N/A',
@@ -40,7 +40,7 @@ export default function Traders() {
             status: user.status ? user.status.charAt(0).toUpperCase() + user.status.slice(1) : 'Active',
             kyc: user.company?.verification_status ? user.company.verification_status.charAt(0).toUpperCase() + user.company.verification_status.slice(1) : 'Pending',
             plan: 'Basic', // Hardcoded fallback for now, as API might not provide it yet
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'Trader')}&background=random`
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.full_name || 'Trader')}&background=random`
           }));
           setTradersData(formatted);
           setTotalPages(data.data.last_page || 1);

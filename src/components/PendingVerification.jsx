@@ -39,7 +39,7 @@ export default function PendingVerification() {
         if (data.status && data.data && data.data.data) {
           const formatted = data.data.data.map(user => ({
             id: user.id,
-            name: user.full_name || 'N/A',
+            name: user.name || user.full_name || 'N/A',
             email: user.email || 'N/A',
             phone: user.phone_number || 'N/A',
             userType: user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Trader',
@@ -48,7 +48,7 @@ export default function PendingVerification() {
             docsStatus: '2/4 Uploaded', // Mock fallback
             kycStatus: 'Under Review',
             status: 'Pending Approval',
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'User')}&background=random`
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.full_name || 'User')}&background=random`
           }));
           setPendingDataState(formatted);
           setTotalPages(data.data.last_page || 1);

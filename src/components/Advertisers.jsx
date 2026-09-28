@@ -39,7 +39,7 @@ export default function Advertisers() {
         if (data.status && data.data && data.data.data) {
           const formatted = data.data.data.map(user => ({
             id: user.id,
-            contactName: user.full_name || 'N/A',
+            contactName: user.name || user.full_name || 'N/A',
             phone: user.phone_number || 'N/A',
             email: user.email || 'N/A',
             company: user.company?.name || 'N/A',
@@ -49,7 +49,7 @@ export default function Advertisers() {
             endDate: 'N/A',
             status: user.status ? user.status.charAt(0).toUpperCase() + user.status.slice(1) : 'Active',
             totalSpend: '₹0',
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'Advertiser')}&background=random`
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.full_name || 'Advertiser')}&background=random`
           }));
           setAdvertisersDataState(formatted);
           setTotalPages(data.data.last_page || 1);

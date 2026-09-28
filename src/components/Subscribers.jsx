@@ -39,7 +39,7 @@ export default function Subscribers() {
         if (data.status && data.data && data.data.data) {
           const formatted = data.data.data.map(user => ({
             id: user.id,
-            name: user.full_name || 'N/A',
+            name: user.name || user.full_name || 'N/A',
             phone: user.phone_number || 'N/A',
             email: user.email || 'N/A',
             planName: 'Basic', // mock fallback
@@ -51,7 +51,7 @@ export default function Subscribers() {
             expiryDate: 'N/A',
             status: user.status ? user.status.charAt(0).toUpperCase() + user.status.slice(1) : 'Active',
             autoRenew: true,
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'Subscriber')}&background=random`
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.full_name || 'Subscriber')}&background=random`
           }));
           setSubs(formatted);
           setTotalPages(data.data.last_page || 1);

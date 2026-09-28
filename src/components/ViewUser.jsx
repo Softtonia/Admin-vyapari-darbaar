@@ -37,9 +37,9 @@ export default function ViewUser() {
 
       <div className="uf-section">
         <div className="uv-profile-header">
-          <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'User')}&size=128&background=random`} alt="Avatar" className="uv-avatar" />
+          <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.full_name || 'User')}&size=128&background=random`} alt="Avatar" className="uv-avatar" />
           <div className="uv-header-info">
-            <h2>{user.full_name || `${user.first_name || ''} ${user.last_name || ''}`}</h2>
+            <h2>{user.name || user.full_name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Guest'}</h2>
             <span className="uv-role-badge">{user.role || 'User'}</span>
           </div>
         </div>

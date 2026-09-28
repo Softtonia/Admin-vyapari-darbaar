@@ -51,18 +51,18 @@ export default function UserList() {
         if (data.status && data.data && data.data.data) {
           const formattedUsers = data.data.data.map((user, idx) => ({
             id: user.id,
-            name: user.full_name || 'N/A',
+            name: user.name || user.full_name || 'N/A',
             email: user.email || 'N/A',
             phone: user.phone_number || 'N/A',
-            company: user.company?.company_name || 'N/A',
+            company: user.company?.name || user.company?.company_name || 'N/A',
             type: user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1).replace('_', ' ') : 'User',
             location: user.company?.city && user.company?.state ? `${user.company.city}, ${user.company.state}` : 'N/A',
-            address: user.company?.address_line_1 || 'N/A',
+            address: user.company?.address || user.company?.address_line_1 || 'N/A',
             gstin: user.company?.gstin || 'N/A',
             joinDate: new Date(user.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
             status: user.status ? user.status.charAt(0).toUpperCase() + user.status.slice(1) : 'Active',
             kyc: user.company?.verification_status ? user.company.verification_status.charAt(0).toUpperCase() + user.company.verification_status.slice(1) : 'Pending',
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'User')}&background=random`,
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.full_name || 'User')}&background=random`,
           }));
           setUsersData(formattedUsers);
           if (formattedUsers.length > 0 && !selectedUser) setSelectedUser(formattedUsers[0]);
