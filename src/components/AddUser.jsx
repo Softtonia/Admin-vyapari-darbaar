@@ -176,6 +176,48 @@ export default function AddUser() {
     setFormData(prev => ({ ...prev, city: e.target.value }));
   };
 
+  const [stepErrors, setStepErrors] = useState([]);
+
+  const validateStep = (step) => {
+    let errors = [];
+    if (step === 1) {
+      if (!formData.first_name) errors.push("The first name is required.");
+      if (!formData.last_name) errors.push("The last name is required.");
+      if (!formData.phone_number) errors.push("The phone number is required.");
+      if (!formData.email) errors.push("The email address is required.");
+    } else if (step === 2) {
+      if (!formData.role) errors.push("The role is required.");
+    } else if (step === 3) {
+      if (!formData.company_name) errors.push("The company/business name is required.");
+      if (!formData.business_type) errors.push("The business type is required.");
+      if (!formData.pan_number) errors.push("The PAN number is required.");
+      if (!formData.business_category) errors.push("The business category is required.");
+      if (!formData.address_line_1) errors.push("The address line 1 is required.");
+      if (!formData.country || isNaN(formData.country)) errors.push("The country id field must be an integer.");
+      if (!formData.state || isNaN(formData.state)) errors.push("The state id field must be an integer.");
+      if (!formData.city || isNaN(formData.city)) errors.push("The city id field must be an integer.");
+      if (!formData.pincode) errors.push("The PIN code is required.");
+      if (!formData.account_holder_name) errors.push("The account holder name is required.");
+      if (!formData.bank_name) errors.push("The bank name is required.");
+      if (!formData.account_number) errors.push("The account number is required.");
+      if (!formData.ifsc_code) errors.push("The IFSC code is required.");
+      if (!uploadedFiles.aadhaar) errors.push("Aadhaar card is required.");
+      if (!uploadedFiles.pan) errors.push("PAN card is required.");
+    }
+    
+    setStepErrors(errors);
+    return errors.length === 0;
+  };
+
+  const handleNextStep = (nextStepTarget) => {
+    // If navigating forward, validate current step
+    if (nextStepTarget > currentStep) {
+      if (!validateStep(currentStep)) return;
+    }
+    setStepErrors([]);
+    setCurrentStep(nextStepTarget);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -313,7 +355,7 @@ export default function AddUser() {
 
       {/* Stepper */}
       <div className="au-stepper">
-        <div className={`au-step ${currentStep >= 1 ? 'active' : ''}`} onClick={() => setCurrentStep(1)} style={{cursor:'pointer'}}>
+        <div className={`au-step ${currentStep >= 1 ? 'active' : ''}`} onClick={() => handleNextStep(1)} style={{cursor:'pointer'}}>
           <div className="au-step-circle">1</div>
           <div className="au-step-text">
             <span className="au-step-title">Basic Information</span>
@@ -321,7 +363,7 @@ export default function AddUser() {
           </div>
           <div className="au-step-divider"></div>
         </div>
-        <div className={`au-step ${currentStep >= 2 ? 'active' : ''}`} onClick={() => setCurrentStep(2)} style={{cursor:'pointer'}}>
+        <div className={`au-step ${currentStep >= 2 ? 'active' : ''}`} onClick={() => handleNextStep(2)} style={{cursor:'pointer'}}>
           <div className="au-step-circle">2</div>
           <div className="au-step-text">
             <span className="au-step-title">User Type & Role</span>
@@ -329,7 +371,7 @@ export default function AddUser() {
           </div>
           <div className="au-step-divider"></div>
         </div>
-        <div className={`au-step ${currentStep >= 3 ? 'active' : ''}`} onClick={() => setCurrentStep(3)} style={{cursor:'pointer'}}>
+        <div className={`au-step ${currentStep >= 3 ? 'active' : ''}`} onClick={() => handleNextStep(3)} style={{cursor:'pointer'}}>
           <div className="au-step-circle">3</div>
           <div className="au-step-text">
             <span className="au-step-title">Business & KYC Details</span>
@@ -337,7 +379,7 @@ export default function AddUser() {
           </div>
           <div className="au-step-divider"></div>
         </div>
-        <div className={`au-step ${currentStep >= 4 ? 'active' : ''}`} onClick={() => setCurrentStep(4)} style={{cursor:'pointer'}}>
+        <div className={`au-step ${currentStep >= 4 ? 'active' : ''}`} onClick={() => handleNextStep(4)} style={{cursor:'pointer'}}>
           <div className="au-step-circle">4</div>
           <div className="au-step-text">
             <span className="au-step-title">Subscription Plan</span>
@@ -345,7 +387,7 @@ export default function AddUser() {
           </div>
           <div className="au-step-divider"></div>
         </div>
-        <div className={`au-step ${currentStep >= 5 ? 'active' : ''}`} onClick={() => setCurrentStep(5)} style={{ flex: '0.5', cursor:'pointer' }}>
+        <div className={`au-step ${currentStep >= 5 ? 'active' : ''}`} onClick={() => handleNextStep(5)} style={{ flex: '0.5', cursor:'pointer' }}>
           <div className="au-step-circle">5</div>
           <div className="au-step-text">
             <span className="au-step-title">Review & Create</span>
@@ -354,7 +396,15 @@ export default function AddUser() {
         </div>
       </div>
 
-      {error && <div style={{ color: 'red', marginBottom: '16px' }}>{error}</div>}
+      {error && <div style={{ color: '#ef4444', background: '#fef2f2', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid #fca5a5' }}>{error}</div>}
+      
+      {stepErrors.length > 0 && (
+        <div style={{ color: '#ef4444', background: '#fef2f2', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid #fca5a5' }}>
+          <ul style={{ margin: 0, paddingLeft: '20px' }}>
+            {stepErrors.map((err, i) => <li key={i}>{err}</li>)}
+          </ul>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
         <div className="au-grid">
@@ -987,7 +1037,7 @@ export default function AddUser() {
         <div className="au-actions">
           <button type="button" className="au-btn-cancel" onClick={() => {
             if (currentStep > 1) {
-              setCurrentStep(currentStep - 1);
+              handleNextStep(currentStep - 1);
             } else {
               navigate(-1);
             }
@@ -996,11 +1046,16 @@ export default function AddUser() {
           </button>
           
           {currentStep < 5 ? (
-            <button type="button" className="au-btn-submit" onClick={() => setCurrentStep(currentStep + 1)}>
+            <button type="button" className="au-btn-submit" onClick={() => handleNextStep(currentStep + 1)}>
               Next Step <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             </button>
           ) : (
-            <button type="submit" className="au-btn-submit" disabled={loading}>
+            <button type="submit" className="au-btn-submit" onClick={(e) => {
+              if (!validateStep(currentStep)) {
+                e.preventDefault();
+                return;
+              }
+            }} disabled={loading}>
               {loading ? 'Creating...' : 'Create User'}
             </button>
           )}
