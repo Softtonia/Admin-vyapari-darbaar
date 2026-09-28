@@ -86,7 +86,7 @@ export default function AddUser() {
     gstin: '',
     pan_number: '',
     year_established: '',
-    business_category: '',
+    business_category_ids: [],
     no_of_employees: '',
     website: '',
 
@@ -115,8 +115,13 @@ export default function AddUser() {
   });
 
   const handleChange = (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-    setFormData({ ...formData, [e.target.name]: value });
+    if (e.target.name === 'business_category_ids') {
+      const values = Array.from(e.target.selectedOptions, option => option.value);
+      setFormData({ ...formData, [e.target.name]: values });
+    } else {
+      const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+      setFormData({ ...formData, [e.target.name]: value });
+    }
   };
 
   useEffect(() => {
@@ -257,7 +262,11 @@ export default function AddUser() {
       if (formData.gstin) fd.append('gstin', formData.gstin);
       if (formData.pan_number) fd.append('pan_number', formData.pan_number);
       if (formData.year_established) fd.append('year_of_establishment', formData.year_established);
-      if (formData.business_category) fd.append('business_category', formData.business_category);
+      if (formData.business_category_ids && formData.business_category_ids.length > 0) {
+        formData.business_category_ids.forEach((id, index) => {
+          fd.append(`business_category_ids[${index}]`, id);
+        });
+      }
       if (formData.no_of_employees) fd.append('no_of_employees', formData.no_of_employees);
       if (formData.website) fd.append('website', formData.website);
       if (formData.business_description) fd.append('business_description', formData.business_description);
@@ -729,12 +738,12 @@ export default function AddUser() {
                     </div>
                     <div className="au-form-col">
                       <label className="au-label">Business Category <span className="req">*</span></label>
-                      <select className="au-select" name="business_category" value={formData.business_category} onChange={handleChange}>
-                        <option value="">Select</option>
+                      <select className="au-select" name="business_category_ids" value={formData.business_category_ids} onChange={handleChange} multiple style={{height: '100px'}}>
                         {businessCategories.map(cat => (
-                          <option key={cat.id} value={cat.name}>{cat.name}</option>
+                          <option key={cat.id} value={cat.id}>{cat.name}</option>
                         ))}
                       </select>
+                      <span style={{fontSize:'12px', color:'#6b7280'}}>Hold Ctrl (or Cmd) to select multiple</span>
                     </div>
                     <div className="au-form-col">
                       <label className="au-label">No. of Employees (Optional)</label>
